@@ -2,7 +2,7 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include "librigidbodytracker/object_tracker.h"
+#include "librigidbodytracker/rigid_body_tracker.h"
 
 #include <chrono>
 #include <cstdio>

@@ -1,4 +1,4 @@
-#include "librigidbodytracker/object_tracker.h"
+#include "librigidbodytracker/rigid_body_tracker.h"
 
 // PCL
 #include <pcl/point_cloud.h>
