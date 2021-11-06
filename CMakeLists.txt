@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.5)
 project(librigidbodytracker)
 
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 14)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(PCL REQUIRED)
-# find_package(Eigen3 REQUIRED)
+# find_package(PkgConfig)
+# pkg_check_modules(YamlCpp yaml-cpp)
 
 ###########
 ## Build ##
@@ -15,16 +16,28 @@ find_package(PCL REQUIRED)
 include_directories(
   include
   ${PCL_INCLUDE_DIRS}
-  # /usr/include/eigen3/
-  # ${EIGEN3_INCLUDE_DIR}
 )
 
 ## Declare a cpp library
 add_library(librigidbodytracker
   src/rigid_body_tracker.cpp
 )
-
-## Specify libraries to link a library or executable target against
 target_link_libraries(librigidbodytracker
   ${PCL_LIBRARIES}
 )
+
+# add_executable(playclouds
+#   src/playclouds.cpp
+# )
+# target_link_libraries(playclouds
+#   librigidbodytracker
+#   ${PCL_LIBRARIES}
+#   yaml-cpp
+# )
+
+# add_executable(profile
+#   src/profile.cpp
+# )
+# target_link_libraries(profile
+#   ${PCL_LIBRARIES}
+# )

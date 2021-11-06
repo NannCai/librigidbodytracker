@@ -1,4 +1,4 @@
-#include "librigidbodytracker/object_tracker.h"
+#include "librigidbodytracker/rigid_body_tracker.h"
 #include "librigidbodytracker/cloudlog.hpp"
 #include "yaml-cpp/yaml.h"
 
@@ -106,7 +106,7 @@ static void readObjects(std::vector<librigidbodytracker::Object> &objects)
     assert(cf.IsMap());
     auto initPos = cf["initialPosition"];
     Eigen::Affine3f xf(Eigen::Translation3f(asVec(initPos)));
-    objects.emplace_back(0, 0, xf);
+    objects.emplace_back(0, 0, xf, cf["id"].as<std::string>());
   }
 }
 

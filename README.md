@@ -1,4 +1,4 @@
-[![CMake](https://github.com/USC-ACTLab/libobjecttracker/actions/workflows/cmake.yml/badge.svg?branch=master)](https://github.com/USC-ACTLab/libobjecttracker/actions/workflows/cmake.yml)
+[![CMake](https://github.com/IMRCLab/librigidbodytracker/actions/workflows/cmake.yml/badge.svg)](https://github.com/IMRCLab/librigidbodytracker/actions/workflows/cmake.yml)
 
 # librigidbodytracker
 This library helps to track (i.e. estimate the pose) of rigid-bodies.
