@@ -2,7 +2,7 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include "libobjecttracker/object_tracker.h"
+#include "librigidbodytracker/object_tracker.h"
 
 #include <chrono>
 #include <cstdio>
@@ -25,7 +25,7 @@ using Point = pcl::PointXYZ;
 using Cloud = pcl::PointCloud<Point>;
 using ICP = pcl::IterativeClosestPoint<Point, Point>;
 
-namespace libobjecttracker {
+namespace librigidbodytracker {
 
 	class PointCloudLogger
 	{
@@ -101,7 +101,7 @@ namespace libobjecttracker {
 			}
 		}
 
-		void play(libobjecttracker::ObjectTracker &tracker) const
+		void play(librigidbodytracker::ObjectTracker &tracker) const
 		{
 			for (size_t i = 0; i < clouds.size(); ++i) {
 				std::cout << "\n  " << i << "  ------------------------------\n";
@@ -129,7 +129,7 @@ namespace libobjecttracker {
 	public:
 		PointCloudDebugger(std::string file_path) : writepath(file_path) {}
 
-		void convert(libobjecttracker::ObjectTracker & tracker, std::vector<MarkerConfiguration> & config)
+		void convert(librigidbodytracker::ObjectTracker & tracker, std::vector<MarkerConfiguration> & config)
 		{
 			auto eig2pcl = [](Eigen::Vector3f v) {
 			  return pcl::PointXYZ(v.x(), v.y(), v.z());
@@ -189,4 +189,4 @@ namespace libobjecttracker {
 		std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> matches;
 	};
 
-} //namespace libobjecttracker
+} //namespace librigidbodytracker

@@ -1,5 +1,5 @@
-#include "libobjecttracker/object_tracker.h"
-#include "libobjecttracker/cloudlog.hpp"
+#include "librigidbodytracker/object_tracker.h"
+#include "librigidbodytracker/cloudlog.hpp"
 #include "yaml-cpp/yaml.h"
 
 #include <cassert>
@@ -52,7 +52,7 @@ Eigen::Vector3f asVec(YAML::Node const &node)
 }
 
 static void readMarkerConfigurations(
-  std::vector<libobjecttracker::MarkerConfiguration>& markerConfigurations)
+  std::vector<librigidbodytracker::MarkerConfiguration> &markerConfigurations)
 {
   YAML::Node config_root = rosparams();
   auto markerRoot = config_root["markerConfigurations"];
@@ -73,7 +73,7 @@ static void readMarkerConfigurations(
 }
 
 static void readDynamicsConfigurations(
-  std::vector<libobjecttracker::DynamicsConfiguration>& dynamicsConfigurations)
+  std::vector<librigidbodytracker::DynamicsConfiguration>& dynamicsConfigurations)
 {
   YAML::Node config_root = rosparams();
   auto dynRoot = config_root["dynamicsConfigurations"];
@@ -83,7 +83,7 @@ static void readDynamicsConfigurations(
   for (auto &&dyn : dynRoot) {
     auto val = dyn.second; // first is key
     assert(val.IsMap());
-    dynamicsConfigurations.push_back(libobjecttracker::DynamicsConfiguration());
+    dynamicsConfigurations.push_back(librigidbodytracker::DynamicsConfiguration());
     auto &conf = dynamicsConfigurations.back();
     conf.maxXVelocity = val["maxXVelocity"].as<float>();
     conf.maxYVelocity = val["maxYVelocity"].as<float>();
@@ -97,7 +97,7 @@ static void readDynamicsConfigurations(
   }
 }
 
-static void readObjects(std::vector<libobjecttracker::Object>& objects)
+static void readObjects(std::vector<librigidbodytracker::Object> &objects)
 {
   YAML::Node cfs_root = YAML::LoadFile(YAMLDIR + "/crazyflies.yaml");
   auto cfs = cfs_root["crazyflies"];
@@ -112,7 +112,7 @@ static void readObjects(std::vector<libobjecttracker::Object>& objects)
 
 int main(int argc, char **argv)
 {
-  using namespace libobjecttracker;
+  using namespace librigidbodytracker;
 
   if (argc < 2) {
     std::cerr << "error: requres filename arugment\n";
@@ -131,10 +131,10 @@ int main(int argc, char **argv)
             << markerConfigurations.size() << " marker configurations, "
             << objects.size() << " crazyflies.\n";
 
-  libobjecttracker::ObjectTracker tracker(
-    dynamicsConfigurations,
-    markerConfigurations,
-    objects);
+  librigidbodytracker::ObjectTracker tracker(
+      dynamicsConfigurations,
+      markerConfigurations,
+      objects);
 
   tracker.setLogWarningCallback(&log_stderr);
   if (argc < 3) {

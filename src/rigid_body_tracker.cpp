@@ -1,4 +1,4 @@
-#include "libobjecttracker/object_tracker.h"
+#include "librigidbodytracker/object_tracker.h"
 
 // PCL
 #include <pcl/point_cloud.h>
@@ -33,7 +33,7 @@ static float deltaAngle(float a, float b)
   return atan2(sin(a-b), cos(a-b));
 }
 
-namespace libobjecttracker {
+namespace librigidbodytracker {
 
 /////////////////////////////////////////////////////////////
 
@@ -535,14 +535,14 @@ void ObjectTracker::logWarn(const std::string& msg)
   }
 }
 
-} // namespace libobjecttracker
+} // namespace librigidbodytracker
 
 #ifdef STANDALONE
 #include "stdio.h"
 #include "cloudlog.hpp"
 int main()
 {
-  libobjecttracker::ObjectTracker ot({}, {}, {});
+  librigidbodytracker::ObjectTracker ot({}, {}, {});
   PointCloudLogger logger;
   PointCloudPlayer player;
   player.play(ot);

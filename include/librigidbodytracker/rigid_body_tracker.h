@@ -6,7 +6,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-namespace libobjecttracker {
+namespace librigidbodytracker {
 
   struct DynamicsConfiguration
   {
@@ -112,6 +112,6 @@ namespace libobjecttracker {
     std::function<void(const std::string&)> m_logWarn;
   };
 
-} // namespace libobjecttracker
+} // namespace librigidbodytracker
 
 
