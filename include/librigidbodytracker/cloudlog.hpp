@@ -101,7 +101,7 @@ namespace librigidbodytracker {
 			}
 		}
 
-		void play(librigidbodytracker::ObjectTracker &tracker) const
+		void play(librigidbodytracker::RigidBodyTracker &tracker) const
 		{
 			for (size_t i = 0; i < clouds.size(); ++i) {
 				std::cout << "\n  " << i << "  ------------------------------\n";
@@ -129,7 +129,7 @@ namespace librigidbodytracker {
 	public:
 		PointCloudDebugger(std::string file_path) : writepath(file_path) {}
 
-		void convert(librigidbodytracker::ObjectTracker & tracker, std::vector<MarkerConfiguration> & config)
+		void convert(librigidbodytracker::RigidBodyTracker & tracker, std::vector<MarkerConfiguration> & config)
 		{
 			auto eig2pcl = [](Eigen::Vector3f v) {
 			  return pcl::PointXYZ(v.x(), v.y(), v.z());
@@ -148,18 +148,18 @@ namespace librigidbodytracker {
 				//make another output cloud
 				matches.emplace_back(new pcl::PointCloud<pcl::PointXYZ>());
 				matches.back()->reserve(markermax);
-				//read updated objects
-				const std::vector<Object> & objects = tracker.objects();
+				//read updated rigidBodies
+				const std::vector<RigidBody> & rigidBodies = tracker.rigidBodies();
 				int a = 0;
-				for (auto & object : objects) {
+				for (auto & rigidBody : rigidBodies) {
 					++a;
-					std::cout << "Object vector size: " << objects.size() << "\n";
-					std::cout << "Object " << a << " processing\n";
+					std::cout << "RigidBody vector size: " << rigidBodies.size() << "\n";
+					std::cout << "RigidBody " << a << " processing\n";
 					//debugging stuff
-					Cloud::Ptr &objMarkers = config[object.m_markerConfigurationIdx];
-					size_t const objNpts = objMarkers->size();
-					for (size_t j = 0; j < objNpts; ++j) { //for each marker
-						auto p = object.transformation() * pcl2eig((*objMarkers)[j]); //get real position
+					Cloud::Ptr &rbMarkers = config[rigidBody.m_markerConfigurationIdx];
+					size_t const rbNpts = rbMarkers->size();
+					for (size_t j = 0; j < rbNpts; ++j) { //for each marker
+						auto p = rigidBody.transformation() * pcl2eig((*rbMarkers)[j]); //get real position
 						matches.back()->push_back(eig2pcl(p));
 					}
 				}
