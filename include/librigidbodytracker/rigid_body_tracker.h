@@ -34,6 +34,7 @@ namespace librigidbodytracker {
 
     const Eigen::Affine3f& transformation() const;
     Eigen::Vector3f center() const { return m_lastTransformation.translation(); }
+    bool orientationAvailable() const { return m_hasOrientation; }
 
     const Eigen::Affine3f& initialTransformation() const;
     Eigen::Vector3f initialCenter() const { return m_initialTransformation.translation(); }
@@ -52,6 +53,7 @@ namespace librigidbodytracker {
     size_t m_markerConfigurationIdx;
     size_t m_dynamicsConfigurationIdx;
     Eigen::Affine3f m_lastTransformation;
+    bool m_hasOrientation;
     const Eigen::Affine3f m_initialTransformation;
     Eigen::Vector3f m_velocity;
     std::chrono::time_point<std::chrono::high_resolution_clock> m_lastValidTransform;

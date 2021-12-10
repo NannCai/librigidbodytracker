@@ -45,6 +45,7 @@ RigidBody::RigidBody(
   : m_markerConfigurationIdx(markerConfigurationIdx)
   , m_dynamicsConfigurationIdx(dynamicsConfigurationIdx)
   , m_lastTransformation(initialTransformation)
+  , m_hasOrientation(false)
   , m_initialTransformation(initialTransformation)
   , m_lastValidTransform()
   , m_lastTransformationValid(false)
@@ -351,6 +352,7 @@ void RigidBodyTracker::updatePose(std::chrono::high_resolution_clock::time_point
       rigidBody.m_lastTransformation = tROTA;
       rigidBody.m_lastValidTransform = stamp;
       rigidBody.m_lastTransformationValid = true;
+      rigidBody.m_hasOrientation = true;
     } else {
       std::stringstream sstr;
       sstr << "Dynamic check failed for rigidBody " << rigidBody.name() << std::endl;
@@ -413,6 +415,7 @@ bool RigidBodyTracker::initializePosition(
     rigidBody.m_lastTransformation = Eigen::Translation3f(marker);
     rigidBody.m_lastValidTransform = stamp;
     rigidBody.m_lastTransformationValid = true;
+    rigidBody.m_hasOrientation = false;
   }
 
   return solution.size() == m_rigidBodies.size();
@@ -525,6 +528,7 @@ void RigidBodyTracker::updatePosition(std::chrono::high_resolution_clock::time_p
     rigidBody.m_lastTransformation = Eigen::Translation3f(marker);
     rigidBody.m_lastValidTransform = stamp;
     rigidBody.m_lastTransformationValid = true;
+    rigidBody.m_hasOrientation = false;
   }
 }
 
