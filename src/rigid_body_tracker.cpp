@@ -11,6 +11,8 @@
 
 #include "assignment.hpp"
 
+#include <limits>
+
 // TEMP for debug
 #include <cstdio>
 
@@ -205,7 +207,7 @@ bool RigidBodyTracker::initializePose(Cloud::ConstPtr markersConst)
     // try ICP with guesses of many different yaws about knn centroid
     Cloud result;
     static int const N_YAW = 20;
-    double bestErr = DBL_MAX;
+    double bestErr = std::numeric_limits<double>::max();
     Eigen::Affine3f bestTransformation;
     for (int i = 0; i < N_YAW; ++i) {
       float yaw = i * (2 * M_PI / N_YAW);
