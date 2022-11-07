@@ -148,7 +148,7 @@ bool RigidBodyTracker::initializePose(Cloud::ConstPtr markersConst)
 
   // compute the distance between the closest 2 rigidBodies in the nominal configuration
   // we will use this value to limit allowed deviation from nominal positions
-  float closest = FLT_MAX;
+  float closest = std::numeric_limits<float>::max();
   for (int i = 0; i < numRigidBodies; ++i) {
     auto pi = m_rigidBodies[i].initialCenter();
     for (int j = i + 1; j < numRigidBodies; ++j) {
