@@ -414,7 +414,8 @@ bool RigidBodyTracker::initializePosition(
   for (const auto& s : solution) {
     auto& rigidBody = m_rigidBodies[s.first];
     Eigen::Vector3f marker = pcl2eig((*markers)[s.second]);
-    rigidBody.m_lastTransformation = Eigen::Translation3f(marker);
+    Eigen::Vector3f offset = pcl2eig((*m_markerConfigurations[rigidBody.m_markerConfigurationIdx])[0]);
+    rigidBody.m_lastTransformation = Eigen::Translation3f(marker + offset);
     rigidBody.m_lastValidTransform = stamp;
     rigidBody.m_lastTransformationValid = true;
     rigidBody.m_hasOrientation = false;
@@ -465,6 +466,7 @@ void RigidBodyTracker::updatePosition(std::chrono::high_resolution_clock::time_p
   size_t const numRigidBodies = m_rigidBodies.size();
   for (int iRb = 0; iRb < numRigidBodies; ++iRb) {
     RigidBody& rigidBody = m_rigidBodies[iRb];
+    Eigen::Vector3f offset = pcl2eig((*m_markerConfigurations[rigidBody.m_markerConfigurationIdx])[0]);
 
     rigidBody.m_lastTransformationValid = false;
 
@@ -495,7 +497,7 @@ void RigidBodyTracker::updatePosition(std::chrono::high_resolution_clock::time_p
       Eigen::Vector3f marker = pcl2eig((*markers)[nearestIdx[iMarker]]);
 
       // Compute changes:
-      Eigen::Vector3f velocity = (marker - rigidBody.center()) / dt;
+      Eigen::Vector3f velocity = (marker - rigidBody.center() + offset) / dt;
       float vx = velocity.x();
       float vy = velocity.y();
       float vz = velocity.z();
@@ -504,7 +506,7 @@ void RigidBodyTracker::updatePosition(std::chrono::high_resolution_clock::time_p
           && fabs(vy) < dynConf.maxYVelocity
           && fabs(vz) < dynConf.maxZVelocity)
       {
-        float dist = (marker - rigidBody.center()).norm();
+        float dist = (marker - rigidBody.center() + offset).norm();
         long cost = dist * 1000; // cost needs to be an integer -> convert to mm
         assignment.setCost(iRb, nearestIdx[iMarker], cost);
         foundPotentialMarker = true;
@@ -523,11 +525,12 @@ void RigidBodyTracker::updatePosition(std::chrono::high_resolution_clock::time_p
   for (const auto& s : solution) {
     auto& rigidBody = m_rigidBodies[s.first];
     Eigen::Vector3f marker = pcl2eig((*markers)[s.second]);
+    Eigen::Vector3f offset = pcl2eig((*m_markerConfigurations[rigidBody.m_markerConfigurationIdx])[0]);
     std::chrono::duration<double> elapsedSeconds = stamp-rigidBody.m_lastValidTransform;
     double dt = elapsedSeconds.count();
 
-    rigidBody.m_velocity = (marker - rigidBody.center()) / dt;
-    rigidBody.m_lastTransformation = Eigen::Translation3f(marker);
+    rigidBody.m_velocity = (marker - rigidBody.center() + offset) / dt;
+    rigidBody.m_lastTransformation = Eigen::Translation3f(marker + offset);
     rigidBody.m_lastValidTransform = stamp;
     rigidBody.m_lastTransformationValid = true;
     rigidBody.m_hasOrientation = false;
