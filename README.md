@@ -6,3 +6,7 @@ It assumes that an initial estimate for the pose of each rigid body is given.
 The new poses are estimated using the iterative closest point algorithm (ICP) frame-by-frame.
 
 The library is used in the Crazyswarm project.
+
+## Building
+
+See `cmake.yml` workflow for a detailed list of instructions on how to build on Ubuntu.

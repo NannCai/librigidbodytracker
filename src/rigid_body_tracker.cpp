@@ -545,16 +545,3 @@ void RigidBodyTracker::logWarn(const std::string& msg)
 }
 
 } // namespace librigidbodytracker
-
-#ifdef STANDALONE
-#include "stdio.h"
-#include "cloudlog.hpp"
-int main()
-{
-  librigidbodytracker::RigidBodyTracker ot({}, {}, {});
-  PointCloudLogger logger;
-  PointCloudPlayer player;
-  player.play(ot);
-  puts("test OK");
-}
-#endif // STANDALONE

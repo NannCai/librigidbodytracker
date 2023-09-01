@@ -97,7 +97,7 @@ static void readDynamicsConfigurations(
   }
 }
 
-static void readObjects(std::vector<librigidbodytracker::Object> &objects)
+static void readObjects(std::vector<librigidbodytracker::RigidBody> &objects)
 {
   YAML::Node cfs_root = YAML::LoadFile(YAMLDIR + "/crazyflies.yaml");
   auto cfs = cfs_root["crazyflies"];
@@ -115,13 +115,13 @@ int main(int argc, char **argv)
   using namespace librigidbodytracker;
 
   if (argc < 2) {
-    std::cerr << "error: requres filename arugment\n";
+    std::cerr << "error: requires filename argument\n";
     return -1;
   }
 
   std::vector<DynamicsConfiguration> dynamicsConfigurations;
   std::vector<MarkerConfiguration> markerConfigurations;
-  std::vector<Object> objects;
+  std::vector<RigidBody> objects;
 
   readMarkerConfigurations(markerConfigurations);
   readDynamicsConfigurations(dynamicsConfigurations);
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
             << markerConfigurations.size() << " marker configurations, "
             << objects.size() << " crazyflies.\n";
 
-  librigidbodytracker::ObjectTracker tracker(
+  librigidbodytracker::RigidBodyTracker tracker(
       dynamicsConfigurations,
       markerConfigurations,
       objects);

@@ -26,18 +26,19 @@ target_link_libraries(librigidbodytracker
   ${PCL_LIBRARIES}
 )
 
-# add_executable(playclouds
-#   src/playclouds.cpp
-# )
-# target_link_libraries(playclouds
-#   librigidbodytracker
-#   ${PCL_LIBRARIES}
-#   yaml-cpp
-# )
+add_executable(playclouds
+  src/playclouds.cpp
+)
+target_link_libraries(playclouds
+  librigidbodytracker
+  ${PCL_LIBRARIES}
+  yaml-cpp
+)
 
-# add_executable(profile
-#   src/profile.cpp
-# )
-# target_link_libraries(profile
-#   ${PCL_LIBRARIES}
-# )
+add_executable(standalone
+  src/standalone.cpp
+)
+target_link_libraries(standalone
+  librigidbodytracker
+  ${PCL_LIBRARIES}
+)
