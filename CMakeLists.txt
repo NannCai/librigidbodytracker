@@ -5,8 +5,8 @@ set (CMAKE_CXX_STANDARD 14)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(PCL REQUIRED)
-# find_package(PkgConfig)
-# pkg_check_modules(YamlCpp yaml-cpp)
+find_package(PkgConfig)
+pkg_check_modules(YamlCpp yaml-cpp)
 
 ###########
 ## Build ##
