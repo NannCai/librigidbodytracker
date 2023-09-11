@@ -87,21 +87,31 @@ RigidBodyTracker::RigidBodyTracker(
   // if at least one of the used marker configurations only has one marker,
   // then switch to position only tracking
 
+  bool hasMultiMarker = false;
   for (const RigidBody& rigidBody : m_rigidBodies) {
     Cloud::Ptr &rbMarkers = m_markerConfigurations[rigidBody.m_markerConfigurationIdx];
     size_t const rbNpts = rbMarkers->size();
     if (rbNpts == 1) {
       m_trackPositionOnly = true;
-      break;
+      // break;
+    }
+    else if(rbNpts > 1){
+      hasMultiMarker = true;
     }
   }
+
+  if (m_trackPositionOnly && hasMultiMarker) {
+  throw std::runtime_error("Cannot use single-marker and multi-marker configurations simultaneously.");
+  }
+
 }
+
+
 
 void RigidBodyTracker::update(Cloud::Ptr pointCloud)
 {
   update(std::chrono::high_resolution_clock::now(), pointCloud);
 }
-
 void RigidBodyTracker::update(std::chrono::high_resolution_clock::time_point time,
   Cloud::Ptr pointCloud)
 {
