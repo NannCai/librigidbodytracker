@@ -101,7 +101,7 @@ RigidBodyTracker::RigidBodyTracker(
   }
 
   if (m_trackPositionOnly && hasMultiMarker) {
-  throw std::runtime_error("Cannot use single-marker and multi-marker configurations simultaneously.");
+    throw std::runtime_error("Cannot use single-marker and multi-marker configurations simultaneously.");
   }
 
 }
