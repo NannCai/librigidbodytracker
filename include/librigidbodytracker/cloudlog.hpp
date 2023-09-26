@@ -32,7 +32,7 @@ namespace librigidbodytracker {
 	public:
 		PointCloudLogger(std::string file_path) : file(file_path, std::ios::binary | std::ios::out)
 		{
-			// std::cout << file_path << std::endl;  // 
+			std::cout << file_path << std::endl;  // 
 
 			if (file.is_open())
 			{
@@ -60,7 +60,7 @@ namespace librigidbodytracker {
 		void log(uint32_t millis, pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
 		{
 			write<uint32_t>(file, millis);
-			std::cout << "Current time in milliseconds: " << millis << std::endl;
+			// std::cout << "Current time in milliseconds: " << millis << std::endl;  // this work
 
 			write<uint32_t>(file, cloud->size());
 			for (pcl::PointXYZ const &p : *cloud) {
@@ -74,6 +74,8 @@ namespace librigidbodytracker {
 		void flush()
 		{
 			file.flush();
+			// std::cout << "finish flush" << std::endl;
+
 		}
 
 	protected:
