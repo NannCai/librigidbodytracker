@@ -8,8 +8,8 @@
 #include <streambuf>
 #include <string>
 
-static std::string YAMLDIR = "../../../../crazyswarm/launch";
-
+// static std::string YAMLDIR = "../../../../crazyswarm/launch";
+static std::string YAMLDIR = "../../../../crazyswarm2/ros_ws/src/crazyswarm/launch";
 static void log_stderr(std::string s)
 {
   std::cout << s << "\n";
@@ -22,11 +22,15 @@ static pcl::PointXYZ eig2pcl(Eigen::Vector3f v)
 
 std::string wholefile(std::string path)
 {
+  std::cout << "wholefile function" << std::endl;
+  std::cout << "path"<< path << std::endl;
   std::ifstream t(path);
   std::string str;
 
-  t.seekg(0, std::ios::end);   
-  str.reserve(t.tellg());
+  t.seekg(0, std::ios::end); 
+  
+  str.reserve(t.tellg());   // wrong here
+
   t.seekg(0, std::ios::beg);
 
   str.assign((std::istreambuf_iterator<char>(t)),
@@ -37,10 +41,16 @@ std::string wholefile(std::string path)
 
 YAML::Node rosparams()
 {
-  std::string file = wholefile(YAMLDIR + "/hover_swarm.launch");
+  std::cout << "rosparams function" << std::endl;
+  std::string file = wholefile(YAMLDIR + "/hover_swarm.launch");  // wrong here
+  std::cout << "finish wholefile function" << std::endl;
   auto begin = file.find("<rosparam>") + strlen("<rosparam>");
   auto end = file.find("</rosparam>");
+  std::cout << "begin "<<begin<< "end "<< end<< std::endl;   //egin352end1881
+  
   return YAML::Load(file.substr(begin, end - begin));
+  std::cout << "finish rosparams function" << std::endl;
+  
 }
 
 Eigen::Vector3f asVec(YAML::Node const &node)
@@ -54,12 +64,14 @@ Eigen::Vector3f asVec(YAML::Node const &node)
 static void readMarkerConfigurations(
   std::vector<librigidbodytracker::MarkerConfiguration> &markerConfigurations)
 {
-  YAML::Node config_root = rosparams();
-  auto markerRoot = config_root["markerConfigurations"];
+  std::cout << "readMarkerConfigurations" << std::endl;
+  YAML::Node config_root = rosparams();  // something wrong here, before change the YAMLDIR
+  auto markerRoot = config_root["markerConfigurations"];    // here have the wrong configure i think
+  // std::cout << "config_root"<< std::endl;
   assert(markerRoot.IsMap());
 
   markerConfigurations.clear();
-  for (auto &&config : markerRoot) {
+  for (auto &&config : markerRoot) {    // didnt goes into this loop
     auto val = config.second; // first is key
     assert(val.IsMap());
     auto offset = asVec(val["offset"]);
@@ -75,6 +87,7 @@ static void readMarkerConfigurations(
 static void readDynamicsConfigurations(
   std::vector<librigidbodytracker::DynamicsConfiguration>& dynamicsConfigurations)
 {
+  std::cout << "readDynamicsConfigurations function" << std::endl;
   YAML::Node config_root = rosparams();
   auto dynRoot = config_root["dynamicsConfigurations"];
   assert(dynRoot.IsMap());
@@ -99,6 +112,7 @@ static void readDynamicsConfigurations(
 
 static void readObjects(std::vector<librigidbodytracker::RigidBody> &objects)
 {
+  std::cout << "readObjects function" << std::endl;
   YAML::Node cfs_root = YAML::LoadFile(YAMLDIR + "/crazyflies.yaml");
   auto cfs = cfs_root["crazyflies"];
   assert(cfs.IsSequence());
@@ -113,18 +127,26 @@ static void readObjects(std::vector<librigidbodytracker::RigidBody> &objects)
 int main(int argc, char **argv)
 {
   using namespace librigidbodytracker;
+  // std::cout << "argc"<< argc << std::endl;
 
   if (argc < 2) {
     std::cerr << "error: requires filename argument\n";
     return -1;
   }
+  // else{
+  //   std::cout << "argv[1]"<< argv[1] << std::endl;
+  // }
 
   std::vector<DynamicsConfiguration> dynamicsConfigurations;
   std::vector<MarkerConfiguration> markerConfigurations;
   std::vector<RigidBody> objects;
 
-  readMarkerConfigurations(markerConfigurations);
-  readDynamicsConfigurations(dynamicsConfigurations);
+  readMarkerConfigurations(markerConfigurations);   // wrong here
+  //readMarkerConfigurations -rosparams()- wholefile- str.reserve(t.tellg()); 
+  readDynamicsConfigurations(dynamicsConfigurations);  // then wrong here
+  // readDynamicsConfigurations- rosparams- wholefile 
+  std::cout << "before readObjects" << std::endl;
+  
   readObjects(objects);
 
   std::cout << dynamicsConfigurations.size() << " dynamics configurations, "
