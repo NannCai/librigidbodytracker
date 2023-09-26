@@ -32,6 +32,18 @@ namespace librigidbodytracker {
 	public:
 		PointCloudLogger(std::string file_path) : file(file_path, std::ios::binary | std::ios::out)
 		{
+			// std::cout << file_path << std::endl;  // 
+
+			if (file.is_open())
+			{
+				std::cout << "File is open" << std::endl;
+				std::cout << "File path: " << file_path << std::endl;
+			}
+			else
+			{
+				std::cout << "File is not open" << std::endl;
+			}
+
 		}
 
 		void log(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
@@ -48,6 +60,8 @@ namespace librigidbodytracker {
 		void log(uint32_t millis, pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
 		{
 			write<uint32_t>(file, millis);
+			std::cout << "Current time in milliseconds: " << millis << std::endl;
+
 			write<uint32_t>(file, cloud->size());
 			for (pcl::PointXYZ const &p : *cloud) {
 				static_assert(std::is_same<decltype(p.x), float>::value, "expected float");
