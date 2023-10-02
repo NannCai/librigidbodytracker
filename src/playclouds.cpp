@@ -8,8 +8,8 @@
 #include <streambuf>
 #include <string>
 
-// static std::string YAMLDIR = "../../../../crazyswarm/launch";
-static std::string YAMLDIR = "../../../../crazyswarm2/ros_ws/src/crazyswarm/launch";
+using namespace librigidbodytracker;
+
 static void log_stderr(std::string s)
 {
   std::cout << s << "\n";
@@ -20,38 +20,6 @@ static pcl::PointXYZ eig2pcl(Eigen::Vector3f v)
   return pcl::PointXYZ(v.x(), v.y(), v.z());
 }
 
-std::string wholefile(std::string path)
-{
-  std::cout << "wholefile function" << std::endl;
-  std::cout << "path"<< path << std::endl;
-  std::ifstream t(path);
-  std::string str;
-
-  t.seekg(0, std::ios::end); 
-  
-  str.reserve(t.tellg());   // wrong here
-
-  t.seekg(0, std::ios::beg);
-
-  str.assign((std::istreambuf_iterator<char>(t)),
-              std::istreambuf_iterator<char>());
-
-  return str;
-}
-
-YAML::Node rosparams()
-{
-  std::cout << "rosparams function" << std::endl;
-  std::string file = wholefile(YAMLDIR + "/hover_swarm.launch");  // wrong here
-  std::cout << "finish wholefile function" << std::endl;
-  auto begin = file.find("<rosparam>") + strlen("<rosparam>");
-  auto end = file.find("</rosparam>");
-  std::cout << "begin "<<begin<< "end "<< end<< std::endl;   //egin352end1881
-  
-  return YAML::Load(file.substr(begin, end - begin));
-  std::cout << "finish rosparams function" << std::endl;
-  
-}
 
 Eigen::Vector3f asVec(YAML::Node const &node)
 {
@@ -61,15 +29,49 @@ Eigen::Vector3f asVec(YAML::Node const &node)
     node[0].as<float>(), node[1].as<float>(), node[2].as<float>());
 }
 
-static void readMarkerConfigurations(
-  std::vector<librigidbodytracker::MarkerConfiguration> &markerConfigurations)
+static void readConfig(
+  const std::string& cfgfile,
+  std::vector<DynamicsConfiguration>& dynamicsConfigurations,
+  std::vector<MarkerConfiguration>& markerConfigurations,
+  std::vector<RigidBody>& rigidBodies)
 {
-  std::cout << "readMarkerConfigurations" << std::endl;
-  YAML::Node config_root = rosparams();  // something wrong here, before change the YAMLDIR
-  auto markerRoot = config_root["markerConfigurations"];    // here have the wrong configure i think
-  // std::cout << "config_root"<< std::endl;
+  YAML::Node cfg = YAML::LoadFile(cfgfile);
+
+  // read dynamics
+  auto dynRoot = cfg["dynamics_configurations"];
+  assert(dynRoot.IsMap());
+
+  std::map<std::string, size_t> dynamics_name_to_index;
+  size_t i = 0;
+  dynamicsConfigurations.clear();
+  for (auto &&dyn : dynRoot) {
+    auto val = dyn.second; // first is key
+    assert(val.IsMap());
+    dynamicsConfigurations.push_back(librigidbodytracker::DynamicsConfiguration());
+    auto &conf = dynamicsConfigurations.back();
+    Eigen::Vector3f max_vel = asVec(val["max_velocity"]);
+    conf.maxXVelocity = max_vel(0);
+    conf.maxYVelocity = max_vel(1);
+    conf.maxZVelocity = max_vel(2);
+    Eigen::Vector3f max_angular_vel = asVec(val["max_angular_velocity"]);
+    conf.maxPitchRate = max_angular_vel(0);
+    conf.maxRollRate = max_angular_vel(1);
+    conf.maxYawRate = max_angular_vel(2);
+    conf.maxRoll = val["max_roll"].as<float>();
+    conf.maxPitch = val["max_pitch"].as<float>();
+    conf.maxFitnessScore = val["max_fitness_score"].as<float>();
+
+    dynamics_name_to_index[dyn.first.as<std::string>()] = i;
+    ++i;
+  }
+
+  // read marker config
+
+  auto markerRoot = cfg["marker_configurations"];
   assert(markerRoot.IsMap());
 
+  std::map<std::string, size_t> marker_name_to_index;
+  i = 0;
   markerConfigurations.clear();
   for (auto &&config : markerRoot) {    // didnt goes into this loop
     auto val = config.second; // first is key
@@ -81,56 +83,35 @@ static void readMarkerConfigurations(
       auto pt = asVec(point.second) + offset;
       markerConfigurations.back()->push_back(eig2pcl(pt));
     }
+
+    marker_name_to_index[config.first.as<std::string>()] = i;
+    ++i;
   }
-}
 
-static void readDynamicsConfigurations(
-  std::vector<librigidbodytracker::DynamicsConfiguration>& dynamicsConfigurations)
-{
-  std::cout << "readDynamicsConfigurations function" << std::endl;
-  YAML::Node config_root = rosparams();
-  auto dynRoot = config_root["dynamicsConfigurations"];
-  assert(dynRoot.IsMap());
+  // read rigid bodies
 
-  dynamicsConfigurations.clear();
-  for (auto &&dyn : dynRoot) {
-    auto val = dyn.second; // first is key
-    assert(val.IsMap());
-    dynamicsConfigurations.push_back(librigidbodytracker::DynamicsConfiguration());
-    auto &conf = dynamicsConfigurations.back();
-    conf.maxXVelocity = val["maxXVelocity"].as<float>();
-    conf.maxYVelocity = val["maxYVelocity"].as<float>();
-    conf.maxZVelocity = val["maxZVelocity"].as<float>();
-    conf.maxPitchRate = val["maxPitchRate"].as<float>();
-    conf.maxRollRate = val["maxRollRate"].as<float>();
-    conf.maxYawRate = val["maxYawRate"].as<float>();
-    conf.maxRoll = val["maxRoll"].as<float>();
-    conf.maxPitch = val["maxPitch"].as<float>();
-    conf.maxFitnessScore = val["maxFitnessScore"].as<float>();
-  }
-}
+  auto rbs = cfg["rigid_bodies"];
+  assert(rbs.IsMap());
 
-static void readObjects(std::vector<librigidbodytracker::RigidBody> &objects)
-{
-  std::cout << "readObjects function" << std::endl;
-  YAML::Node cfs_root = YAML::LoadFile(YAMLDIR + "/crazyflies.yaml");
-  auto cfs = cfs_root["crazyflies"];
-  assert(cfs.IsSequence());
-  for (auto &&cf : cfs) {
-    assert(cf.IsMap());
-    auto initPos = cf["initialPosition"];
+  for (auto &&rb : rbs) {
+    auto val = rb.second; // first is key
+    auto initPos = val["initial_position"];
     Eigen::Affine3f xf(Eigen::Translation3f(asVec(initPos)));
-    objects.emplace_back(0, 0, xf, cf["id"].as<std::string>());
+    rigidBodies.emplace_back(
+      marker_name_to_index.at(val["marker"].as<std::string>()),
+      dynamics_name_to_index.at(val["dynamics"].as<std::string>()),
+      xf,
+      rb.first.as<std::string>());
   }
 }
-
+  
 int main(int argc, char **argv)
 {
   using namespace librigidbodytracker;
   // std::cout << "argc"<< argc << std::endl;
 
-  if (argc < 2) {
-    std::cerr << "error: requires filename argument\n";
+  if (argc < 3) {
+    std::cerr << "use arguments: <cfg> <recording> [<debuglog>]\n";
     return -1;
   }
   // else{
@@ -139,34 +120,28 @@ int main(int argc, char **argv)
 
   std::vector<DynamicsConfiguration> dynamicsConfigurations;
   std::vector<MarkerConfiguration> markerConfigurations;
-  std::vector<RigidBody> objects;
+  std::vector<RigidBody> rigidBodies;
 
-  readMarkerConfigurations(markerConfigurations);   // wrong here
-  //readMarkerConfigurations -rosparams()- wholefile- str.reserve(t.tellg()); 
-  readDynamicsConfigurations(dynamicsConfigurations);  // then wrong here
-  // readDynamicsConfigurations- rosparams- wholefile 
-  std::cout << "before readObjects" << std::endl;
-  
-  readObjects(objects);
+  readConfig(argv[1], dynamicsConfigurations, markerConfigurations, rigidBodies);
 
   std::cout << dynamicsConfigurations.size() << " dynamics configurations, "
             << markerConfigurations.size() << " marker configurations, "
-            << objects.size() << " crazyflies.\n";
+            << rigidBodies.size() << " rigid bodies.\n";
 
   librigidbodytracker::RigidBodyTracker tracker(
       dynamicsConfigurations,
       markerConfigurations,
-      objects);
+      rigidBodies);
 
   tracker.setLogWarningCallback(&log_stderr);
-  if (argc < 3) {
+  if (argc < 4) {
     PointCloudPlayer player;
-    player.load(argv[1]);
+    player.load(argv[2]);
     player.play(tracker);
   }
   else {
-    PointCloudDebugger debugger(argv[2]);
-    debugger.load(argv[1]);
+    PointCloudDebugger debugger(argv[3]);
+    debugger.load(argv[2]);
     debugger.convert(tracker,markerConfigurations);
   }
 }
