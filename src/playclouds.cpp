@@ -137,7 +137,8 @@ int main(int argc, char **argv)
   if (argc < 4) {
     PointCloudPlayer player;
     player.load(argv[2]);
-    player.play(tracker);
+    // player.play(tracker);
+    player.play_compute_markerposition();
   }
   else {
     PointCloudDebugger debugger(argv[3]);

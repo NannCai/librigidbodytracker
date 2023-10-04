@@ -101,7 +101,9 @@ RigidBodyTracker::RigidBodyTracker(
   }
 
   if (m_trackPositionOnly && hasMultiMarker) {
-    throw std::runtime_error("Cannot use single-marker and multi-marker configurations simultaneously.");
+    // throw std::runtime_error("Cannot use single-marker and multi-marker configurations simultaneously.");
+    std::cout << '!!has two marker mode!! developing the hybrid mode algorithm' << std::endl;
+    // TODO creat a new mode called hybrid 
   }
 
 }

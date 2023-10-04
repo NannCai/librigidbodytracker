@@ -32,11 +32,9 @@ namespace librigidbodytracker {
 	public:
 		PointCloudLogger(std::string file_path) : file(file_path, std::ios::binary | std::ios::out)
 		{
-			std::cout << file_path << std::endl;  // 
-
 			if (file.is_open())
 			{
-				std::cout << "File is open" << std::endl;
+				std::cout << "File is open------------" << std::endl;
 				std::cout << "File path: " << file_path << std::endl;
 			}
 			else
@@ -122,9 +120,6 @@ namespace librigidbodytracker {
 
 		void play(librigidbodytracker::RigidBodyTracker &tracker) const
 		{
-			// Create a PCL visualization object
-			pcl::visualization::CloudViewer viewer("Point Cloud Viewer");
-
 			for (size_t i = 0; i < clouds.size(); ++i) {
 				std::cout << "\n  " << i << "  ------------------------------\n";
 				auto dur = std::chrono::milliseconds(timestamps[i]);
@@ -148,6 +143,144 @@ namespace librigidbodytracker {
 
 			}
 		}
+
+		void play_compute_offset(librigidbodytracker::RigidBodyTracker &tracker) const
+		{
+			pcl::PointXYZ totalCenter = {0.0, 0.0, 0.0};
+			size_t validCloudsCount = 0;
+
+			for (size_t i = 0; i < clouds.size(); ++i) {
+				std::cout << "\n  " << i << "  ------------------------------\n";
+				auto dur = std::chrono::milliseconds(timestamps[i]);
+				std::chrono::high_resolution_clock::time_point stamp(dur);
+				tracker.update(stamp, clouds[i]);
+
+				const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
+
+				if (cloud->size() < 3) {
+					std::cout << "Not enough points. Skipping calculation.\n";
+					continue;
+				}
+
+				pcl::PointXYZ center;
+				center.x = ((*cloud)[0].x + (*cloud)[1].x + (*cloud)[2].x) / 3.0;
+				center.y = ((*cloud)[0].y + (*cloud)[1].y + (*cloud)[2].y) / 3.0;
+				center.z = ((*cloud)[0].z + (*cloud)[1].z + (*cloud)[2].z) / 3.0;
+
+				totalCenter.x += center.x;
+				totalCenter.y += center.y;
+				totalCenter.z += center.z;
+				validCloudsCount++;
+				std::cout << "Center of the first three points: (" << center.x << ", " << center.y << ", " << center.z << ")\n";
+
+			}
+
+			// Average Center: (0.0128561, 0.00107494, 0.0371899)
+			if (validCloudsCount > 0) {
+				totalCenter.x /= validCloudsCount;
+				totalCenter.y /= validCloudsCount;
+				totalCenter.z /= validCloudsCount;
+				std::cout << "Average Center: (" << totalCenter.x << ", " << totalCenter.y << ", " << totalCenter.z << ")\n";
+			} else {
+				std::cout << "No valid point clouds found.\n";
+			}
+		}
+
+		// void play_compute_markerposition()
+		// {
+		// 	pcl::PointXYZ totalFirstPoint = {0.0, 0.0, 0.0};
+		// 	size_t validCloudsCount = 0;
+
+		// 	for (size_t i = 0; i < clouds.size(); ++i) {
+		// 		std::cout << "\n  " << i << "  ------------------------------\n";
+		// 		auto dur = std::chrono::milliseconds(timestamps[i]);
+		// 		std::chrono::high_resolution_clock::time_point stamp(dur);
+
+		// 		const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
+
+		// 		if (cloud->empty()) {
+		// 			std::cout << "Empty point cloud. Skipping calculation.\n";
+		// 			continue;
+		// 		}
+
+		// 		const pcl::PointXYZ& firstPoint = (*cloud)[0];
+
+		// 		totalFirstPoint.x += firstPoint.x;
+		// 		totalFirstPoint.y += firstPoint.y;
+		// 		totalFirstPoint.z += firstPoint.z;
+		// 		validCloudsCount++;
+		// 	}
+
+		// 	if (validCloudsCount > 0) {
+		// 		totalFirstPoint.x /= validCloudsCount;
+		// 		totalFirstPoint.y /= validCloudsCount;
+		// 		totalFirstPoint.z /= validCloudsCount;
+		// 		std::cout << "Average First Point: (" << totalFirstPoint.x << ", " << totalFirstPoint.y << ", " << totalFirstPoint.z << ")\n";
+		// 	} else {
+		// 		std::cout << "No valid point clouds found.\n";
+		// 	}
+		// }
+
+
+		void play_compute_markerposition()
+		{
+			pcl::PointXYZ totalFirstPoint = {0.0, 0.0, 0.0};
+			pcl::PointXYZ totalSecondPoint = {0.0, 0.0, 0.0};
+			pcl::PointXYZ totalThirdPoint = {0.0, 0.0, 0.0};
+			size_t validCloudsCount = 0;
+
+			for (size_t i = 0; i < clouds.size(); ++i) {
+				std::cout << "\n  " << i << "  ------------------------------\n";
+				auto dur = std::chrono::milliseconds(timestamps[i]);
+				std::chrono::high_resolution_clock::time_point stamp(dur);
+
+				const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
+
+				if (cloud->size() < 3) {
+					std::cout << "Not enough points. Skipping calculation.\n";
+					continue;
+				}
+
+				const pcl::PointXYZ& firstPoint = (*cloud)[0];
+				const pcl::PointXYZ& secondPoint = (*cloud)[1];
+				const pcl::PointXYZ& thirdPoint = (*cloud)[2];
+
+				totalFirstPoint.x += firstPoint.x;
+				totalFirstPoint.y += firstPoint.y;
+				totalFirstPoint.z += firstPoint.z;
+
+				totalSecondPoint.x += secondPoint.x;
+				totalSecondPoint.y += secondPoint.y;
+				totalSecondPoint.z += secondPoint.z;
+
+				totalThirdPoint.x += thirdPoint.x;
+				totalThirdPoint.y += thirdPoint.y;
+				totalThirdPoint.z += thirdPoint.z;
+
+				validCloudsCount++;
+			}
+
+			if (validCloudsCount > 0) {
+				totalFirstPoint.x /= validCloudsCount;
+				totalFirstPoint.y /= validCloudsCount;
+				totalFirstPoint.z /= validCloudsCount;
+
+				totalSecondPoint.x /= validCloudsCount;
+				totalSecondPoint.y /= validCloudsCount;
+				totalSecondPoint.z /= validCloudsCount;
+
+				totalThirdPoint.x /= validCloudsCount;
+				totalThirdPoint.y /= validCloudsCount;
+				totalThirdPoint.z /= validCloudsCount;
+
+				std::cout << "Average First Point: (" << totalFirstPoint.x << ", " << totalFirstPoint.y << ", " << totalFirstPoint.z << ")\n";
+				std::cout << "Average Second Point: (" << totalSecondPoint.x << ", " << totalSecondPoint.y << ", " << totalSecondPoint.z << ")\n";
+				std::cout << "Average Third Point: (" << totalThirdPoint.x << ", " << totalThirdPoint.y << ", " << totalThirdPoint.z << ")\n";
+			} else {
+				std::cout << "No valid point clouds found.\n";
+			}
+		}
+
 
 	protected:
 		template <typename T>

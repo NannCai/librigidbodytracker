@@ -1,4 +1,10 @@
 marker_configurations:
+  three_marker:
+    offset: [0.0128561, 0.00107494, 0.0371899]
+    points:
+      p0: [0.0326013, 0.0000905, 0.0380298]
+      p1: [0.0020009, 0.0287984, 0.0374813]
+      p2: [0.00396616, -0.025664, 0.0360586]
   default: # for standard Crazyflie
     offset: [0.0, -0.01, -0.04]
     points:
@@ -36,5 +42,9 @@ dynamics_configurations:
 rigid_bodies:
   crazyflie:
     initial_position: [0,0,0]
+    marker: "three_marker"
+    dynamics: "default"
+  crazyflie2:
+    initial_position: [1.0,1.0,0]
     marker: "default_single_marker"
     dynamics: "default"
