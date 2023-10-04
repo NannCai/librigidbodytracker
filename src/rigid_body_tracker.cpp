@@ -20,6 +20,12 @@ using Point = pcl::PointXYZ;
 using Cloud = pcl::PointCloud<Point>;
 using ICP = pcl::IterativeClosestPoint<Point, Point>;
 
+enum TrackingMode {
+    PositionMode,
+    PoseMode,
+    HybridMode
+};
+
 static Eigen::Vector3f pcl2eig(Point p)
 {
   return Eigen::Vector3f(p.x, p.y, p.z);
@@ -80,6 +86,7 @@ RigidBodyTracker::RigidBodyTracker(
   , m_dynamicsConfigurations(dynamicsConfigurations)
   , m_rigidBodies(rigidBodies)
   , m_trackPositionOnly(false)
+  , m_trackingMode(PositionMode)
   , m_initialized(false)
   , m_init_attempts(0)
   , m_logWarn()
@@ -87,23 +94,23 @@ RigidBodyTracker::RigidBodyTracker(
   // if at least one of the used marker configurations only has one marker,
   // then switch to position only tracking
 
-  bool hasMultiMarker = false;
   for (const RigidBody& rigidBody : m_rigidBodies) {
     Cloud::Ptr &rbMarkers = m_markerConfigurations[rigidBody.m_markerConfigurationIdx];
     size_t const rbNpts = rbMarkers->size();
     if (rbNpts == 1) {
+      // m_trackingMode = PositionMode;
       m_trackPositionOnly = true;
-      // break;
     }
     else if(rbNpts > 1){
-      hasMultiMarker = true;
+      m_trackingMode = PoseMode;
     }
   }
 
-  if (m_trackPositionOnly && hasMultiMarker) {
+  if (m_trackPositionOnly && m_trackingMode == PoseMode) {
     // throw std::runtime_error("Cannot use single-marker and multi-marker configurations simultaneously.");
     std::cout << '!!has two marker mode!! developing the hybrid mode algorithm' << std::endl;
     // TODO creat a new mode called hybrid 
+    m_trackingMode = HybridMode;
   }
 
 }
@@ -117,11 +124,21 @@ void RigidBodyTracker::update(Cloud::Ptr pointCloud)
 void RigidBodyTracker::update(std::chrono::high_resolution_clock::time_point time,
   Cloud::Ptr pointCloud)
 {
-  if (m_trackPositionOnly) {
+  // if (m_trackPositionOnly) {
+  //   updatePosition(time, pointCloud);
+  // } else {
+  //   updatePose(time, pointCloud);
+  // }
+
+  if (m_trackingMode == PositionMode) {
     updatePosition(time, pointCloud);
-  } else {
+  } else if (m_trackingMode == PoseMode) {
     updatePose(time, pointCloud);
   }
+  else if (m_trackingMode == HybridMode){
+    updateHybrid(time, pointcloud);
+  }
+
 }
 
 const std::vector<RigidBody>& RigidBodyTracker::rigidBodies() const
@@ -548,6 +565,57 @@ void RigidBodyTracker::updatePosition(std::chrono::high_resolution_clock::time_p
     rigidBody.m_hasOrientation = false;
   }
 }
+
+
+bool RigidBodyTracker::initializeHybrid(
+  std::chrono::high_resolution_clock::time_point stamp,
+  Cloud::ConstPtr markers)
+{
+  std::cout << 'initializeHybrid function' << std::endl;
+
+}
+
+void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_point stamp,
+  Cloud::ConstPtr markers)
+  {
+    std::cout << 'updateHybrid function' << std::endl;
+
+    if (markers->empty()) {
+      for (auto& rigidBody : m_rigidBodies) {
+        rigidBody.m_lastTransformationValid = false;
+      }
+      return;
+    }
+
+
+    // @ this part should be modyfied
+    // @ from updatePose
+    m_initialized = m_initialized || initializePose(markers);
+    if (!m_initialized) {
+      logWarn(
+        "rigid body tracker initialization failed - "
+        "check that position is correct, all markers are visible, "
+        "and marker configuration matches config file");
+      // Doesn't make too much sense to continue here - lets wait to be fully initialized
+      return;
+    }
+
+    // @ from updatePosition
+    // re-initialize, if we have not received an update in a long time
+    if (!m_initialized || lastCalldt > 0.4) {
+      m_initialized = initializePosition(stamp, markers);
+      if (!m_initialized) {
+        logWarn(
+          "rigid body tracker initialization failed - "
+          "check that position is correct, all markers are visible, "
+          "and marker configuration matches config file");
+      }
+      // Doesn't make too much sense to continue here - lets wait to be fully initialized
+      return;
+    }
+
+
+  }
 
 void RigidBodyTracker::logWarn(const std::string& msg)
 {

@@ -110,7 +110,7 @@ namespace librigidbodytracker {
     bool m_initialized;
     int m_init_attempts;
     bool m_trackPositionOnly;
-
+    TrackingMode m_trackingMode;
     std::function<void(const std::string&)> m_logWarn;
   };
 
