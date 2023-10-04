@@ -88,6 +88,9 @@ namespace librigidbodytracker {
 		std::chrono::high_resolution_clock::time_point start;
 	};
 
+// PointCloudPlayer is a class that have loading and playing back point cloud data function: load, play.
+// load: The loaded point cloud data is stored in the timestamps and clouds member variables.
+// play: takes a RigidBodyTracker object as input and iterates over the loaded point cloud data, updating the tracker with each point cloud at the corresponding timestamp.
 	class PointCloudPlayer
 	{
 	public:
@@ -119,11 +122,30 @@ namespace librigidbodytracker {
 
 		void play(librigidbodytracker::RigidBodyTracker &tracker) const
 		{
+			// Create a PCL visualization object
+			pcl::visualization::CloudViewer viewer("Point Cloud Viewer");
+
 			for (size_t i = 0; i < clouds.size(); ++i) {
 				std::cout << "\n  " << i << "  ------------------------------\n";
 				auto dur = std::chrono::milliseconds(timestamps[i]);
 				std::chrono::high_resolution_clock::time_point stamp(dur);
 				tracker.update(stamp, clouds[i]);
+
+
+				// # new debugg print 
+				// Print the points in the current point cloud
+				// Ptr& cloud refers to the same object as clouds[i] but it's a reference, so it won't make a copy.
+				const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
+				// iterating over each point in the point cloud.
+				// for (const pcl::PointXYZ& point : *cloud) {  // !!! here reference and pointer need to be figure out
+				// 	std::cout << "Point: (" << point.x << ", " << point.y << ", " << point.z << ")\n";
+				// }
+
+				for (size_t i = 0; i < cloud->size(); ++i) {
+					const pcl::PointXYZ& point = (*cloud)[i];
+					std::cout << "Point " << i << ": (" << point.x << ", " << point.y << ", " << point.z << ")\n";
+				}
+
 			}
 		}
 

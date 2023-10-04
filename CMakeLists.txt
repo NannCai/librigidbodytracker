@@ -35,10 +35,11 @@ target_link_libraries(playclouds
   yaml-cpp
 )
 
-add_executable(standalone
-  src/standalone.cpp
-)
-target_link_libraries(standalone
+# add_executable(standalone
+#   src/standalone.cpp
+# )
+target_link_libraries(
+  # standalone
   librigidbodytracker
   ${PCL_LIBRARIES}
 )
