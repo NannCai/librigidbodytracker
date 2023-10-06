@@ -8,6 +8,12 @@
 
 namespace librigidbodytracker {
 
+enum TrackingMode {
+    PositionMode,
+    PoseMode,
+    HybridMode
+};
+
   struct DynamicsConfiguration
   {
     double maxXVelocity;
@@ -100,6 +106,13 @@ namespace librigidbodytracker {
 
     bool initializePosition(std::chrono::high_resolution_clock::time_point stamp,
       pcl::PointCloud<pcl::PointXYZ>::ConstPtr markers);
+
+    bool initializeHybrid(
+      pcl::PointCloud<pcl::PointXYZ>::ConstPtr markers);
+
+    void updateHybrid(std::chrono::high_resolution_clock::time_point stamp,
+      const pcl::PointCloud<pcl::PointXYZ>::ConstPtr markers);
+
 
     void logWarn(const std::string& msg);
 

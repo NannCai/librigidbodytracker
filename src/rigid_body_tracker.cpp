@@ -20,11 +20,11 @@ using Point = pcl::PointXYZ;
 using Cloud = pcl::PointCloud<Point>;
 using ICP = pcl::IterativeClosestPoint<Point, Point>;
 
-enum TrackingMode {
-    PositionMode,
-    PoseMode,
-    HybridMode
-};
+// enum TrackingMode {
+//     PositionMode,
+//     PoseMode,
+//     HybridMode
+// };
 
 static Eigen::Vector3f pcl2eig(Point p)
 {
@@ -81,10 +81,10 @@ bool RigidBody::lastTransformationValid() const
 RigidBodyTracker::RigidBodyTracker(
   const std::vector<DynamicsConfiguration>& dynamicsConfigurations,
   const std::vector<MarkerConfiguration>& markerConfigurations,
-  const std::vector<RigidBody>& rigidBodies)
+  const std::vector<RigidBody>& rigidBodies)  // rigidBodies is the paras of rbs passinto the object m_rigidBodies
   : m_markerConfigurations(markerConfigurations)
   , m_dynamicsConfigurations(dynamicsConfigurations)
-  , m_rigidBodies(rigidBodies)
+  , m_rigidBodies(rigidBodies)   // now m_rigidBodies is already have all the config paras from yaml file
   , m_trackPositionOnly(false)
   , m_trackingMode(PositionMode)
   , m_initialized(false)
@@ -108,13 +108,12 @@ RigidBodyTracker::RigidBodyTracker(
 
   if (m_trackPositionOnly && m_trackingMode == PoseMode) {
     // throw std::runtime_error("Cannot use single-marker and multi-marker configurations simultaneously.");
-    std::cout << '!!has two marker mode!! developing the hybrid mode algorithm' << std::endl;
+    std::cout << "!!has two marker mode!! developing the hybrid mode algorithm\n" ;
     // TODO creat a new mode called hybrid 
     m_trackingMode = HybridMode;
   }
 
 }
-
 
 
 void RigidBodyTracker::update(Cloud::Ptr pointCloud)
@@ -136,7 +135,7 @@ void RigidBodyTracker::update(std::chrono::high_resolution_clock::time_point tim
     updatePose(time, pointCloud);
   }
   else if (m_trackingMode == HybridMode){
-    updateHybrid(time, pointcloud);
+    updateHybrid(time, pointCloud);
   }
 
 }
@@ -567,55 +566,48 @@ void RigidBodyTracker::updatePosition(std::chrono::high_resolution_clock::time_p
 }
 
 
-bool RigidBodyTracker::initializeHybrid(
-  std::chrono::high_resolution_clock::time_point stamp,
-  Cloud::ConstPtr markers)
+bool RigidBodyTracker::initializeHybrid(Cloud::ConstPtr markers)
 {
-  std::cout << 'initializeHybrid function' << std::endl;
+  std::cout << "initializeHybrid function\n";
+  // use the config to initial
+  size_t const numRigidBodies = m_rigidBodies.size();
+  for (int iRb = 0; iRb < numRigidBodies; ++iRb) {
+    RigidBody& rigidBody = m_rigidBodies[iRb];
 
+    Eigen::Vector3f configinitialCenter = rigidBody.initialCenter();
+    Eigen::Matrix4f configTransformation = pcl::getTransformation(
+      configinitialCenter.x(), configinitialCenter.y(), configinitialCenter.z(),
+      0, 0, 0).matrix();
+
+    rigidBody.m_lastTransformation = configTransformation;
+    // std::cout << "rigidBody.m_lastTransformation  "<< rigidBody.m_lastTransformation << "\n";
+  }
+  return true  // TODO
 }
 
 void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_point stamp,
   Cloud::ConstPtr markers)
-  {
-    std::cout << 'updateHybrid function' << std::endl;
+{
+  std::cout << "updateHybrid function\n" ;
 
-    if (markers->empty()) {
-      for (auto& rigidBody : m_rigidBodies) {
-        rigidBody.m_lastTransformationValid = false;
-      }
-      return;
+  if (markers->empty()) {
+    for (auto& rigidBody : m_rigidBodies) {
+      rigidBody.m_lastTransformationValid = false;
     }
-
-
-    // @ this part should be modyfied
-    // @ from updatePose
-    m_initialized = m_initialized || initializePose(markers);
-    if (!m_initialized) {
-      logWarn(
-        "rigid body tracker initialization failed - "
-        "check that position is correct, all markers are visible, "
-        "and marker configuration matches config file");
-      // Doesn't make too much sense to continue here - lets wait to be fully initialized
-      return;
-    }
-
-    // @ from updatePosition
-    // re-initialize, if we have not received an update in a long time
-    if (!m_initialized || lastCalldt > 0.4) {
-      m_initialized = initializePosition(stamp, markers);
-      if (!m_initialized) {
-        logWarn(
-          "rigid body tracker initialization failed - "
-          "check that position is correct, all markers are visible, "
-          "and marker configuration matches config file");
-      }
-      // Doesn't make too much sense to continue here - lets wait to be fully initialized
-      return;
-    }
-
-
+    return;
   }
+  m_initialized = m_initialized || initializeHybrid(markers);
+  if (!m_initialized) {
+    logWarn(
+      "rigid body tracker initialization failed - "
+      "check that position is correct, all markers are visible, "
+      "and marker configuration matches config file");
+    // Doesn't make too much sense to continue here - lets wait to be fully initialized
+    return;
+  }
+
+
+}
 
 void RigidBodyTracker::logWarn(const std::string& msg)
 {

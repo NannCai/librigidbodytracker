@@ -100,7 +100,7 @@ static void readConfig(
     rigidBodies.emplace_back(
       marker_name_to_index.at(val["marker"].as<std::string>()),
       dynamics_name_to_index.at(val["dynamics"].as<std::string>()),
-      xf,
+      xf,     // Eigen::Affine3f xf(Eigen::Translation3f(asVec(initPos)));
       rb.first.as<std::string>());
   }
 }
