@@ -283,6 +283,8 @@ bool RigidBodyTracker::initializePose(Cloud::ConstPtr markersConst)
 void RigidBodyTracker::updatePose(std::chrono::high_resolution_clock::time_point stamp,
   Cloud::ConstPtr markers)
 {
+  std::cout << "updatePose function\n" ;
+
   if (markers->empty()) {
     for (auto& rigidBody : m_rigidBodies) {
       rigidBody.m_lastTransformationValid = false;
@@ -379,7 +381,7 @@ void RigidBodyTracker::updatePose(std::chrono::high_resolution_clock::time_point
         && icp.getFitnessScore() < dynConf.maxFitnessScore)
     {
       rigidBody.m_velocity = (tROTA.translation() - rigidBody.center()) / dt;
-      rigidBody.m_lastTransformation = tROTA;
+      rigidBody.m_lastTransformation = tROTA;  // tROTA is an object, so m_lastTransformation is also an object of class Eigen::Affine3f
       rigidBody.m_lastValidTransform = stamp;
       rigidBody.m_lastTransformationValid = true;
       rigidBody.m_hasOrientation = true;
@@ -580,9 +582,9 @@ bool RigidBodyTracker::initializeHybrid(Cloud::ConstPtr markers)
       0, 0, 0).matrix();
 
     rigidBody.m_lastTransformation = configTransformation;
-    // std::cout << "rigidBody.m_lastTransformation  "<< rigidBody.m_lastTransformation << "\n";
+    std::cout << "rigidBody.m_lastTransformation:  \n"<< configTransformation << "\n";
   }
-  return true  // TODO
+  return true;  
 }
 
 void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_point stamp,
@@ -606,7 +608,76 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     return;
   }
 
+  ICP icp;
 
+  // // Set the maximum number of iterations (criterion 1)
+  icp.setMaximumIterations(2);
+  // // Set the transformation epsilon (criterion 2)
+  // icp.setTransformationEpsilon(1e-8);
+  // // Set the euclidean distance difference epsilon (criterion 3)
+  // icp.setEuclideanFitnessEpsilon(1);
+
+
+  icp.setInputTarget(markers);   // 
+
+  for (auto& rigidBody : m_rigidBodies) {
+    Cloud::Ptr &rbMarkers = m_markerConfigurations[rigidBody.m_markerConfigurationIdx];
+    size_t const rbNpts = rbMarkers->size();
+    std::cout << "rbNpts: "<<rbNpts<<"  \n";
+
+    if (rbNpts == 1) {
+      std::cout << "rbNpts == 1 \n";
+      continue;
+    }
+
+
+    std::chrono::duration<double> elapsedSeconds = stamp-rigidBody.m_lastValidTransform;
+    double dt = elapsedSeconds.count();
+
+    // Set the max correspondence distance
+    // TODO: take max here?
+    const DynamicsConfiguration& dynConf = m_dynamicsConfigurations[rigidBody.m_dynamicsConfigurationIdx];
+    float maxV = dynConf.maxXVelocity;
+    icp.setMaxCorrespondenceDistance(maxV * dt);
+    
+    // Update input source
+    icp.setInputSource(m_markerConfigurations[rigidBody.m_markerConfigurationIdx]);
+    
+    // Perform the alignment for k times
+    int k= 2;
+    for (size_t i = 0; i < k; ++i)  {
+      Cloud result;
+      // auto deltaPos = Eigen::Translation3f(dt * rigidBody.m_velocity);
+      // auto predictTransform = deltaPos * rigidBody.m_lastTransformation;
+      auto predictTransform = rigidBody.m_lastTransformation;      
+      std::cout << "predictTransform:  \n"<< predictTransform.matrix()<< "\n";
+
+      icp.align(result, predictTransform.matrix());
+      // TODO should i have if (!icp.hasConverged()) here? 
+      if (!icp.hasConverged()) {
+        // ros::Time t = ros::Time::now();
+        // ROS_INFO("ICP did not converge %d.%d", t.sec, t.nsec);
+        std::stringstream sstr;
+        sstr << "ICP did not converge!"
+            << " for rigidBody " << rigidBody.name();
+        logWarn(sstr.str());
+        continue;
+      }
+
+
+
+      Eigen::Matrix4f transformation = icp.getFinalTransformation();
+      std::cout << "icp.getFinalTransformation():  \n"<< transformation << "\n";
+      Eigen::Affine3f tROTA(transformation);
+      rigidBody.m_lastTransformation = tROTA;
+      // std::cout << "rigidBody.m_lastTransformation:  \n"<< tROTA << "\n";   // cannot print tROTA here??
+
+
+
+    }
+
+
+  }
 }
 
 void RigidBodyTracker::logWarn(const std::string& msg)

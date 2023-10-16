@@ -40,11 +40,11 @@ dynamics_configurations:
     max_fitness_score: 0.001
 
 rigid_bodies:
-  crazyflie:
+  three_marker_drone:
     initial_position: [0,0,0]
     marker: "three_marker"
     dynamics: "default"
-  crazyflie2:
+  one_marker_drone:
     initial_position: [1.0,1.0,0]
     marker: "default_single_marker"
     dynamics: "default"

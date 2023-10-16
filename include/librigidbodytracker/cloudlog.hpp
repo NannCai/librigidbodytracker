@@ -120,10 +120,19 @@ namespace librigidbodytracker {
 
 		void play(librigidbodytracker::RigidBodyTracker &tracker) const
 		{
-			for (size_t i = 0; i < clouds.size(); ++i) {
+			// for (size_t i = 0; i < clouds.size(); ++i) {
+			// for (size_t i = 280; i < 283; ++i) {
+			// for (size_t i = 100; i < 103; ++i) {
+			for (size_t i = 0; i < 10; ++i) {
 				std::cout << "\n  " << i << "  ------------------------------\n";
 				auto dur = std::chrono::milliseconds(timestamps[i]);
 				std::chrono::high_resolution_clock::time_point stamp(dur);
+				// Delete the last point in clouds[i]
+				// if (!clouds[i]->empty()) {
+				// 	// clouds[i]->pop_back();        
+				// 	clouds[i]->resize(clouds[i]->size() - 1);
+				// }			
+
 				tracker.update(stamp, clouds[i]);
 
 
@@ -132,12 +141,8 @@ namespace librigidbodytracker {
 				// Ptr& cloud refers to the same object as clouds[i] but it's a reference, so it won't make a copy.
 				const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
 				// iterating over each point in the point cloud.
-				// for (const pcl::PointXYZ& point : *cloud) {  // !!! here reference and pointer need to be figure out
-				// 	std::cout << "Point: (" << point.x << ", " << point.y << ", " << point.z << ")\n";
-				// }
-
 				for (size_t i = 0; i < cloud->size(); ++i) {
-					const pcl::PointXYZ& point = (*cloud)[i];
+					const pcl::PointXYZ& point = (*cloud)[i];  // !!! here reference and pointer need to be figure out
 					std::cout << "Point " << i << ": (" << point.x << ", " << point.y << ", " << point.z << ")\n";
 				}
 
@@ -148,12 +153,11 @@ namespace librigidbodytracker {
 		{
 			pcl::PointXYZ totalCenter = {0.0, 0.0, 0.0};
 			size_t validCloudsCount = 0;
-
 			for (size_t i = 0; i < clouds.size(); ++i) {
 				std::cout << "\n  " << i << "  ------------------------------\n";
 				auto dur = std::chrono::milliseconds(timestamps[i]);
 				std::chrono::high_resolution_clock::time_point stamp(dur);
-				tracker.update(stamp, clouds[i]);
+				// tracker.update(stamp, clouds[i]);
 
 				const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
 
@@ -186,50 +190,17 @@ namespace librigidbodytracker {
 			}
 		}
 
-		// void play_compute_markerposition()
-		// {
-		// 	pcl::PointXYZ totalFirstPoint = {0.0, 0.0, 0.0};
-		// 	size_t validCloudsCount = 0;
-
-		// 	for (size_t i = 0; i < clouds.size(); ++i) {
-		// 		std::cout << "\n  " << i << "  ------------------------------\n";
-		// 		auto dur = std::chrono::milliseconds(timestamps[i]);
-		// 		std::chrono::high_resolution_clock::time_point stamp(dur);
-
-		// 		const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
-
-		// 		if (cloud->empty()) {
-		// 			std::cout << "Empty point cloud. Skipping calculation.\n";
-		// 			continue;
-		// 		}
-
-		// 		const pcl::PointXYZ& firstPoint = (*cloud)[0];
-
-		// 		totalFirstPoint.x += firstPoint.x;
-		// 		totalFirstPoint.y += firstPoint.y;
-		// 		totalFirstPoint.z += firstPoint.z;
-		// 		validCloudsCount++;
-		// 	}
-
-		// 	if (validCloudsCount > 0) {
-		// 		totalFirstPoint.x /= validCloudsCount;
-		// 		totalFirstPoint.y /= validCloudsCount;
-		// 		totalFirstPoint.z /= validCloudsCount;
-		// 		std::cout << "Average First Point: (" << totalFirstPoint.x << ", " << totalFirstPoint.y << ", " << totalFirstPoint.z << ")\n";
-		// 	} else {
-		// 		std::cout << "No valid point clouds found.\n";
-		// 	}
-		// }
-
-
 		void play_compute_markerposition()
 		{
+			std::cout << "play_compute_markerposition" << std::endl;
+
 			pcl::PointXYZ totalFirstPoint = {0.0, 0.0, 0.0};
 			pcl::PointXYZ totalSecondPoint = {0.0, 0.0, 0.0};
 			pcl::PointXYZ totalThirdPoint = {0.0, 0.0, 0.0};
 			size_t validCloudsCount = 0;
 
-			for (size_t i = 0; i < clouds.size(); ++i) {
+			// for (size_t i = 0; i < clouds.size(); ++i) {
+			for (size_t i = 100; i < 102; ++i) {
 				std::cout << "\n  " << i << "  ------------------------------\n";
 				auto dur = std::chrono::milliseconds(timestamps[i]);
 				std::chrono::high_resolution_clock::time_point stamp(dur);
@@ -330,7 +301,7 @@ namespace librigidbodytracker {
 					Cloud::Ptr &rbMarkers = config[rigidBody.m_markerConfigurationIdx];
 					size_t const rbNpts = rbMarkers->size();
 					for (size_t j = 0; j < rbNpts; ++j) { //for each marker
-						auto p = rigidBody.transformation() * pcl2eig((*rbMarkers)[j]); //get real position
+						auto p = rigidBody.transformation() * pcl2eig((*rbMarkers)[j]); //get the pose of the robot
 						matches.back()->push_back(eig2pcl(p));
 					}
 				}
