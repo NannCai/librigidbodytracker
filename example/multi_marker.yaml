@@ -1,10 +1,11 @@
 marker_configurations:
-  three_marker:
-    offset: [0.0128561, 0.00107494, 0.0371899]
+  four_marker:
+    offset: [0.00363391, 0.00918964, 0.0392361]
     points:
-      p0: [0.0326013, 0.0000905, 0.0380298]
-      p1: [0.0020009, 0.0287984, 0.0374813]
-      p2: [0.00396616, -0.025664, 0.0360586]
+      p0: [0.0295994, 0.0092348, 0.0399362]
+      p1: [-0.00136414, 0.0375172, 0.0399581]
+      p2: [0.00118363, -0.0168406, 0.038382]
+      p3: [-0.0148833, 0.0068471, 0.0386681]
   default: # for standard Crazyflie
     offset: [0.0, -0.01, -0.04]
     points:
@@ -40,11 +41,11 @@ dynamics_configurations:
     max_fitness_score: 0.001
 
 rigid_bodies:
-  three_marker_drone:
+  four_marker_drone:
     initial_position: [0,0,0]
-    marker: "three_marker"
+    marker: "four_marker"
     dynamics: "default"
-  one_marker_drone:
-    initial_position: [1.0,1.0,0]
-    marker: "default_single_marker"
-    dynamics: "default"
+  # one_marker_drone:
+  #   initial_position: [1.0,1.0,0]
+  #   marker: "default_single_marker"
+  #   dynamics: "default"
