@@ -49,7 +49,7 @@ class Assignment {
     }
   }
 
-  void setCost(const Agent& agent, const Task& task, long cost) {
+  void setCost(const Agent& agent, const std::set<Task>& group, long cost) {
     // std::cout << "setCost: " << agent << "->" << task << " cost: " << cost <<
     // std::endl;
     // Lazily create vertex for agent
@@ -63,18 +63,33 @@ class Assignment {
       agentVertex = agentIter->second;
     }
 
-    // Lazily create vertex for task
-    auto taskIter = m_tasks.left.find(task);
-    vertex_t taskVertex;
-    if (taskIter == m_tasks.left.end()) {
-      taskVertex = boost::add_vertex(m_graph);
-      addOrUpdateEdge(taskVertex, m_sinkVertex, 0);
-      m_tasks.insert(tasksMapEntry_t(task, taskVertex));
-    } else {
-      taskVertex = taskIter->second;
+    // Lazily create vertex for group
+    auto groupIter = m_groups.find(group);
+    vertex_t groupVertex;
+    if (groupIter == m_groups.end()) {
+      groupVertex = boost::add_vertex(m_graph);
+      std::cout << "Group size: " << group.size() << std::endl;
+      addOrUpdateEdge(agentVertex, groupVertex, 0);
+      m_groups.insert(groupsMapEntry_t(group, groupVertex));
+    }else {
+      groupVertex = groupIter->second;
     }
 
-    addOrUpdateEdge(agentVertex, taskVertex, cost);
+    // Lazily create vertex for tasks
+    // add a for loop over group
+    for (const auto& task : group) {
+      auto taskIter = m_tasks.left.find(task);
+      vertex_t taskVertex;
+      if (taskIter == m_tasks.left.end()) {
+        taskVertex = boost::add_vertex(m_graph);
+        addOrUpdateEdge(taskVertex, m_sinkVertex, 0);
+        m_tasks.insert(tasksMapEntry_t(task, taskVertex));
+      } else {
+        taskVertex = taskIter->second;
+      }
+    }
+    // TODO: add new edges from group to tasks (for loop)    add tasks vertex and group-task edges
+    
   }
 
   // find first (optimal) solution with minimal cost
@@ -150,14 +165,11 @@ class Assignment {
 
  protected:
   void addOrUpdateEdge(vertex_t from, vertex_t to, long cost) {
-    // check if there is an edge in graph
     auto e = boost::edge(from, to, m_graph);
     if (e.second) {
-      // found edge -> update cost
       m_graph[e.first].cost = cost;
       m_graph[m_graph[e.first].reverseEdge].cost = -cost;
     } else {
-      // no edge in graph yet
       auto e1 = boost::add_edge(from, to, m_graph);
       m_graph[e1.first].cost = cost;
       m_graph[e1.first].capacity = 1;
@@ -178,6 +190,11 @@ class Assignment {
 
   agentsMap_t m_agents;
   tasksMap_t m_tasks;
+
+  typedef std::map<std::set<Task>, vertex_t> groupsMap_t;
+  typedef typename groupsMap_t::value_type groupsMapEntry_t;
+  groupsMap_t m_groups;
+  
 
   graph_t m_graph;
   vertex_t m_sourceVertex;

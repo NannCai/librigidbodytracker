@@ -8,6 +8,7 @@
 #include <pcl/registration/transformation_estimation_2D.h>
 // #include <pcl/registration/transformation_estimation_lm.h>
 #include <pcl/search/impl/search.hpp>
+#include <set>
 
 #include "assignment.hpp"
 
@@ -129,14 +130,15 @@ void RigidBodyTracker::update(std::chrono::high_resolution_clock::time_point tim
   //   updatePose(time, pointCloud);
   // }
 
-  if (m_trackingMode == PositionMode) {
-    updatePosition(time, pointCloud);
-  } else if (m_trackingMode == PoseMode) {
-    updatePose(time, pointCloud);
-  }
-  else if (m_trackingMode == HybridMode){
-    updateHybrid(time, pointCloud);
-  }
+  // if (m_trackingMode == PositionMode) {
+  //   updatePosition(time, pointCloud);
+  // } else if (m_trackingMode == PoseMode) {
+  //   updatePose(time, pointCloud);
+  // }
+  // else if (m_trackingMode == HybridMode){
+  //   updateHybrid(time, pointCloud);
+  // }
+  updateHybrid(time, pointCloud);
 
 }
 
@@ -352,6 +354,7 @@ void RigidBodyTracker::updatePose(std::chrono::high_resolution_clock::time_point
 
     // Obtain the transformation that aligned cloud_source to cloud_source_registered
     Eigen::Matrix4f transformation = icp.getFinalTransformation();
+    // std::cout << "icp.getFinalTransformation():  \n"<< transformation << "\n";
 
     Eigen::Affine3f tROTA(transformation);
     float x, y, z, roll, pitch, yaw;
@@ -523,7 +526,7 @@ void RigidBodyTracker::updatePosition(std::chrono::high_resolution_clock::time_p
     const DynamicsConfiguration& dynConf = m_dynamicsConfigurations[rigidBody.m_dynamicsConfigurationIdx];
 
     bool foundPotentialMarker = false;
-    for (int iMarker = 0; iMarker < nFound; ++iMarker) {
+    for (int iMarker = 0; iMarker < nFound; ++iMarker) {   // loop all the near markers
       Eigen::Vector3f marker = pcl2eig((*markers)[nearestIdx[iMarker]]);
 
       // Compute changes:
@@ -588,9 +591,9 @@ bool RigidBodyTracker::initializeHybrid(Cloud::ConstPtr markers)
 }
 
 void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_point stamp,
-  Cloud::ConstPtr markers)
+  Cloud::ConstPtr markers)   //when using: updateHybrid(time, pointCloud);
 {
-  std::cout << "updateHybrid function\n" ;
+  // std::cout << "updateHybrid function\n" ;
 
   if (markers->empty()) {
     for (auto& rigidBody : m_rigidBodies) {
@@ -611,7 +614,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   ICP icp;
 
   // // Set the maximum number of iterations (criterion 1)
-  icp.setMaximumIterations(2);
+  icp.setMaximumIterations(5);  // looks not that good as 5
   // // Set the transformation epsilon (criterion 2)
   // icp.setTransformationEpsilon(1e-8);
   // // Set the euclidean distance difference epsilon (criterion 3)
@@ -626,7 +629,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     std::cout << "rbNpts: "<<rbNpts<<"  \n";
 
     if (rbNpts == 1) {
-      std::cout << "rbNpts == 1 \n";
+      std::cout << "skip icp\n";
       continue;
     }
 
@@ -641,22 +644,20 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     icp.setMaxCorrespondenceDistance(maxV * dt);
     
     // Update input source
-    icp.setInputSource(m_markerConfigurations[rigidBody.m_markerConfigurationIdx]);
+    icp.setInputSource(m_markerConfigurations[rigidBody.m_markerConfigurationIdx]);   // move configure to frame point cloud 
     
     // Perform the alignment for k times
     int k= 2;
+    auto predictTransform = rigidBody.m_lastTransformation;      
+    std::cout << "predictTransform/m_lastTransformation:  \n"<< predictTransform.matrix()<< "\n";
+
+    // std::cout << "-----try k times icp to get different options:----  \n";
+    std::set<std::vector<size_t>>allCorrespondences;
     for (size_t i = 0; i < k; ++i)  {
       Cloud result;
-      // auto deltaPos = Eigen::Translation3f(dt * rigidBody.m_velocity);
-      // auto predictTransform = deltaPos * rigidBody.m_lastTransformation;
-      auto predictTransform = rigidBody.m_lastTransformation;      
-      std::cout << "predictTransform:  \n"<< predictTransform.matrix()<< "\n";
-
-      icp.align(result, predictTransform.matrix());
+      icp.align(result, predictTransform.matrix());  // in the result there are moved config markers
       // TODO should i have if (!icp.hasConverged()) here? 
       if (!icp.hasConverged()) {
-        // ros::Time t = ros::Time::now();
-        // ROS_INFO("ICP did not converge %d.%d", t.sec, t.nsec);
         std::stringstream sstr;
         sstr << "ICP did not converge!"
             << " for rigidBody " << rigidBody.name();
@@ -665,16 +666,52 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
       }
 
 
+      // Get the correspondence indices
+      std::vector<size_t> correspondences;
+      pcl::search::KdTree<Point>::Ptr search_tree = icp.getSearchMethodTarget();
+      for (auto point : result.points) {
+        std::vector<int> matched_indices;
+        std::vector<float> matched_distances;
+        search_tree->nearestKSearch(point, 1, matched_indices, matched_distances);
+        correspondences.push_back(matched_indices[0]);
+      }
+      allCorrespondences.insert(correspondences);
+
+      // // Print result points
+      // std::cout << "Result Points/ moved config markers :" << std::endl;
+      // for (auto point : result.points) {
+      //     std::cout << "Point: " << point << std::endl;
+      // }
+      // // Print correspondences
+      // std::cout << "Correspondences/ markers that are found for current drones:" << std::endl;
+      // for (size_t idx : correspondences) {
+      //     std::cout <<"Correspond idx: "<< idx << " Point: " << (*markers)[idx] << std::endl;
+      // }
 
       Eigen::Matrix4f transformation = icp.getFinalTransformation();
-      std::cout << "icp.getFinalTransformation():  \n"<< transformation << "\n";
+      // std::cout << "icp.getFinalTransformation():  \n"<< transformation << "\n";
       Eigen::Affine3f tROTA(transformation);
       rigidBody.m_lastTransformation = tROTA;
-      // std::cout << "rigidBody.m_lastTransformation:  \n"<< tROTA << "\n";   // cannot print tROTA here??
+      // std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< tROTA.matrix() << "\n";  
 
 
 
     }
+
+    // std::cout <<  "allCorrespondences.size() "<<allCorrespondences.size()<< "\n";
+    if (allCorrespondences.size() > 1) {
+      std::cout <<  "!!!!!!!!!!!!!!!!!more than one option!!!!!!!!!!!!\n";
+      int index = 0;
+      for (const auto& vec : allCorrespondences) {
+        std::cout << "vec" << index << " ";
+        for (int num : vec) {
+            std::cout << num << " ";
+        }
+        std::cout << "\n";
+        index++;
+      }
+    }
+
 
 
   }

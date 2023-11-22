@@ -42,7 +42,10 @@ dynamics_configurations:
 
 rigid_bodies:
   four_marker_drone:
-    initial_position: [0,0,0]
+    # initial_position: [1,1,1]
+    # initial_position: [0.01, 0.01, 0.01]
+    # initial_position: [-0.0456353, -0.0531081, 0.037793]
+    initial_position: [-0.00200032, 0.00204419, 0.0412501]
     marker: "four_marker"
     dynamics: "default"
   # one_marker_drone:
