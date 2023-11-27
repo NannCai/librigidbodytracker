@@ -71,11 +71,14 @@ class Assignment {
     if (groupIter == m_groups.end()) {
       groupVertex = boost::add_vertex(m_graph);
       std::cout << "Group size: " << group.size() << std::endl;
-      addOrUpdateEdge(agentVertex, groupVertex, cost,group.size());
+      // addOrUpdateEdge(agentVertex, groupVertex, cost,group.size());
       m_groups.insert(groupsMapEntry_t(group, groupVertex));
     }else {
       groupVertex = groupIter->second;
     }
+    addOrUpdateEdge(agentVertex, groupVertex, cost,group.size());
+
+
 
     // Lazily create vertex for tasks
     // add a for loop over group
@@ -117,6 +120,8 @@ class Assignment {
 
     // find solution
     solution.clear();
+    std::cout << "line 129, inside solve function"<< std::endl;  //  already here
+
     auto es = out_edges(m_sourceVertex, m_graph);
     for (auto eit = es.first; eit != es.second; ++eit) {
       vertex_t agentVertex = target(*eit, m_graph);
@@ -125,9 +130,13 @@ class Assignment {
         if (!m_graph[*eit2].isReverseEdge) {
           vertex_t taskVertex = target(*eit2, m_graph);
           if (m_graph[*eit2].residualCapacity == 0) {
+            std::cout << "line 139, inside solve function"<< std::endl;  //  already here
             solution[m_agents.right.at(agentVertex)] =
-                m_tasks.right.at(taskVertex);
+                m_tasks.right.at(taskVertex);    // !!!!! cannot do this 
+                // what():  bimap<>: invalid key
+            std::cout << "line 142, inside solve function"<< std::endl;  
             cost += m_graph[edge(agentVertex, taskVertex, m_graph).first].cost;
+            std::cout << "line 144, inside solve function"<< std::endl;  
             break;
           }
         }

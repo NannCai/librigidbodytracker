@@ -55,8 +55,12 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  std::cout << "line 58, end all setCost"<< std::endl;  //  already here
+
+
   std::map<std::string, std::string> solution;
   int64_t c = assignment.solve(solution);
+  std::cout << "line 64, solved the assignment problem "<< std::endl;  //  
 
   std::cout << "solution with cost: " << c << std::endl;
   for (const auto& s : solution) {
