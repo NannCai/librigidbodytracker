@@ -50,7 +50,7 @@ class Assignment {
   }
 
   void setCost(const Agent& agent, const std::set<Task>& group, long cost) {
-    std::cout << "setCost: " << agent << "->" << "group" << " cost: " << cost << std::endl;
+    std::cout << "setCost: " << agent << "->" << "group" << " cost: " << cost << std::endl;  // TODO print the num in group
     // std::cout << "setCost: " << agent << "->" << group << " cost: " << cost << std::endl;
 
     // Lazily create vertex for agent
@@ -78,8 +78,6 @@ class Assignment {
     }
     addOrUpdateEdge(agentVertex, groupVertex, cost,group.size());
 
-
-
     // Lazily create vertex for tasks
     // add a for loop over group
     for (const auto& task : group) {
@@ -101,7 +99,7 @@ class Assignment {
   }
 
   // find first (optimal) solution with minimal cost
-  long solve(std::map<Agent, Task>& solution) {
+  long solve(std::map<Agent,std::set<Task>>& solution) {
     using namespace boost;
 
     successive_shortest_path_nonnegative_weights(
@@ -120,7 +118,6 @@ class Assignment {
 
     // find solution
     solution.clear();
-    std::cout << "line 129, inside solve function"<< std::endl;  //  already here
 
     auto es = out_edges(m_sourceVertex, m_graph);
     for (auto eit = es.first; eit != es.second; ++eit) {
@@ -128,15 +125,30 @@ class Assignment {
       auto es2 = out_edges(agentVertex, m_graph);
       for (auto eit2 = es2.first; eit2 != es2.second; ++eit2) {
         if (!m_graph[*eit2].isReverseEdge) {
-          vertex_t taskVertex = target(*eit2, m_graph);
+          vertex_t groupVertex = target(*eit2, m_graph);
           if (m_graph[*eit2].residualCapacity == 0) {
-            std::cout << "line 139, inside solve function"<< std::endl;  //  already here
-            solution[m_agents.right.at(agentVertex)] =
-                m_tasks.right.at(taskVertex);    // !!!!! cannot do this 
+            for (auto itr = m_groups.begin(); itr != m_groups.end(); ++itr) {
+                if (itr->second == groupVertex) {
+                    std::set<Task> correspondingGroup = itr->first;
+                    solution[m_agents.right.at(agentVertex)] =
+                        correspondingGroup;    
+                    for (const auto& element : itr->first) {
+                        std::cout << element << " ";
+                    }                
+                    std::cout << std::endl;
+                    // std::cout << "Key found: " << itr->first << std::endl;
+                    break;
+
+                }
+            }
+
+            // solution[m_agents.right.at(agentVertex)] =
+            //     m_groups.at(groupVertex);    // m_groups cannot use .right.at  need to search in the google 
+                // on .right.at in boost::bimap, find function same in std::map<std::set<Task>
                 // what():  bimap<>: invalid key
-            std::cout << "line 142, inside solve function"<< std::endl;  
-            cost += m_graph[edge(agentVertex, taskVertex, m_graph).first].cost;
-            std::cout << "line 144, inside solve function"<< std::endl;  
+
+            // cost += m_graph[edge(agentVertex, taskVertex, m_graph).first].cost;
+            cost += m_graph[edge(agentVertex, groupVertex, m_graph).first].cost;  // Is this right?
             break;
           }
         }

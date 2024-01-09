@@ -4,8 +4,8 @@
 
 #include <boost/program_options.hpp>
 
-// #include "assignment.hpp"
-#include "assignment_group_constraint.hpp"
+// #include <libMultiRobotPlanning/assignment.hpp>
+#include "assignment.hpp"
 
 using libMultiRobotPlanning::Assignment;
 
@@ -46,53 +46,41 @@ int main(int argc, char* argv[]) {
       std::string agent = match.str(1);
       std::string task = match.str(2);
       int cost = std::stoi(match.str(3));
-      std::set<std::string> taskSet;
-      taskSet.insert(task);
-      assignment.setCost(agent, taskSet, cost);
+      assignment.setCost(agent, task, cost);
     } else {
       std::cerr << "Couldn't match line \"" << line << "\"!" << match.size()
                 << std::endl;
     }
   }
 
-  std::cout << "line 58, end all setCost"<< std::endl;  //  already here
+  // const size_t numAgents = 4;
+  // const size_t numTasks = 4;
 
+  // const int64_t cost[numAgents][numTasks] = {{90, 76, 75, 80},
+  //                                            {35, 85, 55, 65},
+  //                                            {125, 95, 90, 105},
+  //                                            {45, 110, 95, 115}};
 
-  // std::map<std::string, std::string> solution;
-  std::map<std::string, std::set<std::string>> solution;
+  // for (size_t i = 0; i < numAgents; ++i) {
+  //   for (size_t j = 0; j < numTasks; ++j) {
+  //     a.setCost("a" + std::to_string(i), "t" + std::to_string(j),
+  //     cost[i][j]);
+  //   }
+  // }
+
+  std::map<std::string, std::string> solution;
   int64_t c = assignment.solve(solution);
-  std::cout << "line 64, solved the assignment problem "<< std::endl;  //  
 
-  // std::cout << "solution with cost: " << c << std::endl;
-  // for (const auto& s : solution) {
-  //   std::cout << s.first << ": " << s.second << std::endl;
-  // }
-
-  // std::ofstream out(outputFile);
-  // out << "cost: " << c << std::endl;
-  // out << "assignment:" << std::endl;
-  // for (const auto& s : solution) {
-  //   out << "  " << s.first << ": " << s.second << std::endl;
-  // }
-
-    std::cout << "solution with cost: " << c << std::endl;
-    for (const auto& s : solution) {
-        std::cout << s.first << ": ";
-        for (const auto& element : s.second) {
-            std::cout << element << " ";
-        }
-        std::cout << std::endl;
-    }
+  std::cout << "solution with cost: " << c << std::endl;
+  for (const auto& s : solution) {
+    std::cout << s.first << ": " << s.second << std::endl;
+  }
 
   std::ofstream out(outputFile);
   out << "cost: " << c << std::endl;
   out << "assignment:" << std::endl;
   for (const auto& s : solution) {
-      out << "  " << s.first << ": ";
-      for (const auto& element : s.second) {
-          out << element << " ";
-      }
-      out << std::endl;
+    out << "  " << s.first << ": " << s.second << std::endl;
   }
 
   return 0;

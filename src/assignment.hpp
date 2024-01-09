@@ -105,7 +105,7 @@ class Assignment {
         if (!m_graph[*eit2].isReverseEdge) {
           vertex_t taskVertex = target(*eit2, m_graph);
           if (m_graph[*eit2].residualCapacity == 0) {
-            solution[m_agents.right.at(agentVertex)] =
+            solution[m_agents.right.at(agentVertex)] =  //m_agents.right.at(agentVertex) find const Agent& agent
                 m_tasks.right.at(taskVertex);
             cost += m_graph[edge(agentVertex, taskVertex, m_graph).first].cost;
             break;
