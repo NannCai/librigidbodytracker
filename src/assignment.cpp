@@ -38,61 +38,73 @@ int main(int argc, char* argv[]) {
 
   Assignment<std::string, std::string> assignment;
 
+  // std::ifstream input(inputFile);
+  // std::regex re("(\\w+)\\s*->\\s*(\\w+)\\s*:\\s*(\\d+)");
+  // for (std::string line; getline(input, line);) {
+  //   std::smatch match;
+  //   if (std::regex_search(line, match, re) && match.size() == 4) {
+  //     std::string agent = match.str(1);
+  //     std::string task = match.str(2);
+  //     int cost = std::stoi(match.str(3));
+  //     std::set<std::string> taskSet;
+  //     taskSet.insert(task);
+  //     assignment.setCost(agent, taskSet, cost);
+  //   } else {
+  //     std::cerr << "Couldn't match line \"" << line << "\"!" << match.size()
+  //               << std::endl;
+  //   }
+  // }
+  
   std::ifstream input(inputFile);
-  std::regex re("(\\w+)\\s*->\\s*(\\w+)\\s*:\\s*(\\d+)");
   for (std::string line; getline(input, line);) {
-    std::smatch match;
-    if (std::regex_search(line, match, re) && match.size() == 4) {
-      std::string agent = match.str(1);
-      std::string task = match.str(2);
-      int cost = std::stoi(match.str(3));
-      std::set<std::string> taskSet;
+    std::cout << "line: " << line << "  -------";
+    std::cout << std::endl;
+    std::stringstream stream(line);
+
+    std::string agent;
+    stream >> agent;
+    int cost;
+    stream >> cost;
+    // std::set<std::string> taskSet;
+    std::set<std::string> taskSet;
+    std::string task;
+    while (stream >> task) {
+        // taskSet.insert(task);
       taskSet.insert(task);
-      assignment.setCost(agent, taskSet, cost);
-    } else {
-      std::cerr << "Couldn't match line \"" << line << "\"!" << match.size()
-                << std::endl;
+
     }
+
+    std::cout << "Agent: " << agent << ", Cost: " << cost << ", Tasks: ";
+    for (std::string task : taskSet) {
+        std::cout << task << " ";
+    }
+    std::cout << std::endl;
+
+    assignment.setCost(agent, taskSet, cost);
+
+    taskSet.clear();
   }
 
-  std::cout << "line 58, end all setCost"<< std::endl;  //  already here
-
-
-  // std::map<std::string, std::string> solution;
   std::map<std::string, std::set<std::string>> solution;
   int64_t c = assignment.solve(solution);
-  std::cout << "line 64, solved the assignment problem "<< std::endl;  //  
-
-  // std::cout << "solution with cost: " << c << std::endl;
-  // for (const auto& s : solution) {
-  //   std::cout << s.first << ": " << s.second << std::endl;
-  // }
-
-  // std::ofstream out(outputFile);
-  // out << "cost: " << c << std::endl;
-  // out << "assignment:" << std::endl;
-  // for (const auto& s : solution) {
-  //   out << "  " << s.first << ": " << s.second << std::endl;
-  // }
-
     std::cout << "solution with cost: " << c << std::endl;
     for (const auto& s : solution) {
-        std::cout << s.first << ": ";
-        for (const auto& element : s.second) {
-            std::cout << element << " ";
-        }
-        std::cout << std::endl;
+      std::cout << s.first << ": ";
+      for (const auto& element : s.second) {
+        std::cout << element << " ";
+      }
+      std::cout << std::endl;
     }
 
   std::ofstream out(outputFile);
   out << "cost: " << c << std::endl;
   out << "assignment:" << std::endl;
   for (const auto& s : solution) {
-      out << "  " << s.first << ": ";
-      for (const auto& element : s.second) {
-          out << element << " ";
-      }
-      out << std::endl;
+    out << "  " << s.first << ": ";
+    for (const auto& element : s.second) {
+      out << element << " ";
+    }
+    out << std::endl;
   }
 
   return 0;

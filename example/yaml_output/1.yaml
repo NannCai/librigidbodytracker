@@ -1,6 +1,6 @@
-cost: 276
+cost: 275
 assignment:
-  a0: t0
-  a1: t3
-  a2: t2
-  a3: t1
+  0: 3 
+  1: 2 
+  2: 1 
+  3: 0 

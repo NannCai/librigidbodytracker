@@ -50,16 +50,19 @@ class Assignment {
   }
 
   void setCost(const Agent& agent, const std::set<Task>& group, long cost) {
-    std::cout << "setCost: " << agent << "->" << "group" << " cost: " << cost << std::endl;  // TODO print the num in group
-    // std::cout << "setCost: " << agent << "->" << group << " cost: " << cost << std::endl;
+    std::cout << "setCost: " << agent << "->" << "group";
+    for (std::string task : group) {
+        std::cout << task << " ";
+    }
+    std::cout <<" cost: " << cost << std::endl; 
 
     // Lazily create vertex for agent
     auto agentIter = m_agents.left.find(agent);
     vertex_t agentVertex;
     if (agentIter == m_agents.left.end()) {
       agentVertex = boost::add_vertex(m_graph);
-      std::cout << "outside addOrUpdateEdge(m_sourceVertex, agentVertex, 0,1); "<< std::endl;
-      addOrUpdateEdge(m_sourceVertex, agentVertex, 0,1);
+      // std::cout << "outside addOrUpdateEdge(m_sourceVertex, agentVertex, 0,1); "<< std::endl;
+      // addOrUpdateEdge(m_sourceVertex, agentVertex, 0, 2);
       m_agents.insert(agentsMapEntry_t(agent, agentVertex));
     } else {
       agentVertex = agentIter->second;
@@ -77,6 +80,11 @@ class Assignment {
       groupVertex = groupIter->second;
     }
     addOrUpdateEdge(agentVertex, groupVertex, cost,group.size());
+    // TODO: find the max of group.size() and current capacity value  ???
+    // auto e = boost::edge(m_sourceVertex, agentVertex, m_graph);
+    // m_graph[e.first].capacity;
+    // addOrUpdateEdge(m_sourceVertex, agentVertex, 0, 2);
+
 
     // Lazily create vertex for tasks
     // add a for loop over group
@@ -85,22 +93,48 @@ class Assignment {
       vertex_t taskVertex;
       if (taskIter == m_tasks.left.end()) {
         taskVertex = boost::add_vertex(m_graph);
-        addOrUpdateEdge(groupVertex,taskVertex, 0,1);
         addOrUpdateEdge(taskVertex, m_sinkVertex, 0,1);
         m_tasks.insert(tasksMapEntry_t(task, taskVertex));
       } else {
         taskVertex = taskIter->second;
       }
-    }
-    std::cout << "end one setCost ----" << std::endl;
+      addOrUpdateEdge(groupVertex,taskVertex, 0,1);
 
-    // TODO: add new edges from group to tasks (for loop)    add tasks vertex and group-task edges
+    }
+    std::cout << "---- end one setCost ----" << std::endl;
 
   }
 
   // find first (optimal) solution with minimal cost
   long solve(std::map<Agent,std::set<Task>>& solution) {
     using namespace boost;
+
+    int max_capacity = 0;
+    for (const auto& agent : m_agents) {
+      // int max_capacity = 0;
+      for (const auto& group : m_groups) {
+        auto e = boost::edge(agent.right, group.second, m_graph);
+        if (e.second) {
+          std::cout << "Agent: " << agent.left
+                    << " Group: "; 
+          for (const auto& task : group.first) {
+            std::cout << task << " ";
+          }
+          std::cout << " m_graph[e.first].capacity: " << m_graph[e.first].capacity << std::endl;
+          if (m_graph[e.first].capacity > max_capacity){max_capacity = m_graph[e.first].capacity;}
+        }
+      }
+      // std::cout << "Max Capacity: " << max_capacity << std::endl;
+      // addOrUpdateEdge(m_sourceVertex, agent.right, 0, max_capacity);
+    }
+    std::cout << "Max Capacity: " << max_capacity << std::endl;
+
+    for (const auto& agent : m_agents) {
+      addOrUpdateEdge(m_sourceVertex, agent.right, 0, max_capacity);
+    }
+
+    // auto e = boost::edge(agentVertex, groupVertex, m_graph);
+    // m_graph[e.first].capacity;
 
     successive_shortest_path_nonnegative_weights(
         m_graph, m_sourceVertex, m_sinkVertex,
@@ -109,11 +143,6 @@ class Assignment {
             .weight_map(get(&Edge::cost, m_graph))
             .reverse_edge_map(get(&Edge::reverseEdge, m_graph)));
 
-    // long cost = find_flow_cost(
-    //   m_graph,
-    //   boost::capacity_map(get(&Edge::capacity, m_graph))
-    //   .residual_capacity_map(get(&Edge::residualCapacity, m_graph))
-    //   .weight_map(get(&Edge::cost, m_graph)));
     long cost = 0;
 
     // find solution
@@ -121,12 +150,16 @@ class Assignment {
 
     auto es = out_edges(m_sourceVertex, m_graph);
     for (auto eit = es.first; eit != es.second; ++eit) {
+      std::cout << "rC " << m_graph[*eit].residualCapacity << std::endl;
       vertex_t agentVertex = target(*eit, m_graph);
       auto es2 = out_edges(agentVertex, m_graph);
       for (auto eit2 = es2.first; eit2 != es2.second; ++eit2) {
         if (!m_graph[*eit2].isReverseEdge) {
           vertex_t groupVertex = target(*eit2, m_graph);
-          if (m_graph[*eit2].residualCapacity == 0) {
+          std::cout << "rC2 " << m_graph[*eit2].residualCapacity << std::endl;
+
+          if (m_graph[*eit2].residualCapacity == 0) {    // residual = max - real   residual==0 means maxflow now
+          //if (false) {
             for (auto itr = m_groups.begin(); itr != m_groups.end(); ++itr) {
                 if (itr->second == groupVertex) {
                     std::set<Task> correspondingGroup = itr->first;
@@ -194,10 +227,12 @@ class Assignment {
     // check if there is an edge in graph
     auto e = boost::edge(from, to, m_graph);
     if (e.second) {
-      std::cout << "!!!!found edge -> update cost" << std::endl; 
+      std::cout << "!!!!found edge ->"<<"old "<<m_graph[e.first].cost<<" update cost "<<cost << std::endl; 
       // found edge -> update cost
       m_graph[e.first].cost = cost;
       m_graph[m_graph[e.first].reverseEdge].cost = -cost;
+      // TODO -> update capacity
+      m_graph[e.first].capacity = capacity;
     } else {
       // no edge in graph yet
       auto e1 = boost::add_edge(from, to, m_graph);
