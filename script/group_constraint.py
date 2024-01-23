@@ -2,6 +2,7 @@ import gurobipy as gp
 from gurobipy import GRB
 # from gurobipy import *
 import yaml
+import os
 
 def print_solution(model):
     for var in model.getVars():
@@ -36,13 +37,8 @@ def parse_data(input_path):
     tasks_list = tuple(set(all_tasks)) # TODO all the element in group
     return assignments_dic,agents,groups,tasks_list
 
-if __name__ == '__main__':
-    input_path = 'input_group3.txt'
-    # input_path = 'input2.txt'
 
-    assignments_dic,agents,groups,tasks_list = parse_data(input_path)
-    print('assignments_dic',assignments_dic)
-    # quit()
+def gurobi_algorithm(assignments_dic,agents, groups, tasks_list):
 
     combinations, ms = gp.multidict(assignments_dic)    # keys and diction
     # print('----assignments_dic\n',assignments_dic)
@@ -53,8 +49,6 @@ if __name__ == '__main__':
 
     groupsConstrs = m.addConstrs((x.sum('*',g) <= 1 for g in groups), 'groupsConstrs')  # one group can only be asigned to one agent
     agentsConstrs = m.addConstrs((x.sum(a,'*') == 1 for a in agents), 'agentsConstrs')  # one agent can only have one group
-
-    # TODO  iteratively have less solution
 
     for task in tasks_list:
         print('task',task)
@@ -68,7 +62,12 @@ if __name__ == '__main__':
     m.setObjective(x.prod(ms), GRB.MINIMIZE)
 
     # save model for inspection
-    m.write('output/RAP.lp')
+    output_dir = 'script/output'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_file = os.path.join(output_dir, 'RAP.lp')
+    m.write(output_file)
+
     m.optimize()
 
     print('m.status',m.status)
@@ -77,3 +76,14 @@ if __name__ == '__main__':
         print_solution(m)   
     else:
         print("No solution found")
+
+
+if __name__ == '__main__':
+    input_path = 'script/input_group3.txt'
+    # input_path = 'input2.txt'
+
+    assignments_dic,agents,groups,tasks_list = parse_data(input_path)
+    print('assignments_dic',assignments_dic)
+    # quit()
+
+    gurobi_algorithm(assignments_dic)
