@@ -1,7 +1,7 @@
 import gurobipy as gp
 from gurobipy import GRB
 # from gurobipy import *
-import yaml
+# import yaml
 import os
 
 def print_solution(model):
@@ -45,6 +45,7 @@ def gurobi_algorithm(assignments_dic,agents, groups, tasks_list):
     # print('combinations',combinations)
 
     m = gp.Model('RAP')
+    m.setParam('OutputFlag', 0)
     x = m.addVars(combinations,vtype=GRB.BINARY, name="assign")
 
     groupsConstrs = m.addConstrs((x.sum('*',g) <= 1 for g in groups), 'groupsConstrs')  # one group can only be asigned to one agent
@@ -56,17 +57,19 @@ def gurobi_algorithm(assignments_dic,agents, groups, tasks_list):
             (agent, group) for (agent, group) in assignments_dic
             if any(t == task for t in group.split('_')) 
         ]
-        print('comb_containing',comb_containing)
+        # print('comb_containing',comb_containing)
         taskConstr = m.addConstr(gp.quicksum(x[a, g] for (a,g) in comb_containing) <= 1, task+'Constr')
 
     m.setObjective(x.prod(ms), GRB.MINIMIZE)
 
     # save model for inspection
-    output_dir = 'script/output'
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    output_file = os.path.join(output_dir, 'RAP.lp')
-    m.write(output_file)
+    save_model = 0
+    if save_model:
+        output_dir = 'data/output'
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        output_file = os.path.join(output_dir, 'RAP.lp')
+        m.write(output_file)
 
     m.optimize()
 
@@ -76,10 +79,11 @@ def gurobi_algorithm(assignments_dic,agents, groups, tasks_list):
         print_solution(m)   
     else:
         print("No solution found")
+    return m,x,combinations
 
 
 if __name__ == '__main__':
-    input_path = 'script/input_group3.txt'
+    input_path = 'data/inputs/input_group3.txt'
     # input_path = 'input2.txt'
 
     assignments_dic,agents,groups,tasks_list = parse_data(input_path)

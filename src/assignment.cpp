@@ -17,9 +17,9 @@ int main(int argc, char* argv[]) {
   std::string outputFile;
   desc.add_options()("help", "produce help message")(
       "input,i", po::value<std::string>(&inputFile)->required(),
-      "input cost (txt)")("output,o",
-                          po::value<std::string>(&outputFile)->required(),
-                          "output file (YAML)");
+      "input cost (txt)")
+      ("output,o",po::value<std::string>(&outputFile)->required(),
+      "output file (YAML)");
 
   try {
     po::variables_map vm;

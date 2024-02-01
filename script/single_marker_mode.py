@@ -5,7 +5,7 @@ import yaml
 
 if __name__ == '__main__':
     assignments = []
-    input_path = 'input2.txt'
+    input_path = 'data/inputs/input1.txt'
 
     with open(input_path, 'r') as file:
         for line in file:
@@ -73,7 +73,8 @@ if __name__ == '__main__':
         'cost': model.objVal,
         'assignment': {int(agent[1:]): int(task[1:]) for agent in agents for task in tasks if x[agent, task].x > 0.5}
     }
-    # print(output_data)
+    print(output_data)
+    quit()
 
     with open('1.yaml', 'w') as file:
         file.write(f"cost: {output_data['cost']}\n")
