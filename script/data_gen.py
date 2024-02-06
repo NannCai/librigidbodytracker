@@ -14,7 +14,7 @@ def parse_data(data):
             continue
         agent = 'a' + parts[0]
         cost = int(parts[1])
-        tasks = ['t' + task for task in parts[2:]]
+        tasks = ['t' + task for task in sorted(parts[2:])]
         all_tasks.extend(tasks)
         # group = tuple(set(tasks))
         group = tuple(tasks)
@@ -98,7 +98,7 @@ if __name__ == '__main__':
         # print('assignments_dic, agents, groups, tasks_list',assignments_dic, agents, groups, tasks_list)
         model,x,combinations = gurobi_algorithm(assignments_dic,agents, groups, tasks_list)
 
-        save_gurobi_res( model,x,combinations,res_dir,input_txt_name)
+        save_gurobi_res( model,x,combinations,res_dir,input_txt_name) 
 
 
         print('end')

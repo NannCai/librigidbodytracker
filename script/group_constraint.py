@@ -88,6 +88,5 @@ if __name__ == '__main__':
 
     assignments_dic,agents,groups,tasks_list = parse_data(input_path)
     print('assignments_dic',assignments_dic)
-    # quit()
 
-    gurobi_algorithm(assignments_dic)
+    gurobi_algorithm(assignments_dic,agents, groups, tasks_list)
