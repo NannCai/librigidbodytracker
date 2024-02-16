@@ -48,6 +48,15 @@ target_link_libraries(assignment
 # add_executable(standalone
 #   src/standalone.cpp
 # )
+
+add_executable(cbs_group_constraint
+  src/cbs_group_constraint.cpp
+)
+
+target_link_libraries(cbs_group_constraint
+  ${Boost_LIBRARIES}
+)
+
 target_link_libraries(
   # standalone
   librigidbodytracker

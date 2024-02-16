@@ -49,9 +49,10 @@ def parse_res(gurobi_dir,graph_dir,matching_gurobis,matching_graphs):
     return None,None
 
 if __name__ == '__main__':
-    gurobi_dir = 'data/gurobi_res'  # TODO how to deal with group=t1_t1
+    gurobi_dir = 'data/gurobi_res2'  # TODO how to deal with group=t1_t1
     graph_dir = 'data/graph_res'
     input_dir = 'data/random_inputs'
+    save_dir = 'data/evaluation2'
 
     match_dict = get_matched_files_dict(gurobi_dir,graph_dir,input_dir)
     # print('match_dict', match_dict)
@@ -77,7 +78,7 @@ if __name__ == '__main__':
             print("Content of 'res_gurobi' and 'res_graph' is different.")
             # record the different input and also all the outputs
             
-            save_dir = 'data/evaluation'
+            
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
             filename = f'{save_dir}/eval_{key}.txt'

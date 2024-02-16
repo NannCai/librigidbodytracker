@@ -1,40 +1,40 @@
 import gurobipy as gp
 from gurobipy import GRB
 # from gurobipy import *
-# import yaml
 import os
+import yaml
 
 def print_solution(model):
-    for var in model.getVars():
-        if abs(var.x) > 1e-6:
-            print("{0}: {1}".format(var.varName, var.x))
+    # for var in model.getVars():
+    #     if abs(var.x) > 1e-6:
+    #         print("{0}: {1}".format(var.varName, var.x))
     print('Total matching score: {0}'.format(model.objVal))
     return None
 
-def parse_data(input_path):
+def parse_data(data,additional_cost = 1e4,additional_group = 50):
     assignments_dic = {}
     all_tasks = []
-    additional_group =  50
-    additional_cost = 1e4
-    with open(input_path, 'r') as file:
-        for line in file:
-            parts = line.split()
-            agent = 'a' + parts[0]
-            cost = int(parts[1])
-            tasks = ['t' + task for task in parts[2:]]  # handle multiple tasks
-            all_tasks.extend(tasks)
-            group = tuple(set(tasks))  # is it need to be unique elements in the group?
-            # print('group',group)
-            if len(group) < len(tasks):
-                print('!!!len(group) < len(tasks)!',len(group), '<', len(tasks))
-            group_str = '_'.join(group)
-            assignments_dic[agent, group_str] = cost    
+    for line in data.split('\n'):
+        parts = line.split()
+        if len(parts) < 3:
+            continue
+        agent = 'a' + parts[0]
+        cost = int(parts[1])
+        tasks = ['t' + task for task in sorted(parts[2:])]  # handle multiple tasks
+        all_tasks.extend(tasks)
+        group = tuple(set(tasks))  # is it need to be unique elements in the group?
+        # print('group',group)
+        if len(group) < len(tasks):  # skip the duplicate numbers  TODO maybe not
+            print('!!!len(group) < len(tasks)!',len(group), '<', len(tasks))
+            continue
+        group_str = '_'.join(sorted(group))
+        assignments_dic[agent, group_str] = cost    
     agents = tuple(set(agent for agent, _ in assignments_dic.keys()))
     for agent in agents:
         assignments_dic[agent,'t' + str(additional_group)] = additional_cost
         additional_group = additional_group + 1
     groups = tuple(set(group for _, group in assignments_dic.keys()))
-    tasks_list = tuple(set(all_tasks)) # TODO all the element in group
+    tasks_list = tuple(set(all_tasks)) 
     return assignments_dic,agents,groups,tasks_list
 
 
@@ -52,7 +52,7 @@ def gurobi_algorithm(assignments_dic,agents, groups, tasks_list):
     agentsConstrs = m.addConstrs((x.sum(a,'*') == 1 for a in agents), 'agentsConstrs')  # one agent can only have one group
 
     for task in tasks_list:
-        print('task',task)
+        # print('task',task)
         comb_containing = [
             (agent, group) for (agent, group) in assignments_dic
             if any(t == task for t in group.split('_')) 
@@ -81,12 +81,59 @@ def gurobi_algorithm(assignments_dic,agents, groups, tasks_list):
         print("No solution found")
     return m,x,combinations
 
+def save_gurobi_res(model,x,combinations,res_dir,input_file_name,additional_cost=1e4,additional_group = 50):
+    # Create a dictionary to store the output data
+    output_data = {
+        'cost': model.objVal,
+        'assignment': {
+            # int(agent[1:]): int(group[1:]) if '_' not in group else ' '.join(str(int(t[1:])) for t in group.split('_'))   
+            int(agent[1:]): ' '.join(str(int(t[1:])) for t in group.split('_'))   
+            for agent, group in combinations if (abs(x[agent, group].x) > 1e-6)
+        }
+    }
+    # remove_flag = 1
+    # if remove_flag:
+    #     print('output_data',output_data)
+    for key, value in list(output_data['assignment'].items()):
+        if isinstance(value, str) and value.isdigit() and int(value) >= additional_group:
+            del output_data['assignment'][key]
+            output_data['cost'] = output_data['cost'] - additional_cost
+    print('output_data',output_data)
+
+    if not os.path.exists(res_dir):
+        os.makedirs(res_dir)
+    if 'txt' in input_file_name:
+        input_file_name = input_file_name.replace('.txt', '')
+
+    res_file_name = f'gurobi_{input_file_name}.yaml'
+    res_file = os.path.join(res_dir, res_file_name)
+    print('res_file',res_file)
+    with open(res_file, 'w') as file:
+        file.write(f"cost: {output_data['cost']}\n")
+        del output_data['cost']  # Remove 'cost' from the dictionary before dumping to YAML
+        yaml.dump(output_data, file)
 
 if __name__ == '__main__':
-    input_path = 'data/inputs/input_group3.txt'
+    # input_path = 'data/inputs/input_group3.txt'
     # input_path = 'input2.txt'
+    input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/random_inputs'
+    gurobi_res_dir = 'data/gurobi_res2'
 
-    assignments_dic,agents,groups,tasks_list = parse_data(input_path)
-    print('assignments_dic',assignments_dic)
+    input_files = os.listdir(input_dir)
+    for input_file in input_files:
+        print(input_file,'--------------')  # random_7.txt
+        input_file_path = os.path.join(input_dir, input_file)
+        with open(input_file_path, 'r') as file:
+            data = file.read()
+        additional_cost = 1e4
+        additional_group = 50
+        assignments_dic,agents,groups,tasks_list = parse_data(data,
+                                                              additional_cost = additional_cost,
+                                                              additional_group = additional_group)
+        # print('assignments_dic',assignments_dic)
+        model,x,combinations = gurobi_algorithm(assignments_dic,agents, groups, tasks_list)
+        save_gurobi_res(model,x,combinations,gurobi_res_dir,input_file,
+                        additional_cost = additional_cost,
+                        additional_group = additional_group) 
 
-    gurobi_algorithm(assignments_dic,agents, groups, tasks_list)
+

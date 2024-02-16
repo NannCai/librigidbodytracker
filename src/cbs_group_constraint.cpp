@@ -9,7 +9,11 @@
 
 using libMultiRobotPlanning::Assignment;
 
+  // initialise the cbs
+  // then use cbs.search to find the solution
+
 int main(int argc, char* argv[]) {
+  // !! initialise input
   namespace po = boost::program_options;
   // Declare the supported options.
   po::options_description desc("Allowed options");
@@ -37,7 +41,7 @@ int main(int argc, char* argv[]) {
   }
 
   Assignment<std::string, std::string> assignment;
-
+  
   std::ifstream input(inputFile);
   for (std::string line; getline(input, line);) {
     std::cout << "line: " << line << "  -------";
@@ -48,7 +52,6 @@ int main(int argc, char* argv[]) {
     stream >> agent;
     int cost;
     stream >> cost;
-    // std::set<std::string> taskSet;
     std::set<std::string> taskSet;
     std::string task;
     bool skipLine = false;
@@ -76,6 +79,9 @@ int main(int argc, char* argv[]) {
 
   }
 
+  // !!low level search 
+  // TODO maybe output all solution in the loop
+  // TODO only first should pick the best
   std::map<std::string, std::set<std::string>> solution;
   int64_t c = assignment.solve(solution);
     std::cout << "solution with cost: " << c << std::endl;
@@ -87,16 +93,39 @@ int main(int argc, char* argv[]) {
       std::cout << std::endl;
     }
 
-  std::ofstream out(outputFile);
-  out << "cost: " << c << std::endl;
-  out << "assignment:" << std::endl;
-  for (const auto& s : solution) {
-    out << "  " << s.first << ": ";
-    for (const auto& element : s.second) {
-      out << element << " ";
-    }
-    out << std::endl;
+
+  // !!high level check 
+  // Find common elements among sets
+  if (!solution.empty()) {
+      std::set<std::string> common_elements = solution.begin()->second;
+      for (const auto& pair : solution) {
+          std::set<std::string> current_set = pair.second;
+          std::set<std::string> intersection;
+          std::set_intersection(common_elements.begin(), common_elements.end(),
+                                current_set.begin(), current_set.end(),
+                                std::inserter(intersection, intersection.begin()));
+          common_elements = std::move(intersection);
+      }
+
+      if (common_elements.empty()) {
+          std::cout << "There are no common elements across all sets." << std::endl;
+          // TODO return solution
+      } 
+      else {
+          std::cout << "Common elements across all sets: ";
+          for (const auto& element : common_elements) {
+              std::cout << element << " ";
+          }
+          std::cout << std::endl;
+
+          // TODO return new constraint (for the new lowlevel search)
+      }
+  } 
+  else {
+      std::cout << "No sets in the solution map." << std::endl;
   }
 
-  return 0;
+
+
+
 }
