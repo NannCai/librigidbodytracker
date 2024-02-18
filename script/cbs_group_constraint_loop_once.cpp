@@ -5,7 +5,7 @@
 #include <boost/program_options.hpp>
 
 // #include "assignment.hpp"
-#include "cbs_assignment.hpp"
+#include "assignment_group_constraint.hpp"
 
 using libMultiRobotPlanning::Assignment;
 
