@@ -6,7 +6,7 @@
 #include <boost/graph/successive_shortest_path_nonnegative_weights.hpp>
 
 namespace libMultiRobotPlanning {
-// template <>   //inputs
+template <typename Assignment>   //inputs
 
 class CBS {
  public:

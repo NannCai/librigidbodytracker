@@ -34,7 +34,7 @@ class Assignment {
   void clear() {
     // std::cout << "Asg: clear" << std::endl;
     std::set<edge_t> edgesToRemove;
-    for (const auto& agent : m_agents) {
+    for (const auto& agent : m_agents) {  // add all the edges that need to remove
       auto es = boost::out_edges(agent.right, m_graph);
       for (auto eit = es.first; eit != es.second; ++eit) {
         if (!m_graph[*eit].isReverseEdge) {
@@ -44,7 +44,7 @@ class Assignment {
       }
     }
 
-    for (const auto& e : edgesToRemove) {
+    for (const auto& e : edgesToRemove) {  // then remove all the edges
       boost::remove_edge(e, m_graph);
     }
   }
@@ -135,6 +135,17 @@ class Assignment {
 
     return cost;
   }
+
+
+  // Function to get all groups
+  std::vector<std::set<Task>> getGroups() const {
+    std::vector<std::set<Task>> groups;
+    for (const auto& groupEntry : m_groups) {
+      groups.push_back(groupEntry.first);
+    }
+    return groups;
+  }
+
 
  protected:
   typedef boost::adjacency_list_traits<boost::vecS, boost::vecS,
