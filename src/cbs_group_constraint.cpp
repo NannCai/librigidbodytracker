@@ -6,29 +6,36 @@
 #include <boost/heap/d_ary_heap.hpp>
 
 // #include "assignment.hpp"
-// #include "cbs_assignment.hpp"
-#include "assignment.hpp"
+#include "cbs_assignment.hpp"
+// #include "assignment.hpp"
 
 using libMultiRobotPlanning::Assignment;
 
-struct Constraints{
-  friend std::ostream& operator<<(std::ostream& os, const Constraints& c) {
+struct Constraint{
+  int agent;
+  std::set<std::string> taskSet;
+
+  friend std::ostream& operator<<(std::ostream& os, const Constraint& c) {
     // for (const auto& vc : c.vertexConstraints) {
     //   os << vc << std::endl;
     // }
     // for (const auto& ec : c.edgeConstraints) {
     //   os << ec << std::endl;
     // }
+    os << "Agent: " << c.agent << ", Tasks: ";
+    for (const std::string& task : c.taskSet) {
+      os << task << " ";
+    }
+    os << std::endl;
     return os;
   }
 };
 
 struct HighLevelNode {
   // std::vector<PlanResult<State, Action, Cost> > solution;
-  std::map<std::string, std::string> solution;
+  std::map<std::string, std::set<std::string>>  solution;
   // constraints: [(a1,t1,t2),(a5,t3,t9)] 
-  std::vector<Constraints> constraints;
-  // std::vector<Constraints> constraints;
+  std::vector<Constraint> constraints;
 
   // Cost cost;
   long cost;
@@ -46,20 +53,29 @@ struct HighLevelNode {
   }
 
   friend std::ostream& operator<<(std::ostream& os, const HighLevelNode& c) {
+    os << "current HighLevelNode" << std::endl;
     os << "id: " << c.id << " cost: " << c.cost << std::endl;
-    for (size_t i = 0; i < c.solution.size(); ++i) {
-      os << "Agent: " << i << std::endl;
-      // os << " States:" << std::endl;
-      // for (size_t t = 0; t < c.solution[i].states.size(); ++t) {
-      //   os << "  " << c.solution[i].states[t].first << std::endl;
-      // }
-      std::cout << "solution: " << std::endl;
+    
+    if (c.solution.empty()) {
+      std::cout << "No sets in the solution map." << std::endl;
+    }
+    else{
       for (const auto& s : c.solution) {
-      std::cout << s.first << ": " << s.second << std::endl;
+        std::cout << s.first << ": ";
+        for (const auto& element : s.second) {
+          std::cout << element << " ";
+        }
+        std::cout << std::endl;
       }
-      os << " Constraints:" << std::endl;
-      os << c.constraints[i];
-      // os << " cost: " << c.solution[i].cost << std::endl;
+    }
+
+    if (c.constraints.empty()) {
+      os << "No constraints." << std::endl;
+    } else {
+      os << "Constraints:" << std::endl;
+      for (size_t i = 0; i < c.constraints.size(); ++i) {
+        os << c.constraints[i];
+      }
     }
     return os;
   }
@@ -98,9 +114,11 @@ int main(int argc, char* argv[]) {
       std::string agent;
       long cost;
       std::set<std::string> taskSet;
+      int id;
   };
 
   std::vector<InputData> inputData;
+  int input_id = 0;
 
   std::ifstream input(inputFile);
   for (std::string line; getline(input, line);) {
@@ -121,39 +139,105 @@ int main(int argc, char* argv[]) {
       }
 
       if (!skipLine) {
+          data.id = input_id++;
           inputData.push_back(data);
       }
   }
 
-  Assignment<std::string, std::string> assignment;
 
   // !!! low level search
   // first with no constraints
+  std::cout << "-----low level search------" << std::endl;
+  std::cout << "-----loading data, set cost------" << std::endl;
+  Assignment<std::string, std::string> assignment;
   for (const auto& data : inputData) {
-      std::string group;
+    std::string group;
+    std::cout << "Agent: " << data.agent << ", Cost: " << data.cost << ", Tasks: ";
+    for (const std::string& task : data.taskSet) {
+      std::cout << task << " ";
+      // group += 't'+task + "_";
+      // group += task + "_";
+    }
+    // group.pop_back();  // Remove the last underscore
+    // std::cout << "Group: " << group << std::endl;
+    assignment.setCost(data.agent, data.taskSet, data.cost);
+  }
 
-      std::cout << "Agent: " << data.agent << ", Cost: " << data.cost << ", Tasks: ";
-      for (const std::string& task : data.taskSet) {
-          std::cout << task << " ";
-          group += 't'+task + "_";
+  std::cout << "-----solve assignment------" << std::endl;
+  // std::map<std::string, std::string> solution;
+  std::map<std::string, std::set<std::string>> solution;
+  int64_t c = assignment.solve(solution);
 
+  std::cout << "-----put res into a HighLevelNode------" << std::endl;
+  HighLevelNode start;
+  start.id = 0;
+  start.cost = c;
+  start.solution = solution;
+  std::cout << start;
+
+  typename boost::heap::d_ary_heap<HighLevelNode, boost::heap::arity<2>,
+                                    boost::heap::mutable_<true> >
+      open;
+
+  std::cout << "-----HighLevelNode into Queue------" << std::endl;
+  auto handle = open.push(start);
+  (*handle).handle = handle;
+
+  solution.clear();
+  int id = 1;
+  while (!open.empty()) {
+    std::cout << "-----high level check------" << std::endl;
+    HighLevelNode P = open.top();
+
+    open.pop();
+
+    if (!P.solution.empty()) {
+      std::set<std::string> common_elements = P.solution.begin()->second;
+      std::map<std::string, std::set<std::string>> common_pair;
+
+      for (const auto& pair : P.solution) {
+        std::set<std::string> current_set = pair.second;
+        std::set<std::string> intersection;
+        std::set_intersection(common_elements.begin(), common_elements.end(),
+                              current_set.begin(), current_set.end(),
+                              std::inserter(intersection, intersection.begin()));
+        if (!intersection.empty()) {
+            common_elements = std::move(intersection);
+        }
+      }
+      if (!common_elements.empty()) {
+        std::cout << "Common elements"  << ": ";
+        for (const auto& element : common_elements) {
+            std::cout << element << " ";
+        }
+        std::cout << std::endl;
+
+
+
+        std::cout << "Common pairs "  << ": "<< std::endl;
+        for (const auto& pair : P.solution) {
+          std::set<std::string> current_set = pair.second;
+          if (std::includes(current_set.begin(), current_set.end(), common_elements.begin(), common_elements.end())) {
+            common_pair[pair.first] = pair.second;
+            std::cout << "agent: " << pair.first << ", tasks: ";
+            for (const auto& element : pair.second) {
+              std::cout << element << " ";
+            }
+            std::cout << std::endl;
+          }
+        }
       }
 
-      group.pop_back();  // Remove the last underscore
-      std::cout << "Group: " << group << std::endl;
-
-      assignment.setCost(data.agent, group, data.cost);
-  }
-
-  std::map<std::string, std::string> solution;
-  int64_t c = assignment.solve(solution);
-  std::cout << "solution with cost: " << c << std::endl;
-  for (const auto& s : solution) {
-    std::cout << s.first << ": " << s.second << std::endl;
+    }
+    ++id;
   }
 
 
-  HighLevelNode start;
+
+
+
+
+
 
 
 }

@@ -90,7 +90,7 @@ class CBS {
     start.cost = 0;
     start.id = 0;
 
-    for (size_t i = 0; i < initialStates.size(); ++i) {
+    for (size_t i = 0; i < initialStates.size(); ++i) {  // set constraints, solution, cost of start
       // if (   i < solution.size()
       //     && solution[i].states.size() > 1) {
       //   start.solution[i] = solution[i];
