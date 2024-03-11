@@ -12,16 +12,11 @@
 using libMultiRobotPlanning::Assignment;
 
 struct Constraint{
-  int agent;
+  std::string agent;
   std::set<std::string> taskSet;
 
   friend std::ostream& operator<<(std::ostream& os, const Constraint& c) {
-    // for (const auto& vc : c.vertexConstraints) {
-    //   os << vc << std::endl;
-    // }
-    // for (const auto& ec : c.edgeConstraints) {
-    //   os << ec << std::endl;
-    // }
+    os << "current Constraint: " ;
     os << "Agent: " << c.agent << ", Tasks: ";
     for (const std::string& task : c.taskSet) {
       os << task << " ";
@@ -32,14 +27,10 @@ struct Constraint{
 };
 
 struct HighLevelNode {
-  // std::vector<PlanResult<State, Action, Cost> > solution;
-  std::map<std::string, std::set<std::string>>  solution;
-  // constraints: [(a1,t1,t2),(a5,t3,t9)] 
+  std::map<std::string, std::set<std::string>> solution;
   std::vector<Constraint> constraints;
 
-  // Cost cost;
   long cost;
-
   int id;
 
   typename boost::heap::d_ary_heap<HighLevelNode, boost::heap::arity<2>,
@@ -48,8 +39,18 @@ struct HighLevelNode {
 
   bool operator<(const HighLevelNode& n) const {
     // if (cost != n.cost)
-    return cost > n.cost;
+    // return cost > n.cost;
     // return id > n.id;
+
+    // First, prioritize by the number of pairs in the solution
+    if (solution.size() != n.solution.size()){
+      return solution.size() < n.solution.size(); // Nodes with more pairs come first
+    }
+
+    // If the number of pairs is the same, then prioritize by cost (lower cost comes first)
+    return cost > n.cost; // Note: This is intentionally '>' to make the priority queue a min-heap based on cost
+
+
   }
 
   friend std::ostream& operator<<(std::ostream& os, const HighLevelNode& c) {
@@ -81,6 +82,12 @@ struct HighLevelNode {
   }
 };
 
+struct InputData {
+    std::string agent;
+    long cost;
+    std::set<std::string> taskSet;
+    int id;
+};
 
 int main(int argc, char* argv[]) {
   // !! initialise input
@@ -94,7 +101,6 @@ int main(int argc, char* argv[]) {
       "input cost (txt)")
       ("output,o",po::value<std::string>(&outputFile)->required(),
       "output file (YAML)");
-
   try {
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -109,13 +115,6 @@ int main(int argc, char* argv[]) {
     std::cerr << desc << std::endl;
     return 1;
   }
-
-  struct InputData {
-      std::string agent;
-      long cost;
-      std::set<std::string> taskSet;
-      int id;
-  };
 
   std::vector<InputData> inputData;
   int input_id = 0;
@@ -144,34 +143,27 @@ int main(int argc, char* argv[]) {
       }
   }
 
-
   // !!! low level search
   // first with no constraints
   std::cout << "-----low level search------" << std::endl;
   std::cout << "-----loading data, set cost------" << std::endl;
   Assignment<std::string, std::string> assignment;
   for (const auto& data : inputData) {
-    std::string group;
     std::cout << "Agent: " << data.agent << ", Cost: " << data.cost << ", Tasks: ";
     for (const std::string& task : data.taskSet) {
       std::cout << task << " ";
-      // group += 't'+task + "_";
-      // group += task + "_";
     }
-    // group.pop_back();  // Remove the last underscore
-    // std::cout << "Group: " << group << std::endl;
     assignment.setCost(data.agent, data.taskSet, data.cost);
   }
 
   std::cout << "-----solve assignment------" << std::endl;
-  // std::map<std::string, std::string> solution;
   std::map<std::string, std::set<std::string>> solution;
-  int64_t c = assignment.solve(solution);
+  int64_t cost = assignment.solve(solution);
 
-  std::cout << "-----put res into a HighLevelNode------" << std::endl;
+  std::cout << "-----put solution into a HighLevelNode------" << std::endl;
   HighLevelNode start;
   start.id = 0;
-  start.cost = c;
+  start.cost = cost;
   start.solution = solution;
   std::cout << start;
 
@@ -191,45 +183,81 @@ int main(int argc, char* argv[]) {
 
     open.pop();
 
-    if (!P.solution.empty()) {
-      std::set<std::string> common_elements = P.solution.begin()->second;
-      std::map<std::string, std::set<std::string>> common_pair;
+    if (P.solution.empty()) {
+      std::cout << "Cannot find a solution!" << std::endl;
+    }
+    auto iter = P.solution.begin();
 
-      for (const auto& pair : P.solution) {
-        std::set<std::string> current_set = pair.second;
-        std::set<std::string> intersection;
-        std::set_intersection(common_elements.begin(), common_elements.end(),
-                              current_set.begin(), current_set.end(),
-                              std::inserter(intersection, intersection.begin()));
-        if (!intersection.empty()) {
-            common_elements = std::move(intersection);
+    std::string common_element;
+    std::map<std::string, int> elementCounts;
+    for (; iter != P.solution.end(); ++iter) {
+      std::set<std::string> current_set = iter->second;
+      for (const std::string& task : current_set){
+        elementCounts[task]++;
+        if (elementCounts[task] > 1){
+          std::cout << "Element appearing more than once: task" << task << std::endl;
+          common_element = task;
         }
       }
-      if (!common_elements.empty()) {
-        std::cout << "Common elements"  << ": ";
-        for (const auto& element : common_elements) {
-            std::cout << element << " ";
-        }
-        std::cout << std::endl;
+    }
+    // std::cout << "!common_element.empty()"<<!common_element.empty() << std::endl; 
 
-
-
-        std::cout << "Common pairs "  << ": "<< std::endl;
-        for (const auto& pair : P.solution) {
-          std::set<std::string> current_set = pair.second;
-          if (std::includes(current_set.begin(), current_set.end(), common_elements.begin(), common_elements.end())) {
-            common_pair[pair.first] = pair.second;
-            std::cout << "agent: " << pair.first << ", tasks: ";
-            for (const auto& element : pair.second) {
-              std::cout << element << " ";
-            }
-            std::cout << std::endl;
+    std::vector<Constraint> constraints;
+    if (!common_element.empty()) {
+      std::cout << "Common element"  << ": "<< common_element << std::endl;
+      for (const auto& pair : P.solution) {
+        std::set<std::string> current_set = pair.second;
+        for (const std::string& task : current_set){ 
+          if (task == common_element){
+            Constraint con;
+            con.agent = pair.first;
+            con.taskSet = pair.second;
+            std::cout << con;
+            constraints.push_back(con);
           }
         }
       }
-
     }
-    ++id;
+    else{
+      std::cout << "no common_element, Breaking out of the loop.\n";
+      std::cout << P;
+      break;  
+    }
+
+    for (const auto& constraint : constraints) {
+      std::cout << constraint;
+      std::cout << "-----low level search------" << std::endl;
+      Assignment<std::string, std::string> assignment;
+      for (const auto& data : inputData) {
+        std::cout << "Agent: " << data.agent << ", Cost: " << data.cost << ", Tasks: ";
+        for (const std::string& task : data.taskSet) {
+          std::cout << task << " ";
+        }
+        if (data.agent==constraint.agent && data.taskSet == constraint.taskSet){
+          std::cout << "Condition: data.agent==constraint.agent && data.taskSet == constraint.taskSet, skip\n";
+          continue;}
+        assignment.setCost(data.agent, data.taskSet, data.cost);
+      }
+      std::map<std::string, std::set<std::string>> solution;
+      int64_t cost = assignment.solve(solution);
+
+      HighLevelNode newNode = P;
+      newNode.id = id;
+      newNode.cost = cost;
+      newNode.solution = solution;
+      newNode.constraints.push_back(constraint);
+      std::cout << newNode;
+
+      auto handle = open.push(newNode);
+      (*handle).handle = handle;
+      ++id;
+    }
+
+
+      // TODO feed Common pair into the new assignment as the constraint
+
+
+
   }
 
 
