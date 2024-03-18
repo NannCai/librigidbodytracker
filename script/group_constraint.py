@@ -39,7 +39,11 @@ def parse_data(data,additional_cost = 1e4,additional_group = 50):
 
 
 def gurobi_algorithm(assignments_dic,agents, groups, tasks_list):
-
+    # print('----assignments_dic\n',assignments_dic)
+    if not assignments_dic:
+        print("assignments_dic is empty. Exiting the function.")
+        return None,None,None
+    
     combinations, ms = gp.multidict(assignments_dic)    # keys and diction
     # print('----assignments_dic\n',assignments_dic)
     # print('combinations',combinations)
@@ -82,23 +86,36 @@ def gurobi_algorithm(assignments_dic,agents, groups, tasks_list):
     return m,x,combinations
 
 def save_gurobi_res(model,x,combinations,res_dir,input_file_name,additional_cost=1e4,additional_group = 50):
-    # Create a dictionary to store the output data
-    output_data = {
-        'cost': model.objVal,
-        'assignment': {
-            # int(agent[1:]): int(group[1:]) if '_' not in group else ' '.join(str(int(t[1:])) for t in group.split('_'))   
-            int(agent[1:]): ' '.join(str(int(t[1:])) for t in group.split('_'))   
-            for agent, group in combinations if (abs(x[agent, group].x) > 1e-6)
+    if model is None:
+        output_data = {'cost': 0}
+        # if not os.path.exists(gurobi_res_dir):
+        #     os.makedirs(gurobi_res_dir)
+        # if 'txt' in input_file_name:
+        #     input_file_name = input_file_name.replace('.txt', '')
+        # res_file_name = f'gurobi_{input_file_name}.yaml'
+        # res_file = os.path.join(gurobi_res_dir, res_file_name)
+        # print('res_file',res_file)
+        # with open(res_file, 'w') as file:
+        #     file.write(f"cost: 0\n")
+        #     # del output_data['cost']  # Remove 'cost' from the dictionary before dumping to YAML
+        #     # yaml.dump(output_data, file)    
+    else:
+        output_data = {
+            'cost': model.objVal,
+            'assignment': {
+                # int(agent[1:]): int(group[1:]) if '_' not in group else ' '.join(str(int(t[1:])) for t in group.split('_'))   
+                int(agent[1:]): ' '.join(str(int(t[1:])) for t in group.split('_'))   
+                for agent, group in combinations if (abs(x[agent, group].x) > 1e-6)
+            }
         }
-    }
-    # remove_flag = 1
-    # if remove_flag:
-    #     print('output_data',output_data)
-    for key, value in list(output_data['assignment'].items()):
-        if isinstance(value, str) and value.isdigit() and int(value) >= additional_group:
-            del output_data['assignment'][key]
-            output_data['cost'] = output_data['cost'] - additional_cost
-    print('output_data',output_data)
+        # remove_flag = 1
+        # if remove_flag:
+        #     print('output_data',output_data)
+        for key, value in list(output_data['assignment'].items()):
+            if isinstance(value, str) and value.isdigit() and int(value) >= additional_group:
+                del output_data['assignment'][key]
+                output_data['cost'] = output_data['cost'] - additional_cost
+        print('output_data',output_data)
 
     if not os.path.exists(res_dir):
         os.makedirs(res_dir)
@@ -117,7 +134,7 @@ if __name__ == '__main__':
     # input_path = 'data/inputs/input_group3.txt'
     # input_path = 'input2.txt'
     input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/random_inputs'
-    gurobi_res_dir = 'data/gurobi_res2'
+    gurobi_res_dir = 'data/gurobi_res3'
 
     input_files = os.listdir(input_dir)
     for input_file in input_files:
@@ -132,6 +149,9 @@ if __name__ == '__main__':
                                                               additional_group = additional_group)
         # print('assignments_dic',assignments_dic)
         model,x,combinations = gurobi_algorithm(assignments_dic,agents, groups, tasks_list)
+
+
+
         save_gurobi_res(model,x,combinations,gurobi_res_dir,input_file,
                         additional_cost = additional_cost,
                         additional_group = additional_group) 

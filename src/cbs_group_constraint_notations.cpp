@@ -135,9 +135,15 @@ int main(int argc, char* argv[]) {
       }
   }
 
+  // first with no constraints
   // std::cout << "-----low level search: loading data, set cost;solve assignment;put solution into a HighLevelNode------" << std::endl;
   Assignment<std::string, std::string> assignment;
   for (const auto& data : inputData) {
+    std::cout << "Agent: " << data.agent << ", Cost: " << data.cost << ", Tasks: ";
+    for (const std::string& task : data.taskSet) {
+      std::cout << task << " ";
+    }
+    std::cout << std::endl;
     assignment.setCost(data.agent, data.taskSet, data.cost);
   }
   std::map<std::string, std::set<std::string>> solution;
@@ -146,7 +152,6 @@ int main(int argc, char* argv[]) {
   start.id = 0;
   start.cost = cost;
   start.solution = solution;
-  std::cout << "The start";
   std::cout << start;
 
   typename boost::heap::d_ary_heap<HighLevelNode, boost::heap::arity<2>,
@@ -159,7 +164,9 @@ int main(int argc, char* argv[]) {
   solution.clear();
   int id = 1;
   while (!open.empty()) {
+    std::cout << "-----high level check------" << std::endl;
     HighLevelNode P = open.top();
+    std::cout<<P;
     open.pop();
 
     if (P.solution.empty()) {
@@ -182,6 +189,8 @@ int main(int argc, char* argv[]) {
 
     std::vector<Constraint> new_constraints;
     if (!common_element.empty()) {
+      std::cout << "Common element"  << ": "<< common_element << std::endl;
+      std::cout << "New Constraints: "<< std::endl ;
       for (const auto& pair : P.solution) {
         std::set<std::string> current_set = pair.second;
         for (const std::string& task : current_set){ 
@@ -189,14 +198,14 @@ int main(int argc, char* argv[]) {
             Constraint con;
             con.agent = pair.first;
             con.taskSet = pair.second;
+            std::cout << con;
             new_constraints.push_back(con);
           }
         }
       }
     }
     else{
-      // std::cout << "no common_element, Breaking out of the loop.\n";
-      std::cout << "!find!";
+      std::cout << "no common_element, Breaking out of the loop.\n";
       std::cout << P;
       std::ofstream out(outputFile);
       out << "cost: " << P.cost << std::endl;
@@ -208,36 +217,34 @@ int main(int argc, char* argv[]) {
         }
         out << std::endl;
       }
+
       break;  
     }
 
     for (const auto& new_constraint : new_constraints) {
+      std::cout << "-----new HighLevelNode, low level check------" << std::endl;
       HighLevelNode newNode = P;
-      bool alreadyExists = false;
-      for (const auto& existing_constraint : newNode.constraints) {
-        if (new_constraint.agent == existing_constraint.agent && 
-            new_constraint.taskSet == existing_constraint.taskSet) {
-          alreadyExists = true;
-          break;
-        }
-      }
-      if (alreadyExists) {
-        continue; // Skip the rest of this loop iteration
-      }
-
       newNode.constraints.push_back(new_constraint);
+      // TODO add constraints in P
+      // std::cout << constraint;
       Assignment<std::string, std::string> assignment;
       for (const auto& data : inputData) {
           bool skipData = false;
           for (const auto& constraint : newNode.constraints) {
             if (data.agent == constraint.agent && data.taskSet == constraint.taskSet) {
+              // std::cout << "Condition: data.agent == constraint.agent && data.taskSet == constraint.taskSet, skip\n";
               skipData = true;
               break;
             }
           }
           if (!skipData) {
+            std::cout << "Agent: " << data.agent << ", Cost: " << data.cost << ", Tasks: ";
+            for (const std::string& task : data.taskSet) {
+                std::cout << task << " ";
+            }
             assignment.setCost(data.agent, data.taskSet, data.cost);
           }
+
       }
 
       std::map<std::string, std::set<std::string>> solution;
@@ -246,13 +253,23 @@ int main(int argc, char* argv[]) {
       newNode.id = id;
       newNode.cost = cost;
       newNode.solution = solution;
-      // std::cout << newNode;
+      std::cout << newNode;
 
       auto handle = open.push(newNode);
       (*handle).handle = handle;
       ++id;
     }
 
+
+
   }
+
+
+
+
+
+
+
+
 
 }

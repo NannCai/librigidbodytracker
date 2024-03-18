@@ -15,8 +15,9 @@ def get_matched_files_dict(gurobi_dir,graph_dir,input_dir):
 
     for input_file in input_files:
         file_name = os.path.splitext(input_file)[0]
-        matching_graphs = [graph for graph in graph_files if file_name in graph]
-        matching_gurobis = [gurobi for gurobi in gurobi_files if file_name in gurobi]
+        # new_filename = filename.replace('graph_', '')
+        matching_graphs = [graph for graph in graph_files if file_name == graph.replace('graph_', '').replace('.yaml', '')]
+        matching_gurobis = [gurobi for gurobi in gurobi_files if file_name == gurobi.replace('gurobi_', '').replace('.yaml', '')]
         
         if len(matching_graphs) == 1 and len(matching_gurobis) == 1:
             match_dict[file_name] = {
@@ -27,6 +28,7 @@ def get_matched_files_dict(gurobi_dir,graph_dir,input_dir):
             # print(f'File Name: {file_name}, Matching Graphs: {matching_graphs}, Matching Gurobis: {matching_gurobis}')
         else:
             print(f'Match not found for {file_name}')
+            # print(f'Match not found for {file_name},matching_graphs{matching_graphs},matching_gurobis{matching_gurobis}')
             quit()
     return match_dict
 
@@ -49,14 +51,15 @@ def parse_res(gurobi_dir,graph_dir,matching_gurobis,matching_graphs):
     return None,None
 
 if __name__ == '__main__':
-    gurobi_dir = 'data/gurobi_res2'  # TODO how to deal with group=t1_t1
-    graph_dir = 'data/graph_res'
+    gurobi_dir = 'data/gurobi_res3'  # TODO how to deal with group=t1_t1
+    # graph_dir = 'data/graph_res'
+    graph_dir = 'data/graph_cbs3'
     input_dir = 'data/random_inputs'
-    save_dir = 'data/evaluation2'
+    save_dir = 'data/evaluation3'
 
     match_dict = get_matched_files_dict(gurobi_dir,graph_dir,input_dir)
     # print('match_dict', match_dict)
-
+    match_cout = 0
     # for value in match_dict.values():
     for key,value in match_dict.items():
         print('key',key,'value',value)
@@ -69,24 +72,25 @@ if __name__ == '__main__':
         res_gurobi,res_graph = parse_res(gurobi_dir,graph_dir,matching_gurobis,matching_graphs)
         print('res_gurobi',res_gurobi)
         print('res_graph',res_graph)
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
 
-        # Compare the content of res_gurobi and res_graph
         if res_gurobi['cost'] == res_graph['cost']:
             print("Content of 'res_gurobi' and 'res_graph' is the same.")
             print('!!!!!!')
+            match_cout += 1
         else:
             print("Content of 'res_gurobi' and 'res_graph' is different.")
-            # record the different input and also all the outputs
-            
-            
-            if not os.path.exists(save_dir):
-                os.makedirs(save_dir)
+
+            # record the different input and also all the outputs            
             filename = f'{save_dir}/eval_{key}.txt'
             with open(filename, 'w') as file:
                 file.write(f"res_gurobi:\n{res_gurobi}\n")
                 file.write(f"res_graph:\n{res_graph}\n")
                 with open(f'{input_dir}/{key}.txt', 'r') as input_file:
                     file.write(f"content in {key}.txt:\n{input_file.read()}\n")
+
+    print('match_cout',match_cout)
     print('end')
 
 
