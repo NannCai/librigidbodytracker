@@ -50,11 +50,11 @@ class Assignment {
   }
 
   void setCost(const Agent& agent, const std::set<Task>& group, long cost) {
-    std::cout << "setCost: " << agent << "->" << "group";
-    for (std::string task : group) {
-        std::cout << task << " ";
-    }
-    std::cout <<" cost: " << cost << std::endl; 
+    // std::cout << "setCost: " << agent << "->" << "group";
+    // for (std::string task : group) {
+    //     std::cout << task << " ";
+    // }
+    // std::cout <<" cost: " << cost << std::endl; 
 
     // Lazily create vertex for agent
     auto agentIter = m_agents.left.find(agent);
@@ -72,7 +72,7 @@ class Assignment {
     vertex_t groupVertex;
     if (groupIter == m_groups.end()) {
       groupVertex = boost::add_vertex(m_graph);
-      std::cout << "Group size: " << group.size() << std::endl;
+      // std::cout << "Group size: " << group.size() << std::endl;
       // addOrUpdateEdge(agentVertex, groupVertex, cost,group.size());
       m_groups.insert(groupsMapEntry_t(group, groupVertex));
     }else {
