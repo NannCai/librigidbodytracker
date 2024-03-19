@@ -75,7 +75,8 @@ if __name__ == '__main__':
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
-        if res_gurobi['cost'] == res_graph['cost']:
+        # if res_gurobi['cost'] == res_graph['cost']:
+        if res_gurobi['cost'] == res_graph['cost'] and res_gurobi['assignment'] == res_graph['assignment']:
             print("Content of 'res_gurobi' and 'res_graph' is the same.")
             print('!!!!!!')
             match_cout += 1

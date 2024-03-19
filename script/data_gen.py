@@ -2,34 +2,6 @@ import random
 from group_constraint import gurobi_algorithm,save_gurobi_res,parse_data
 import os
 
-# def parse_data(data):
-#     assignments_dic = {}
-#     all_tasks = []
-#     additional_group =  50
-#     additional_cost = 1e4
-#     for line in data.split('\n'):
-#         parts = line.split()
-#         if len(parts) < 3:
-#             continue
-#         agent = 'a' + parts[0]
-#         cost = int(parts[1])
-#         tasks = ['t' + task for task in sorted(parts[2:])]
-#         all_tasks.extend(tasks)
-#         # group = tuple(set(tasks))
-#         group = tuple(tasks)
-#         # print("len(group) ,len(tasks)",len(group), len(tasks))
-#         # if len(group) !=  len(tasks):
-#         #     print("len(group) !=  len(tasks)",len(group), len(tasks))
-#         group_str = '_'.join(group)
-#         assignments_dic[agent, group_str] = cost    
-#     agents = tuple(set(agent for agent, _ in assignments_dic.keys()))
-#     for agent in agents:
-#         assignments_dic[agent,'t' + str(additional_group)] = additional_cost
-#         additional_group = additional_group + 1
-#     groups = tuple(set(group for _, group in assignments_dic.keys()))
-#     tasks_list = tuple(set(all_tasks))
-#     return assignments_dic, agents, groups, tasks_list
-
 def gen_data():
     num_agent = random.randint(1, 8)  # range(num_agent) is the agent name
     data = ''
@@ -57,8 +29,6 @@ def save_input_txt(save_dir,data,i):
     with open(output_file_path, 'w') as file:
         file.write(data)
     return output_file_name
-
-
 
 if __name__ == '__main__':
     # save_dir = 'data/inputs'

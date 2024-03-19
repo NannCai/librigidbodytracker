@@ -88,23 +88,13 @@ def gurobi_algorithm(assignments_dic,agents, groups, tasks_list):
 def save_gurobi_res(model,x,combinations,res_dir,input_file_name,additional_cost=1e4,additional_group = 50):
     if model is None:
         output_data = {'cost': 0}
-        # if not os.path.exists(gurobi_res_dir):
-        #     os.makedirs(gurobi_res_dir)
-        # if 'txt' in input_file_name:
-        #     input_file_name = input_file_name.replace('.txt', '')
-        # res_file_name = f'gurobi_{input_file_name}.yaml'
-        # res_file = os.path.join(gurobi_res_dir, res_file_name)
-        # print('res_file',res_file)
-        # with open(res_file, 'w') as file:
-        #     file.write(f"cost: 0\n")
-        #     # del output_data['cost']  # Remove 'cost' from the dictionary before dumping to YAML
-        #     # yaml.dump(output_data, file)    
     else:
         output_data = {
             'cost': model.objVal,
             'assignment': {
+                int(agent[1:]): int(group[1:]) if '_' not in group else ' '.join(str(int(t[1:])) for t in group.split('_'))   
                 # int(agent[1:]): int(group[1:]) if '_' not in group else ' '.join(str(int(t[1:])) for t in group.split('_'))   
-                int(agent[1:]): ' '.join(str(int(t[1:])) for t in group.split('_'))   
+                # int(agent[1:]): ' '.join(str(int(t[1:])) for t in group.split('_'))   
                 for agent, group in combinations if (abs(x[agent, group].x) > 1e-6)
             }
         }
@@ -112,7 +102,8 @@ def save_gurobi_res(model,x,combinations,res_dir,input_file_name,additional_cost
         # if remove_flag:
         #     print('output_data',output_data)
         for key, value in list(output_data['assignment'].items()):
-            if isinstance(value, str) and value.isdigit() and int(value) >= additional_group:
+            if isinstance(value, int) and int(value) >= additional_group:
+            # if isinstance(value, str) and value.isdigit() and int(value) >= additional_group:
                 del output_data['assignment'][key]
                 output_data['cost'] = output_data['cost'] - additional_cost
         print('output_data',output_data)
@@ -149,8 +140,6 @@ if __name__ == '__main__':
                                                               additional_group = additional_group)
         # print('assignments_dic',assignments_dic)
         model,x,combinations = gurobi_algorithm(assignments_dic,agents, groups, tasks_list)
-
-
 
         save_gurobi_res(model,x,combinations,gurobi_res_dir,input_file,
                         additional_cost = additional_cost,
