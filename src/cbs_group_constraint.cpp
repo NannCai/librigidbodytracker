@@ -1,13 +1,15 @@
 #include <fstream>
 #include <iostream>
 #include <regex>
-
+#include <chrono>
+#include <filesystem>
 #include <boost/program_options.hpp>
 #include <boost/heap/d_ary_heap.hpp>
 
 // #include "assignment.hpp"
 #include "cbs_assignment.hpp"
 // #include "assignment.hpp"
+
 
 using libMultiRobotPlanning::Assignment;
 
@@ -109,10 +111,10 @@ int main(int argc, char* argv[]) {
     std::cerr << desc << std::endl;
     return 1;
   }
+  std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 
   std::vector<InputData> inputData;
   int input_id = 0;
-
   std::ifstream input(inputFile);
   for (std::string line; getline(input, line);) {
       std::stringstream stream(line);
@@ -156,10 +158,12 @@ int main(int argc, char* argv[]) {
   auto handle = open.push(start);
   (*handle).handle = handle;
 
+  bool outputToFile = false; 
   solution.clear();
   int id = 1;
+  HighLevelNode P;
   while (!open.empty()) {
-    HighLevelNode P = open.top();
+    P = open.top();
     open.pop();
 
     if (P.solution.empty()) {
@@ -197,17 +201,7 @@ int main(int argc, char* argv[]) {
     else{
       // std::cout << "no common_element, Breaking out of the loop.\n";
       std::cout << "!find!";
-      std::cout << P;
-      std::ofstream out(outputFile);
-      out << "cost: " << P.cost << std::endl;
-      out << "assignment:" << std::endl;
-      for (const auto& s : P.solution) {
-        out << "  " << s.first << ": ";
-        for (const auto& element : s.second) {
-          out << element << " ";
-        }
-        out << std::endl;
-      }
+      outputToFile = true; 
       break;  
     }
 
@@ -254,5 +248,42 @@ int main(int argc, char* argv[]) {
     }
 
   }
+  if (outputToFile) {
+    std::cout << P;
+    std::ofstream out(outputFile);
+    out << "cost: " << P.cost << std::endl;
+    out << "assignment:" << std::endl;
+    for (const auto& s : P.solution) {
+      out << "  " << s.first << ": ";
+      for (const auto& element : s.second) {
+        out << element << " ";
+      }
+      out << std::endl;
+    }
+  }
+
+  std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();  
+  std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>( t2-t1 );
+  std::cout << "Runtime: " << time_used.count() << " seconds" << std::endl;
+
+  std::string outputDirectory = outputFile;
+  size_t pos = outputDirectory.find_last_of("/\\");
+  if (pos != std::string::npos) {
+      outputDirectory = outputDirectory.substr(0, pos);
+  }
+  std::cout << "Output Directory: " << outputDirectory << std::endl;
+
+  std::string runtimeFilePath = outputDirectory + "/runtime.txt";
+
+  // std::ofstream runtimeFile(runtimeFilePath);
+  std::ofstream runtimeFile(runtimeFilePath, std::ios_base::app); // Open in append mode
+  // std::ofstream file("runtime.txt", std::ios_base::app);
+
+  if (!runtimeFile.is_open()) {
+    std::cout << "File does not exist, creating a new file..." << std::endl;
+    runtimeFile.open(runtimeFilePath);
+  }
+  runtimeFile << "Input File: " << inputFile << std::endl;
+  runtimeFile << "Runtime: " << time_used.count() << " seconds" << std::endl;
 
 }

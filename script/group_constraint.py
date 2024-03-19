@@ -1,8 +1,9 @@
 import gurobipy as gp
 from gurobipy import GRB
-# from gurobipy import *
 import os
 import yaml
+import time  
+import numpy as np
 
 def print_solution(model):
     # for var in model.getVars():
@@ -126,9 +127,10 @@ if __name__ == '__main__':
     # input_path = 'input2.txt'
     input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/random_inputs'
     gurobi_res_dir = 'data/gurobi_res3'
-
     input_files = os.listdir(input_dir)
+    runtime_list = []
     for input_file in input_files:
+        start_time = time.time()  # Start timing
         print(input_file,'--------------')  # random_7.txt
         input_file_path = os.path.join(input_dir, input_file)
         with open(input_file_path, 'r') as file:
@@ -140,9 +142,17 @@ if __name__ == '__main__':
                                                               additional_group = additional_group)
         # print('assignments_dic',assignments_dic)
         model,x,combinations = gurobi_algorithm(assignments_dic,agents, groups, tasks_list)
-
         save_gurobi_res(model,x,combinations,gurobi_res_dir,input_file,
                         additional_cost = additional_cost,
                         additional_group = additional_group) 
 
+        end_time = time.time()  # End timing
+        runtime = end_time - start_time
+        print(f"Runtime of gurobi_algorithm: {runtime} seconds")
+        runtime_list.append(runtime)
 
+    average_runtime = np.mean(runtime_list)
+    frequency =  1/average_runtime
+    print(f"Average runtime of gurobi_algorithm: {average_runtime} seconds")
+
+    print(f'Frequency of !gurobi! Average Runtime: {frequency}')
