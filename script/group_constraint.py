@@ -149,6 +149,11 @@ if __name__ == '__main__':
         end_time = time.time()  # End timing
         runtime = end_time - start_time
         print(f"Runtime of gurobi_algorithm: {runtime} seconds")
+        gurobi_runtime_file = gurobi_res_dir +'/runtime.txt'
+        with open(gurobi_runtime_file, 'a') as runtime_file:
+            runtime_file.write(f"Input File: {input_file}\n")
+            runtime_file.write(f"Runtime: {runtime} seconds\n")
+            runtime_file.write("\n")
         runtime_list.append(runtime)
 
     average_runtime = np.mean(runtime_list)

@@ -8,83 +8,11 @@
 
 // #include "assignment.hpp"
 #include "cbs_assignment.hpp"
+#include "cbs_group_constraint.hpp"
 // #include "assignment.hpp"
 
 
 using libMultiRobotPlanning::Assignment;
-
-struct Constraint{
-  std::string agent;
-  std::set<std::string> taskSet;
-
-  friend std::ostream& operator<<(std::ostream& os, const Constraint& c) {
-    // os << "current Constraint: " ;
-    os << "Agent: " << c.agent << ", Tasks: ";
-    for (const std::string& task : c.taskSet) {
-      os << task << " ";
-    }
-    os << std::endl;
-    return os;
-  }
-};
-
-struct HighLevelNode {
-  std::map<std::string, std::set<std::string>> solution;
-  std::vector<Constraint> constraints;
-
-  long cost;
-  int id;
-
-  typename boost::heap::d_ary_heap<HighLevelNode, boost::heap::arity<2>,
-                                    boost::heap::mutable_<true> >::handle_type
-      handle;
-
-  bool operator<(const HighLevelNode& n) const {
-    if (solution.size() != n.solution.size()){
-      return solution.size() < n.solution.size(); // Nodes with more pairs come first
-    }
-    if (cost != n.cost){
-      return cost > n.cost;
-    }
-    return id > n.id;
-  }
-
-  friend std::ostream& operator<<(std::ostream& os, const HighLevelNode& c) {
-    os << "current HighLevelNode" << std::endl;
-    os << "id: " << c.id << " cost: " << c.cost << std::endl;
-    
-    if (c.solution.empty()) {
-      os << "No sets in the solution map." << std::endl;
-    }
-    else{
-      os << "solution:\n";
-      for (const auto& s : c.solution) {
-        os << s.first << ": ";
-        for (const auto& element : s.second) {
-          os << element << " ";
-        }
-        os << std::endl;
-      }
-    }
-
-    if (c.constraints.empty()) {
-      os << "No constraints." << std::endl;
-    } else {
-      os << "Constraints:" << std::endl;
-      for (size_t i = 0; i < c.constraints.size(); ++i) {
-        os << c.constraints[i];
-      }
-    }
-    return os;
-  }
-};
-
-struct InputData {
-    std::string agent;
-    long cost;
-    std::set<std::string> taskSet;
-    int id;
-};
 
 int main(int argc, char* argv[]) {
   namespace po = boost::program_options;
@@ -114,28 +42,7 @@ int main(int argc, char* argv[]) {
   std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 
   std::vector<InputData> inputData;
-  int input_id = 0;
-  std::ifstream input(inputFile);
-  for (std::string line; getline(input, line);) {
-      std::stringstream stream(line);
-      InputData data;
-      stream >> data.agent;
-      stream >> data.cost;
-      std::string task;
-      bool skipLine = false;
-      while (stream >> task) {
-          if (data.taskSet.find(task) != data.taskSet.end()) {
-              skipLine = true;
-              break;
-          }
-          data.taskSet.insert(task);
-      }
-      
-      if (!skipLine) {
-          data.id = input_id++;
-          inputData.push_back(data);
-      }
-  }
+  processInputFile(inputFile, inputData);
 
   // std::cout << "-----low level search: loading data, set cost;solve assignment;put solution into a HighLevelNode------" << std::endl;
   Assignment<std::string, std::string> assignment;
@@ -148,7 +55,7 @@ int main(int argc, char* argv[]) {
   start.id = 0;
   start.cost = cost;
   start.solution = solution;
-  std::cout << "The start";
+  std::cout << "The start HLN: ";
   std::cout << start;
 
   typename boost::heap::d_ary_heap<HighLevelNode, boost::heap::arity<2>,
@@ -162,7 +69,14 @@ int main(int argc, char* argv[]) {
   solution.clear();
   int id = 1;
   HighLevelNode P;
+  int loopCount = 0; 
   while (!open.empty()) {
+    loopCount++;
+    std::cout << "=========" << loopCount<< " Loop ==========="  << std::endl;
+    // if (loopCount > 10) {
+    // // std::cout << "Loop count exceeded 20. Exiting the loop." << std::endl;
+    // break; // Add this line to exit the loop
+    // }
     P = open.top();
     open.pop();
 
@@ -170,39 +84,29 @@ int main(int argc, char* argv[]) {
       std::cout << "Cannot find a solution!" << std::endl;
     }
 
-    std::string common_element;
-    std::map<std::string, int> elementCounts; 
-    for (auto iter = P.solution.begin(); iter != P.solution.end(); ++iter) {
-      std::set<std::string> current_set = iter->second;
-      for (const std::string& task : current_set){
-        elementCounts[task]++;
-        if (elementCounts[task] > 1){
-          // std::cout << "Element appearing more than once: task" << task << std::endl;
-          common_element = task;
-          break;
-        }
-      }
-    }
-
-    std::vector<Constraint> new_constraints;
-    if (!common_element.empty()) {
-      for (const auto& pair : P.solution) {
-        std::set<std::string> current_set = pair.second;
-        for (const std::string& task : current_set){ 
-          if (task == common_element){
-            Constraint con;
-            con.agent = pair.first;
-            con.taskSet = pair.second;
-            new_constraints.push_back(con);
-          }
-        }
-      }
-    }
-    else{
-      // std::cout << "no common_element, Breaking out of the loop.\n";
-      std::cout << "!find!";
+    std::string conflict_task;
+    if (!getFirstConflict(P.solution,conflict_task)) {
+      std::cout << "done; cost: " << P.cost << std::endl;
+      // solution = P.solution;
+      // return true;
+      std::cout << "no conflict_task, Breaking out of the loop.\n";
       outputToFile = true; 
-      break;  
+      break;
+    }
+    else
+    {
+      std::cout << P;
+      std::cout << "need to find the new solution"<< std::endl;
+
+    }
+    
+
+    std::cout << "conflict_task: " << conflict_task << std::endl;  //TODO the conflict_task will be the same for a lot of times
+    std::vector<Constraint> new_constraints;
+    createConstraintsFromConflict(P.solution,conflict_task,new_constraints);
+    std::cout << "new constraints: " << std::endl;
+    for (const auto& constraint : new_constraints) {
+      std::cout << constraint;
     }
 
     for (const auto& new_constraint : new_constraints) {
@@ -248,6 +152,11 @@ int main(int argc, char* argv[]) {
     }
 
   }
+
+  std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();  
+  std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>( t2-t1 );
+  std::cout << "Runtime: " << time_used.count() << " seconds" << std::endl;
+
   if (outputToFile) {
     std::cout << P;
     std::ofstream out(outputFile);
@@ -260,30 +169,11 @@ int main(int argc, char* argv[]) {
       }
       out << std::endl;
     }
+    out << "runtime: " << time_used.count() << std::endl;
+    out << "highLevelExpanded: " << loopCount << std::endl;
   }
-
-  std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();  
-  std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>( t2-t1 );
-  std::cout << "Runtime: " << time_used.count() << " seconds" << std::endl;
-
-  std::string outputDirectory = outputFile;
-  size_t pos = outputDirectory.find_last_of("/\\");
-  if (pos != std::string::npos) {
-      outputDirectory = outputDirectory.substr(0, pos);
+  else{
+    std::cout << "didn't find the result!" << std::endl;
   }
-  std::cout << "Output Directory: " << outputDirectory << std::endl;
-
-  std::string runtimeFilePath = outputDirectory + "/runtime.txt";
-
-  // std::ofstream runtimeFile(runtimeFilePath);
-  std::ofstream runtimeFile(runtimeFilePath, std::ios_base::app); // Open in append mode
-  // std::ofstream file("runtime.txt", std::ios_base::app);
-
-  if (!runtimeFile.is_open()) {
-    std::cout << "File does not exist, creating a new file..." << std::endl;
-    runtimeFile.open(runtimeFilePath);
-  }
-  runtimeFile << "Input File: " << inputFile << std::endl;
-  runtimeFile << "Runtime: " << time_used.count() << " seconds" << std::endl;
 
 }

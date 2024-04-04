@@ -4,6 +4,7 @@
 
 #include <boost/program_options.hpp>
 #include <boost/heap/d_ary_heap.hpp>
+#include <chrono>
 
 // #include "assignment.hpp"
 #include "cbs_assignment.hpp"
@@ -264,6 +265,29 @@ int main(int argc, char* argv[]) {
 
   }
 
+  std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();  
+  std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>( t2-t1 );
+  std::cout << "Runtime: " << time_used.count() << " seconds" << std::endl;
+
+  std::string outputDirectory = outputFile;
+  size_t pos = outputDirectory.find_last_of("/\\");
+  if (pos != std::string::npos) {
+      outputDirectory = outputDirectory.substr(0, pos);
+  }
+  // std::cout << "Output Directory: " << outputDirectory << std::endl;
+
+  std::string runtimeFilePath = outputDirectory + "/runtime.txt";
+
+  std::ofstream runtimeFile(runtimeFilePath, std::ios_base::app); // Open in append mode
+
+  if (!runtimeFile.is_open()) {
+    std::cout << "File does not exist, creating a new file..." << std::endl;
+    runtimeFile.open(runtimeFilePath);
+  }
+  runtimeFile << "Input File: " << inputFile << std::endl;
+  runtimeFile << "Runtime: " << time_used.count() << " seconds" << std::endl;
+  // runtimeFile << "Number of times loop ran:" << loopCount << std::endl;
+  // std::cout << "Number of times loop ran: " << loopCount << std::endl; // Output the count after the loop
 
 
 

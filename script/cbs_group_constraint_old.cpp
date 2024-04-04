@@ -1,19 +1,92 @@
 #include <fstream>
 #include <iostream>
 #include <regex>
-
+#include <chrono>
+#include <filesystem>
 #include <boost/program_options.hpp>
+#include <boost/heap/d_ary_heap.hpp>
 
 // #include "assignment.hpp"
 #include "cbs_assignment.hpp"
+// #include "assignment.hpp"
+
 
 using libMultiRobotPlanning::Assignment;
 
-  // initialise the cbs
-  // then use cbs.search to find the solution
+struct Constraint{
+  std::string agent;
+  std::set<std::string> taskSet;
+
+  friend std::ostream& operator<<(std::ostream& os, const Constraint& c) {
+    // os << "current Constraint: " ;
+    os << "Agent: " << c.agent << ", Tasks: ";
+    for (const std::string& task : c.taskSet) {
+      os << task << " ";
+    }
+    os << std::endl;
+    return os;
+  }
+};
+
+struct HighLevelNode {
+  std::map<std::string, std::set<std::string>> solution;
+  std::vector<Constraint> constraints;
+
+  long cost;
+  int id;
+
+  typename boost::heap::d_ary_heap<HighLevelNode, boost::heap::arity<2>,
+                                    boost::heap::mutable_<true> >::handle_type
+      handle;
+
+  bool operator<(const HighLevelNode& n) const {
+    if (solution.size() != n.solution.size()){
+      return solution.size() < n.solution.size(); // Nodes with more pairs come first
+    }
+    if (cost != n.cost){
+      return cost > n.cost;
+    }
+    return id > n.id;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const HighLevelNode& c) {
+    os << "current HighLevelNode" << std::endl;
+    os << "id: " << c.id << " cost: " << c.cost << std::endl;
+    
+    if (c.solution.empty()) {
+      os << "No sets in the solution map." << std::endl;
+    }
+    else{
+      os << "solution:\n";
+      for (const auto& s : c.solution) {
+        os << s.first << ": ";
+        for (const auto& element : s.second) {
+          os << element << " ";
+        }
+        os << std::endl;
+      }
+    }
+
+    if (c.constraints.empty()) {
+      os << "No constraints." << std::endl;
+    } else {
+      os << "Constraints:" << std::endl;
+      for (size_t i = 0; i < c.constraints.size(); ++i) {
+        os << c.constraints[i];
+      }
+    }
+    return os;
+  }
+};
+
+struct InputData {
+    std::string agent;
+    long cost;
+    std::set<std::string> taskSet;
+    int id;
+};
 
 int main(int argc, char* argv[]) {
-  // !! initialise input
   namespace po = boost::program_options;
   // Declare the supported options.
   po::options_description desc("Allowed options");
@@ -24,7 +97,6 @@ int main(int argc, char* argv[]) {
       "input cost (txt)")
       ("output,o",po::value<std::string>(&outputFile)->required(),
       "output file (YAML)");
-
   try {
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -39,126 +111,179 @@ int main(int argc, char* argv[]) {
     std::cerr << desc << std::endl;
     return 1;
   }
+  std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 
-  Assignment<std::string, std::string> assignment;
-  
+  std::vector<InputData> inputData;
+  int input_id = 0;
   std::ifstream input(inputFile);
   for (std::string line; getline(input, line);) {
-    std::cout << "line: " << line << "  -------";
-    std::cout << std::endl;
-    std::stringstream stream(line);
-
-    std::string agent;
-    stream >> agent;
-    int cost;
-    stream >> cost;
-    std::set<std::string> taskSet;
-    std::string task;
-    bool skipLine = false;
-    while (stream >> task) {
-      if (taskSet.find(task) != taskSet.end()) {
-        // Task is already in the set, skip this line
-        std::cout << "Skipping line with duplicate task: " << task << std::endl;
-        skipLine = true;
-        break;
-      }
-      taskSet.insert(task);
-    }
-    std::cout << "end add tasks" << std::endl;
-    if (!skipLine) {
-    std::cout << "Agent: " << agent << ", Cost: " << cost << ", Tasks: ";
-    for (std::string task : taskSet) {
-        std::cout << task << " ";
-    }
-    std::cout << std::endl;
-
-    assignment.setCost(agent, taskSet, cost);
-
-    }
-    taskSet.clear();
-
-  }
-
-  // !!low level search 
-  // TODO maybe output all solution in the loop
-  // TODO only first should pick the best
-  std::map<std::string, std::set<std::string>> solution;
-  int64_t c = assignment.solve(solution);
-    std::cout << "solution with cost: " << c << std::endl;
-    for (const auto& s : solution) {
-      std::cout << s.first << ": ";
-      for (const auto& element : s.second) {
-        std::cout << element << " ";
-      }
-      std::cout << std::endl;
-    }
-
-
-  // !!high level check 
-  // Find common elements among sets
-  if (!solution.empty()) {
-      std::set<std::string> common_elements = solution.begin()->second;
-      for (const auto& pair : solution) {
-          std::set<std::string> current_set = pair.second;
-          std::set<std::string> intersection;
-          std::set_intersection(common_elements.begin(), common_elements.end(),
-                                current_set.begin(), current_set.end(),
-                                std::inserter(intersection, intersection.begin()));
-          common_elements = std::move(intersection);
-      }
-
-      if (common_elements.empty()) {
-          std::cout << "There are no common elements across all sets." << std::endl;
-          // TODO return solution
-      } 
-      else {
-          std::cout << "Common elements across all sets: ";
-          for (const auto& element : common_elements) {
-              std::cout << element << " ";
+      std::stringstream stream(line);
+      InputData data;
+      stream >> data.agent;
+      stream >> data.cost;
+      std::string task;
+      bool skipLine = false;
+      while (stream >> task) {
+          if (data.taskSet.find(task) != data.taskSet.end()) {
+              skipLine = true;
+              break;
           }
-          std::cout << std::endl;
-
-          // TODO return new constraint (for the new lowlevel search)
+          data.taskSet.insert(task);
       }
-  } 
-  else {
-      std::cout << "No sets in the solution map." << std::endl;
+      
+      if (!skipLine) {
+          data.id = input_id++;
+          inputData.push_back(data);
+      }
   }
 
+  // std::cout << "-----low level search: loading data, set cost;solve assignment;put solution into a HighLevelNode------" << std::endl;
+  Assignment<std::string, std::string> assignment;
+  for (const auto& data : inputData) {
+    assignment.setCost(data.agent, data.taskSet, data.cost);
+  }
+  std::map<std::string, std::set<std::string>> solution;
+  int64_t cost = assignment.solve(solution);
+  HighLevelNode start;
+  start.id = 0;
+  start.cost = cost;
+  start.solution = solution;
+  std::cout << "The start";
+  std::cout << start;
 
-  // only left the common task be once in the whole input (have more than one posibilities)
-  // try: remove the first group vertex that have 1 in it, and corresponding edges(2 edges)
+  typename boost::heap::d_ary_heap<HighLevelNode, boost::heap::arity<2>,
+                                    boost::heap::mutable_<true> >
+      open;
 
-  std::set<std::set<std::string>> groupsContainingOne; 
+  auto handle = open.push(start);
+  (*handle).handle = handle;
 
-  for (const auto& group : assignment.getGroups()) {
-    if (group.find("1") != group.end()) {
-      groupsContainingOne.insert(group); // Add the group containing '1' to the set
-      std::cout << "Group containing '1' found: ";
-      for (const auto& task : group) {
-        std::cout << task << " ";
+  bool outputToFile = false; 
+  solution.clear();
+  int id = 1;
+  HighLevelNode P;
+  while (!open.empty()) {
+    P = open.top();
+    open.pop();
+
+    if (P.solution.empty()) {
+      std::cout << "Cannot find a solution!" << std::endl;
+    }
+
+    std::string common_element;
+    std::map<std::string, int> elementCounts; 
+    for (auto iter = P.solution.begin(); iter != P.solution.end(); ++iter) {
+      std::set<std::string> current_set = iter->second;
+      for (const std::string& task : current_set){
+        elementCounts[task]++;
+        if (elementCounts[task] > 1){
+          // std::cout << "Element appearing more than once: task" << task << std::endl;
+          common_element = task;
+          break;
+        }
       }
-      std::cout << std::endl;
+    }
+
+    std::vector<Constraint> new_constraints;
+    if (!common_element.empty()) {
+      for (const auto& pair : P.solution) {
+        std::set<std::string> current_set = pair.second;
+        for (const std::string& task : current_set){ 
+          if (task == common_element){
+            Constraint con;
+            con.agent = pair.first;
+            con.taskSet = pair.second;
+            new_constraints.push_back(con);
+          }
+        }
+      }
+    }
+    else{
+      // std::cout << "no common_element, Breaking out of the loop.\n";
+      std::cout << "!find!";
+      outputToFile = true; 
+      break;  
+    }
+
+    for (const auto& new_constraint : new_constraints) {
+      HighLevelNode newNode = P;
+      bool alreadyExists = false;
+      for (const auto& existing_constraint : newNode.constraints) {
+        if (new_constraint.agent == existing_constraint.agent && 
+            new_constraint.taskSet == existing_constraint.taskSet) {
+          alreadyExists = true;
+          break;
+        }
+      }
+      if (alreadyExists) {
+        continue; // Skip the rest of this loop iteration
+      }
+
+      newNode.constraints.push_back(new_constraint);
+      Assignment<std::string, std::string> assignment;
+      for (const auto& data : inputData) {
+          bool skipData = false;
+          for (const auto& constraint : newNode.constraints) {
+            if (data.agent == constraint.agent && data.taskSet == constraint.taskSet) {
+              skipData = true;
+              break;
+            }
+          }
+          if (!skipData) {
+            assignment.setCost(data.agent, data.taskSet, data.cost);
+          }
+      }
+
+      std::map<std::string, std::set<std::string>> solution;
+      int64_t cost = assignment.solve(solution);
+
+      newNode.id = id;
+      newNode.cost = cost;
+      newNode.solution = solution;
+      // std::cout << newNode;
+
+      auto handle = open.push(newNode);
+      (*handle).handle = handle;
+      ++id;
+    }
+
+  }
+  if (outputToFile) {
+    std::cout << P;
+    std::ofstream out(outputFile);
+    out << "cost: " << P.cost << std::endl;
+    out << "assignment:" << std::endl;
+    for (const auto& s : P.solution) {
+      out << "  " << s.first << ": ";
+      for (const auto& element : s.second) {
+        out << element << " ";
+      }
+      out << std::endl;
     }
   }
 
-  // if (groupContainsElement1) {
-  //     // Perform the necessary operations before solving the assignment
-  //     std::cout << "A group containing '1' was found." << std::endl;
-  // }
+  std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();  
+  std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>( t2-t1 );
+  std::cout << "Runtime: " << time_used.count() << " seconds" << std::endl;
 
+  std::string outputDirectory = outputFile;
+  size_t pos = outputDirectory.find_last_of("/\\");
+  if (pos != std::string::npos) {
+      outputDirectory = outputDirectory.substr(0, pos);
+  }
+  std::cout << "Output Directory: " << outputDirectory << std::endl;
 
+  std::string runtimeFilePath = outputDirectory + "/runtime.txt";
 
+  // std::ofstream runtimeFile(runtimeFilePath);
+  std::ofstream runtimeFile(runtimeFilePath, std::ios_base::app); // Open in append mode
+  // std::ofstream file("runtime.txt", std::ios_base::app);
 
-  Assignment<std::string, std::string> assignment1;  // can this work?? is this deepcopy from the original assignment??
-  assignment1 = assignment;
-
-
-
-
-  
-  // ?? make sure more agent can have 
-
-
+  if (!runtimeFile.is_open()) {
+    std::cout << "File does not exist, creating a new file..." << std::endl;
+    runtimeFile.open(runtimeFilePath);
+  }
+  runtimeFile << "Input File: " << inputFile << std::endl;
+  runtimeFile << "Runtime: " << time_used.count() << " seconds" << std::endl;
 
 }
