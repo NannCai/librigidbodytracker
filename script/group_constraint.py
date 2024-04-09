@@ -86,9 +86,10 @@ def gurobi_algorithm(assignments_dic,agents, groups, tasks_list):
         print("No solution found")
     return m,x,combinations
 
-def save_gurobi_res(model,x,combinations,res_dir,input_file_name,additional_cost=1e4,additional_group = 50):
+def save_gurobi_res(model,x,combinations,res_dir,input_file_name,runtime,additional_cost=1e4,additional_group = 50):
     if model is None:
-        output_data = {'cost': 0}
+        output_data = {'cost': 0,
+                       'assignment':None}
     else:
         output_data = {
             'cost': model.objVal,
@@ -97,7 +98,8 @@ def save_gurobi_res(model,x,combinations,res_dir,input_file_name,additional_cost
                 # int(agent[1:]): int(group[1:]) if '_' not in group else ' '.join(str(int(t[1:])) for t in group.split('_'))   
                 # int(agent[1:]): ' '.join(str(int(t[1:])) for t in group.split('_'))   
                 for agent, group in combinations if (abs(x[agent, group].x) > 1e-6)
-            }
+            },
+            'runtime':runtime
         }
         # remove_flag = 1
         # if remove_flag:
@@ -118,46 +120,68 @@ def save_gurobi_res(model,x,combinations,res_dir,input_file_name,additional_cost
     res_file = os.path.join(res_dir, res_file_name)
     print('res_file',res_file)
     with open(res_file, 'w') as file:
-        file.write(f"cost: {output_data['cost']}\n")
-        del output_data['cost']  # Remove 'cost' from the dictionary before dumping to YAML
-        yaml.dump(output_data, file)
+        # file.write(f"cost: {output_data['cost']}\n")
+        # del output_data['cost']  # Remove 'cost' from the dictionary before dumping to YAML
+        yaml.dump(output_data, file, sort_keys=False)
 
+def Gurobi(input_txt_name,data,gurobi_res_dir):
+    start_time = time.time()
+    assignments_dic, agents, groups, tasks_list = parse_data(data,additional_cost = 1e4)
+    model,x,combinations = gurobi_algorithm(assignments_dic,agents, groups, tasks_list)
+    # if model is None:
+    #     return None
+    end_time = time.time()  # End timing
+    runtime = end_time - start_time
+    save_gurobi_res(model,x,combinations,gurobi_res_dir,input_txt_name,runtime) 
+    return runtime
+    
 if __name__ == '__main__':
-    # input_path = 'data/inputs/input_group3.txt'
-    # input_path = 'input2.txt'
-    input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/random_inputs'
-    gurobi_res_dir = 'data/gurobi_res3'
+    # input_dir = 'data/random_inputs'
+    # gurobi_res_dir = 'data/gurobi_res3'
+
+    max_group_num = 3
+    max_group_size = 3
+    input_dir = f'data/maxGroup_{max_group_num}_maxMarker_{max_group_size}/random_inputs_maxGroup_{max_group_num}_maxMarker_{max_group_size}'
+    gurobi_res_dir = f'data/maxGroup_{max_group_num}_maxMarker_{max_group_size}/gurobi_maxGroup_{max_group_num}_maxMarker_{max_group_size}'
+
     input_files = os.listdir(input_dir)
-    runtime_list = []
+    # input_files = ['random_14.txt']
     for input_file in input_files:
-        start_time = time.time()  # Start timing
-        print(input_file,'--------------')  # random_7.txt
         input_file_path = os.path.join(input_dir, input_file)
         with open(input_file_path, 'r') as file:
             data = file.read()
-        additional_cost = 1e4
-        additional_group = 50
-        assignments_dic,agents,groups,tasks_list = parse_data(data,
-                                                              additional_cost = additional_cost,
-                                                              additional_group = additional_group)
-        # print('assignments_dic',assignments_dic)
-        model,x,combinations = gurobi_algorithm(assignments_dic,agents, groups, tasks_list)
-        save_gurobi_res(model,x,combinations,gurobi_res_dir,input_file,
-                        additional_cost = additional_cost,
-                        additional_group = additional_group) 
+        Gurobi(input_file,data,gurobi_res_dir)
 
-        end_time = time.time()  # End timing
-        runtime = end_time - start_time
-        print(f"Runtime of gurobi_algorithm: {runtime} seconds")
-        gurobi_runtime_file = gurobi_res_dir +'/runtime.txt'
-        with open(gurobi_runtime_file, 'a') as runtime_file:
-            runtime_file.write(f"Input File: {input_file}\n")
-            runtime_file.write(f"Runtime: {runtime} seconds\n")
-            runtime_file.write("\n")
-        runtime_list.append(runtime)
 
-    average_runtime = np.mean(runtime_list)
-    frequency =  1/average_runtime
-    print(f"Average runtime of gurobi_algorithm: {average_runtime} seconds")
+    # runtime_list = []
+    # for input_file in input_files:
+    #     start_time = time.time()  # Start timing
+    #     print(input_file,'--------------')  # random_7.txt
+    #     input_file_path = os.path.join(input_dir, input_file)
+    #     with open(input_file_path, 'r') as file:
+    #         data = file.read()
+    #     additional_cost = 1e4
+    #     additional_group = 50
+    #     assignments_dic,agents,groups,tasks_list = parse_data(data,
+    #                                                           additional_cost = additional_cost,
+    #                                                           additional_group = additional_group)
+    #     # print('assignments_dic',assignments_dic)
+    #     model,x,combinations = gurobi_algorithm(assignments_dic,agents, groups, tasks_list)
 
-    print(f'Frequency of !gurobi! Average Runtime: {frequency}')
+    #     end_time = time.time()  # End timing
+    #     runtime = end_time - start_time
+    #     print(f"Runtime of gurobi_algorithm: {runtime} seconds")
+    #     gurobi_runtime_file = gurobi_res_dir +'/runtime.txt'
+    #     with open(gurobi_runtime_file, 'a') as runtime_file:
+    #         runtime_file.write(f"Input File: {input_file}\n")
+    #         runtime_file.write(f"Runtime: {runtime} seconds\n")
+    #         runtime_file.write("\n")
+    #     runtime_list.append(runtime)
+    #     save_gurobi_res(model,x,combinations,gurobi_res_dir,input_file,runtime,
+    #                     additional_cost = additional_cost,
+    #                     additional_group = additional_group)
+        
+    # average_runtime = np.mean(runtime_list)
+    # frequency =  1/average_runtime
+    # print(f"Average runtime of gurobi_algorithm: {average_runtime} seconds")
+    # print(f'Frequency of !gurobi!: {frequency}')

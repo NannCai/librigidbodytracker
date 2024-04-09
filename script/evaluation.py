@@ -24,7 +24,7 @@ def get_matched_files_dict(gurobi_dir,graph_dir,input_dir):
                 'graph': matching_graphs[0],
                 'gurobi': matching_gurobis[0]
             }
-            print('file_name',file_name,'match_dict[file_name]',match_dict[file_name])
+            # print('file_name',file_name,'match_dict[file_name]',match_dict[file_name])
             # print(f'File Name: {file_name}, Matching Graphs: {matching_graphs}, Matching Gurobis: {matching_gurobis}')
         else:
             print(f'Match not found for {file_name}')
@@ -51,48 +51,82 @@ def parse_res(gurobi_dir,graph_dir,matching_gurobis,matching_graphs):
     return None,None
 
 if __name__ == '__main__':
-    gurobi_dir = 'data/gurobi_res3'  # TODO how to deal with group=t1_t1
-    # graph_dir = 'data/graph_res'
-    graph_dir = 'data/graph_cbs3'
-    input_dir = 'data/random_inputs'
-    save_dir = 'data/evaluation3'
+    # max_group_num_list = [3,5]
+    # max_group_size_list = [3,5]
+    for (max_group_num,max_group_size) in [(3,3),(3,5),(5,5)]:
+        # base_name = "maxGroup_3_maxMarker_3"
+        base_name = f'maxGroup_{max_group_num}_maxMarker_{max_group_size}'
+        gurobi_dir = f'data/{base_name}/gurobi_{base_name}'  # TODO how to deal with group=t1_t1
+        graph_dir = f'data/{base_name}/graph_cbs_{base_name}'
+        input_dir = f'data/{base_name}/random_inputs_{base_name}'
+        save_dir = f'data/{base_name}/evaluation_{base_name}'
 
-    match_dict = get_matched_files_dict(gurobi_dir,graph_dir,input_dir)
-    # print('match_dict', match_dict)
-    match_cout = 0
-    # for value in match_dict.values():
-    for key,value in match_dict.items():
-        print('key',key,'value',value)
-        matching_gurobis = value.get('gurobi')
-        matching_graphs = value.get('graph')
-        # if not matching_gurobis or not matching_graphs:
-        #     print("Error: 'gurobi' or 'graph' key not found in dictionary.")
-        #     continue
+        match_dict = get_matched_files_dict(gurobi_dir,graph_dir,input_dir)
+        match_cout = 0
+        gurobi_runtime_list,graph_runtime_list =[],[]
 
-        res_gurobi,res_graph = parse_res(gurobi_dir,graph_dir,matching_gurobis,matching_graphs)
-        print('res_gurobi',res_gurobi)
-        print('res_graph',res_graph)
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
+        for matched_name,matched_files in match_dict.items():
+            # print('matched_name',matched_name,'matched_files',matched_files)
+            matching_gurobis = matched_files.get('gurobi')
+            matching_graphs = matched_files.get('graph')
+            if not matching_gurobis or not matching_graphs:
+                print("Error: 'gurobi' or 'graph' key not found in dictionary.")
+                continue
 
-        # if res_gurobi['cost'] == res_graph['cost']:
-        if res_gurobi['cost'] == res_graph['cost'] and res_gurobi['assignment'] == res_graph['assignment']:
-            print("Content of 'res_gurobi' and 'res_graph' is the same.")
-            print('!!!!!!')
-            match_cout += 1
-        else:
-            print("Content of 'res_gurobi' and 'res_graph' is different.")
+            res_gurobi,res_graph = parse_res(gurobi_dir,graph_dir,matching_gurobis,matching_graphs)
+            # print('res_gurobi',res_gurobi)
+            # print('res_graph',res_graph)
+
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+                
+            if 'runtime' in res_gurobi and 'runtime' in res_graph:
+                gurobi_runtime_list.append(res_gurobi['runtime'])
+                graph_runtime_list.append(res_graph['runtime'])
+            else:
+                print('matched_name',matched_name)
+                print('res_gurobi',res_gurobi)
+                print('res_graph',res_graph)
+
+            # gurobi_runtime_list.append(res_gurobi.get('runtime', None))
+            # graph_runtime_list.append(res_graph.get('runtime', None))
+
+            if res_gurobi['cost'] == res_graph['cost'] and res_gurobi['assignment'] == res_graph['assignment']:
+                # print("Content of 'res_gurobi' and 'res_graph' is the same.")
+                # print('!!!!!!')
+                match_cout += 1
+            else:
+                print("Content of 'res_gurobi' and 'res_graph' is different.")
 
             # record the different input and also all the outputs            
-            filename = f'{save_dir}/eval_{key}.txt'
+            filename = f'{save_dir}/eval_{matched_name}.txt'
             with open(filename, 'w') as file:
                 file.write(f"res_gurobi:\n{res_gurobi}\n")
                 file.write(f"res_graph:\n{res_graph}\n")
-                with open(f'{input_dir}/{key}.txt', 'r') as input_file:
-                    file.write(f"content in {key}.txt:\n{input_file.read()}\n")
+                with open(f'{input_dir}/{matched_name}.txt', 'r') as input_file:
+                    file.write(f"content in {matched_name}.txt:\n{input_file.read()}\n")
+        
+        print('gurobi_runtime_list',gurobi_runtime_list)
+        print('graph_runtime_list',graph_runtime_list)
+        gurobi_runtime_length = len(gurobi_runtime_list)
+        graph_runtime_length = len(graph_runtime_list)
+        print("Length of gurobi_runtime_list:", gurobi_runtime_length)
+        print("Length of graph_runtime_list:", graph_runtime_length)
 
-    print('match_cout',match_cout)
-    print('end')
+        print('base_name',base_name)
+        average_gurobi = sum(gurobi_runtime_list) / gurobi_runtime_length
+        frequency_gurobi = 1/average_gurobi
+        print(f'Average Runtime of !gurobi!: {average_gurobi} seconds')
+        print(f'Frequency of !gurobi! Average Runtime: {frequency_gurobi}')
+
+
+        average_cbs = sum(graph_runtime_list) / graph_runtime_length
+        frequency_cbs = 1/average_cbs
+        print(f'Average Runtime of !CBS!: {average_cbs} seconds')
+        print(f'Frequency of !CBS! Average Runtime: {frequency_cbs}')
+
+        print('match_cout',match_cout)
+        print('end--------')
 
 
 

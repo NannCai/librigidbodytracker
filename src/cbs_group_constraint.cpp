@@ -69,11 +69,12 @@ int main(int argc, char* argv[]) {
   solution.clear();
   int id = 1;
   HighLevelNode P;
-  int loopCount = 0; 
+  int m_highLevelExpanded = 0; 
+  int m_lowLevelExpanded = 0;
   while (!open.empty()) {
-    loopCount++;
-    std::cout << "=========" << loopCount<< " Loop ==========="  << std::endl;
-    // if (loopCount > 10) {
+    m_highLevelExpanded++;
+    std::cout << "=========" << m_highLevelExpanded<< " Loop ==========="  << std::endl;
+    // if (m_highLevelExpanded > 10) {
     // // std::cout << "Loop count exceeded 20. Exiting the loop." << std::endl;
     // break; // Add this line to exit the loop
     // }
@@ -100,7 +101,6 @@ int main(int argc, char* argv[]) {
 
     }
     
-
     std::cout << "conflict_task: " << conflict_task << std::endl;  //TODO the conflict_task will be the same for a lot of times
     std::vector<Constraint> new_constraints;
     createConstraintsFromConflict(P.solution,conflict_task,new_constraints);
@@ -110,45 +110,10 @@ int main(int argc, char* argv[]) {
     }
 
     for (const auto& new_constraint : new_constraints) {
-      HighLevelNode newNode = P;
-      bool alreadyExists = false;
-      for (const auto& existing_constraint : newNode.constraints) {
-        if (new_constraint.agent == existing_constraint.agent && 
-            new_constraint.taskSet == existing_constraint.taskSet) {
-          alreadyExists = true;
-          break;
-        }
-      }
-      if (alreadyExists) {
-        continue; // Skip the rest of this loop iteration
-      }
-
-      newNode.constraints.push_back(new_constraint);
-      Assignment<std::string, std::string> assignment;
-      for (const auto& data : inputData) {
-          bool skipData = false;
-          for (const auto& constraint : newNode.constraints) {
-            if (data.agent == constraint.agent && data.taskSet == constraint.taskSet) {
-              skipData = true;
-              break;
-            }
-          }
-          if (!skipData) {
-            assignment.setCost(data.agent, data.taskSet, data.cost);
-          }
-      }
-
-      std::map<std::string, std::set<std::string>> solution;
-      int64_t cost = assignment.solve(solution);
-
-      newNode.id = id;
-      newNode.cost = cost;
-      newNode.solution = solution;
-      // std::cout << newNode;
-
+      HighLevelNode newNode;
+      LowLevelSearch(new_constraint,inputData,P,newNode,id);
       auto handle = open.push(newNode);
       (*handle).handle = handle;
-      ++id;
     }
 
   }
@@ -170,7 +135,8 @@ int main(int argc, char* argv[]) {
       out << std::endl;
     }
     out << "runtime: " << time_used.count() << std::endl;
-    out << "highLevelExpanded: " << loopCount << std::endl;
+    out << "highLevelExpanded: " << m_highLevelExpanded << std::endl;
+    out << "lowLevelExpanded: " << id << std::endl;
   }
   else{
     std::cout << "didn't find the result!" << std::endl;

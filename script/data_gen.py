@@ -1,20 +1,19 @@
 import random
-from group_constraint import gurobi_algorithm,save_gurobi_res,parse_data
-import os
+# from group_constraint import gurobi_algorithm,save_gurobi_res,parse_data
+from group_constraint import Gurobi
 
-def gen_data():
+import os
+import time  
+
+def gen_data(max_group_num,max_group_size):
     num_agent = random.randint(1, 8)  # range(num_agent) is the agent name
     data = ''
     for a in range(num_agent):
         print('a',a)
         # group_size = 2
-        group_size = random.randint(1, 5)  
-        num_group = random.randint(1, 5)
-        for g in range(num_group):
-            # group = ' '.join([str(random.randint(0, 9)) for _ in range(2)]) # tasks/group
-            # # print(group)
-            # cost = random.randint(1, 100)
-            # data = data + ' '.join([str(a),str(cost),group]) +'\n'
+        num_group = random.randint(1, max_group_num)
+        group_size = random.randint(1, max_group_size)  # how many tasks in a group
+        for i in range(num_group):
             group = ' '.join([str(random.randint(0, 11)) for _ in range(group_size)])  # Generate tasks with 't'
             cost = random.randint(1, 100)
             data += f'{a} {cost} {group}\n'  # Use f-string for string formatting
@@ -32,19 +31,17 @@ def save_input_txt(save_dir,data,i):
 
 if __name__ == '__main__':
     # save_dir = 'data/inputs'
-    random_inputs_dir = 'data/random_inputs'
-    gurobi_res_dir = 'data/gurobi_res3'
-
+    max_group_num = 3
+    max_group_size = 3
+    random_inputs_dir = f'data/maxGroup_{max_group_num}_maxMarker_{max_group_size}/random_inputs_maxGroup_{max_group_num}_maxMarker_{max_group_size}'
+    gurobi_res_dir = f'data/maxGroup_{max_group_num}_maxMarker_{max_group_size}/gurobi_maxGroup_{max_group_num}_maxMarker_{max_group_size}'
     for i in range(30):
-        data = gen_data()
-        print('data',data)
-        print('----')
-        input_txt_name = save_input_txt(random_inputs_dir,data,i)
-        
+        data = gen_data(max_group_num,max_group_size)
+        # print('data',data)
+        # print('----')
+        input_txt_name = save_input_txt(random_inputs_dir,data,i)        
 
-        assignments_dic, agents, groups, tasks_list = parse_data(data,additional_cost = 1e4)
-        model,x,combinations = gurobi_algorithm(assignments_dic,agents, groups, tasks_list)
-        save_gurobi_res(model,x,combinations,gurobi_res_dir,input_txt_name) 
+        runtime = Gurobi(input_txt_name,data,gurobi_res_dir)  # runtime without read the file and write the result into the file
 
 
         print('end')

@@ -2,8 +2,12 @@
 
 
 # Directory paths
-input_dir="data/random_inputs"
-output_dir="data/graph_cbs3"
+
+base_dir="maxGroup_3_maxMarker_3"
+input_dir="data/${base_dir}/random_inputs_${base_dir}"
+output_dir="data/${base_dir}/graph_cbs_${base_dir}"
+# input_dir="data/random_inputs"
+# output_dir="data/graph_cbs3"
 echo "input_dir: $input_dir"
 echo "output_dir: $output_dir"
 

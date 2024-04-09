@@ -135,6 +135,7 @@ int main(int argc, char **argv)
 
   tracker.setLogWarningCallback(&log_stderr);
   if (argc < 4) {
+    // std::cout << "(argc < 4)" << std::endl;
     PointCloudPlayer player;
     player.load(argv[2]);
     player.play(tracker);

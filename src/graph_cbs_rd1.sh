@@ -8,7 +8,7 @@ echo "input_dir: $input_dir"
 echo "output_dir: $output_dir"
 
 mkdir -p $output_dir
-input_file="data/random_inputs/random_0.txt"
+input_file="data/random_inputs/random_20.txt"
 
 base_name=$(basename $input_file .txt)
 

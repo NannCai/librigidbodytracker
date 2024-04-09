@@ -1,6 +1,10 @@
 
 #include <fstream>
 #include <iostream>
+#include "cbs_assignment.hpp"
+
+using libMultiRobotPlanning::Assignment;
+
 
 struct Constraint{
   std::string agent;
@@ -137,4 +141,35 @@ void createConstraintsFromConflict(
       if (count>1){return ;}
     }
   }
+}
+
+void LowLevelSearch(
+    const Constraint& new_constraint,
+    const std::vector<InputData>& inputData,
+    const HighLevelNode& P,
+    HighLevelNode& newNode,
+    int& id){
+  newNode.id = id;
+  ++id;
+  newNode.constraints = P.constraints;
+  newNode.constraints.push_back(new_constraint);
+  Assignment<std::string, std::string> assignment;
+  for (const auto& data : inputData) {
+    bool skipData = false;
+    for (const auto& constraint : newNode.constraints) {
+      if (data.agent == constraint.agent && data.taskSet == constraint.taskSet) {
+        skipData = true;
+        break;
+      }
+    }
+    if (!skipData) {
+      assignment.setCost(data.agent, data.taskSet, data.cost);
+    }
+  }
+
+  std::map<std::string, std::set<std::string>> solution;
+  int64_t cost = assignment.solve(solution);
+
+  newNode.cost = cost;
+  newNode.solution = solution;
 }
