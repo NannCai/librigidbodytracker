@@ -2,7 +2,7 @@
 
 
 # Directory paths
-for g in 4 5
+for g in 3
 do
   for t in 3 4 5
   do
@@ -10,10 +10,9 @@ do
     do
       # base_dir="G3_T4_A25"
       base_dir="G${g}_T${t}_A${a}"
-      input_dir="data/${base_dir}/random_inputs_${base_dir}"
-      output_dir="data/${base_dir}/graph_cbs_${base_dir}"
-      # input_dir="data/random_inputs"
-      # output_dir="data/graph_cbs3"
+      root_dir="data/18_04"
+      input_dir="${root_dir}/${base_dir}/random_inputs_${base_dir}"
+      output_dir="${root_dir}/${base_dir}/graph_cbs_${base_dir}_new"
       echo "input_dir: $input_dir"
       echo "output_dir: $output_dir"
 

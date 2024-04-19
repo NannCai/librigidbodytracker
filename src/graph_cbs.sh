@@ -3,11 +3,11 @@
 
 # Directory paths
 
-base_dir="G5_T4_A20"
-input_dir="data/${base_dir}/random_inputs_${base_dir}"
-output_dir="data/${base_dir}/graph_cbs_${base_dir}"
-# input_dir="data/random_inputs"
-# output_dir="data/graph_cbs3"
+base_dir="G3_T3_A25"
+root_dir="data/18_04"
+input_dir="${root_dir}/${base_dir}/random_inputs_${base_dir}"
+output_dir="${root_dir}/${base_dir}/graph_cbs_${base_dir}_new"
+# output_dir="data/${base_dir}/graph_cbs_${base_dir}"
 echo "input_dir: $input_dir"
 echo "output_dir: $output_dir"
 

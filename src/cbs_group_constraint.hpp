@@ -10,6 +10,12 @@ struct Constraint{
   std::string agent;
   std::set<std::string> taskSet;
 
+  bool operator<(const Constraint& other) const {
+    if (agent < other.agent) return true;
+    if (agent > other.agent) return false;
+    return taskSet < other.taskSet;
+  }
+
   friend std::ostream& operator<<(std::ostream& os, const Constraint& c) {
     // os << "current Constraint: " ;
     os << "Agent: " << c.agent << ", Tasks: ";
@@ -23,7 +29,7 @@ struct Constraint{
 
 struct HighLevelNode {
   std::map<std::string, std::set<std::string>> solution;
-  std::vector<Constraint> constraints;
+  std::set<Constraint> constraints;
 
   long cost;
   int id;
@@ -123,28 +129,63 @@ bool getFirstConflict(
   return false;
 }
 
+// void createConstraintsFromConflict(
+//     const std::map<std::string, std::set<std::string>>& solution,
+//     const std::string& conflict_task, 
+//     std::vector<Constraint>& constraints){
+//   int count = 0;
+//   for (const auto& pair : solution) {
+//     std::set<std::string> current_set = pair.second;
+//     for (const std::string& task : current_set){ 
+//       if (task == conflict_task){
+//         count++;
+//         Constraint con;
+//         con.agent = pair.first;
+//         con.taskSet = pair.second;
+//         constraints.push_back(con);
+//       }
+//       if (count>1){return ;}
+//     }
+//   }
+// }
+
 void createConstraintsFromConflict(
     const std::map<std::string, std::set<std::string>>& solution,
     const std::string& conflict_task, 
-    std::vector<Constraint>& constraints){
+    std::set<std::set<Constraint>>& new_constraints){
   int count = 0;
+  std::set<Constraint> all_constraints;
   for (const auto& pair : solution) {
     std::set<std::string> current_set = pair.second;
     for (const std::string& task : current_set){ 
       if (task == conflict_task){
-        count++;
         Constraint con;
         con.agent = pair.first;
         con.taskSet = pair.second;
-        constraints.push_back(con);
+        all_constraints.insert(con);
       }
-      if (count>1){return ;}
     }
   }
+  for (const auto& constraint : all_constraints) {
+    std::cout <<"constraint:" << std::endl;
+    std::cout << constraint;
+    std::set<Constraint> constraint_set(all_constraints);
+    constraint_set.erase(constraint);
+    new_constraints.insert(constraint_set);
+  }
+  
+  for (const auto& constraint_set : new_constraints) {
+    std::cout <<"constraint_set:" << std::endl;
+    for (const auto& constraint : constraint_set) {
+        std::cout << constraint;
+    }
+  }
+
 }
 
+
 void LowLevelSearch(
-    const Constraint& new_constraint,
+    const std::set<Constraint>& new_constraint_set,
     const std::vector<InputData>& inputData,
     const HighLevelNode& P,
     HighLevelNode& newNode,
@@ -152,7 +193,9 @@ void LowLevelSearch(
   newNode.id = id;
   ++id;
   newNode.constraints = P.constraints;
-  newNode.constraints.push_back(new_constraint);
+  for (const auto& constraint : new_constraint_set) {
+      newNode.constraints.insert(constraint);
+  }
   Assignment<std::string, std::string> assignment;
   for (const auto& data : inputData) {
     bool skipData = false;

@@ -45,20 +45,42 @@ def parse_res(gurobi_dir,graph_dir,matching_gurobis,matching_graphs):
         quit()
     return None,None
 
+def violin_box_plot(data,frequency_cbs,average_cbs,frequency_gurobi,average_gurobi,base_name,save_dir):
+    # print(" Creating violin plot")
+    plt.close()
+    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(15, 6))
+    # fig = plt.figure(figsize=(8,6))
+    axs[0].violinplot(data, showmeans=False,showmedians=True)
+    axs[0].set_xticks([1, 2], ['Gurobi', 'Cbs'])
+    axs[0].set_ylabel('Runtime')
+    axs[0].set_title(f'Violin plot frequency CBS {frequency_cbs:.2f} runtime {average_cbs:.4f}')
+
+    axs[1].boxplot(data)
+    axs[1].set_xticks([1, 2], ['Gurobi', 'Cbs'])
+    axs[1].set_ylabel('Runtime')
+    axs[1].set_title(f'Box plot gurobi {frequency_gurobi:.2f} runtime {average_gurobi:.4f}')
+
+    violin_path = save_dir + f'/violin_box_{base_name}.png'
+    print('violin_path',violin_path)
+    plt.savefig(violin_path, bbox_inches='tight')
+
 if __name__ == '__main__':
     # size_list = [(3,3),(3,5),(5,5)]
-    size_list = [(4,15)]  # G5_T4_A15
-    # size_list = [(t,a) for t in range(3,6) for a in range(5,25,5)]
+    size_list = [(3,3,25)]  # G5_T4_A15
+    # size_list = [(3,t,a) for t in range(3,6) for a in range(5,21,5)]
     # size_list = [(t,15) for t in range(3,6)]
     print('size_list',size_list)
+    graph_version = '_new'  # _old _new
 
-    for (max_task_num,max_agent_num) in size_list:
-        max_group_num = 5
+    for (max_group_num,max_task_num,max_agent_num) in size_list:
+        # max_group_num = 5
+        root_dir = 'data/18_04'
         base_name = f'G{max_group_num}_T{max_task_num}_A{max_agent_num}'
-        gurobi_dir = f'data/{base_name}/gurobi_{base_name}'  # TODO how to deal with group=t1_t1
-        graph_dir = f'data/{base_name}/graph_cbs_{base_name}'
-        input_dir = f'data/{base_name}/random_inputs_{base_name}'
-        save_dir = f'data/{base_name}/evaluation_{base_name}'
+        gurobi_dir = f'{root_dir}/{base_name}/gurobi_{base_name}'  # TODO how to deal with group=t1_t1
+        # graph_dir = f'{root_dir}/{base_name}/graph_cbs_{base_name}'
+        graph_dir = f'{root_dir}/{base_name}/graph_cbs_{base_name}{graph_version}'
+        input_dir = f'{root_dir}/{base_name}/random_inputs_{base_name}'
+        save_dir = f'{root_dir}/{base_name}/evaluation_{base_name}{graph_version}'
 
         match_dict = get_matched_files_dict(gurobi_dir,graph_dir,input_dir)
         match_cout = 0
@@ -107,23 +129,6 @@ if __name__ == '__main__':
         data = [gurobi_runtime_list, graph_runtime_list]
 
 
-        print(" Creating violin plot")
-        plt.close()
-        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(15, 6))
-        # fig = plt.figure(figsize=(8,6))
-        axs[0].violinplot(data, showmeans=False,showmedians=True)
-        axs[0].set_xticks([1, 2], ['Gurobi', 'Cbs'])
-        axs[0].set_ylabel('Runtime')
-        axs[0].set_title('Violin plot')
-
-        axs[1].boxplot(data)
-        axs[1].set_xticks([1, 2], ['Gurobi', 'Cbs'])
-        axs[1].set_ylabel('Runtime')
-        axs[1].set_title('Box plot')
-
-        violin_path = save_dir + f'/violin_box_{base_name}.png'
-        print('violin_path',violin_path)
-        plt.savefig(violin_path, bbox_inches='tight')
 
         gurobi_runtime_length = len(gurobi_runtime_list)
         graph_runtime_length = len(graph_runtime_list)
@@ -149,7 +154,7 @@ if __name__ == '__main__':
         print('end--------')
 
 
-
+        violin_box_plot(data,frequency_cbs,average_cbs,frequency_gurobi,average_gurobi,base_name,save_dir)
 
 
 

@@ -105,16 +105,17 @@ int main(int argc, char* argv[]) {
 
     
     // std::cout << "conflict_task: " << conflict_task << std::endl;  //TODO the conflict_task will be the same for a lot of times
-    std::vector<Constraint> new_constraints;
+    // std::vector<Constraint> new_constraints;  // need to be set of constraints 
+    std::set<std::set<Constraint>> new_constraints;
     createConstraintsFromConflict(P.solution,conflict_task,new_constraints);
     // std::cout << "new constraints: " << std::endl;
     // for (const auto& constraint : new_constraints) {
     //   std::cout << constraint;
     // }
 
-    for (const auto& new_constraint : new_constraints) {
+    for (const auto& new_constraint_set : new_constraints) {
       HighLevelNode newNode;
-      LowLevelSearch(new_constraint,inputData,P,newNode,id);
+      LowLevelSearch(new_constraint_set,inputData,P,newNode,id);
       auto handle = open.push(newNode);
       (*handle).handle = handle;
     }

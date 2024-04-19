@@ -646,7 +646,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     icp.setInputSource(m_markerConfigurations[rigidBody.m_markerConfigurationIdx]);   // move configure to frame point cloud 
     
     // Perform the alignment for k times
-    int k= 2;
+    int k= 2; // max_group_num
     auto predictTransform = rigidBody.m_lastTransformation;      
     std::cout << "predictTransform/m_lastTransformation:  \n"<< predictTransform.matrix()<< "\n";
 
