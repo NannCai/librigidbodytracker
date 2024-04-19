@@ -68,7 +68,7 @@ def gurobi_algorithm(assignments_dic,agents, groups, tasks_list):
     m.setObjective(x.prod(ms), GRB.MINIMIZE)
 
     # save model for inspection
-    save_model = 0
+    save_model = 1
     if save_model:
         output_dir = 'data/output'
         if not os.path.exists(output_dir):
@@ -103,7 +103,7 @@ def save_gurobi_res(model,x,combinations,res_dir,input_file_name,runtime,additio
         }
         # remove_flag = 1
         # if remove_flag:
-        #     print('output_data',output_data)
+        print('output_data',output_data)
         for key, value in list(output_data['assignment'].items()):
             if isinstance(value, int) and int(value) >= additional_group:
             # if isinstance(value, str) and value.isdigit() and int(value) >= additional_group:
@@ -124,64 +124,54 @@ def save_gurobi_res(model,x,combinations,res_dir,input_file_name,runtime,additio
         # del output_data['cost']  # Remove 'cost' from the dictionary before dumping to YAML
         yaml.dump(output_data, file, sort_keys=False)
 
-def Gurobi(input_txt_name,data,gurobi_res_dir):
+def Gurobi(input_txt_name,data,gurobi_res_dir,additional_group):
     start_time = time.time()
-    assignments_dic, agents, groups, tasks_list = parse_data(data,additional_cost = 1e4)
+    assignments_dic, agents, groups, tasks_list = parse_data(data,additional_cost = 1e4, additional_group = additional_group)
     model,x,combinations = gurobi_algorithm(assignments_dic,agents, groups, tasks_list)
     # if model is None:
     #     return None
     end_time = time.time()  # End timing
     runtime = end_time - start_time
-    save_gurobi_res(model,x,combinations,gurobi_res_dir,input_txt_name,runtime) 
+    save_gurobi_res(model,x,combinations,gurobi_res_dir,input_txt_name,runtime,additional_group = additional_group) 
     return runtime
     
 if __name__ == '__main__':
     # input_dir = 'data/random_inputs'
     # gurobi_res_dir = 'data/gurobi_res3'
 
-    max_group_num = 3
-    max_group_size = 3
-    input_dir = f'data/maxGroup_{max_group_num}_maxMarker_{max_group_size}/random_inputs_maxGroup_{max_group_num}_maxMarker_{max_group_size}'
-    gurobi_res_dir = f'data/maxGroup_{max_group_num}_maxMarker_{max_group_size}/gurobi_maxGroup_{max_group_num}_maxMarker_{max_group_size}'
+    # max_group_num = 3
+    # max_group_size = 3
+    # input_dir = f'data/maxGroup_{max_group_num}_maxMarker_{max_group_size}/random_inputs_maxGroup_{max_group_num}_maxMarker_{max_group_size}'
+    # gurobi_res_dir = f'data/maxGroup_{max_group_num}_maxMarker_{max_group_size}/gurobi_maxGroup_{max_group_num}_maxMarker_{max_group_size}'
+
+    max_task_num = 5
+    max_agent_num = 20 # have 8 robot in the flight space
+
+    max_group_num = 3   # dont be too much 
+    base_name = f'G{max_group_num}_T{max_task_num}_A{max_agent_num}'
+    random_inputs_dir = f'data/{base_name}/random_inputs_{base_name}'
+    gurobi_res_dir = f'data/{base_name}/gurobi_{base_name}'
+    input_dir = f'data/{base_name}/random_inputs_{base_name}'
+    additional_group = max_task_num*max_agent_num + 30
+
 
     input_files = os.listdir(input_dir)
-    # input_files = ['random_14.txt']
+    # input_files = ['random_2.txt']  # gurobi_random_2
     for input_file in input_files:
         input_file_path = os.path.join(input_dir, input_file)
         with open(input_file_path, 'r') as file:
             data = file.read()
-        Gurobi(input_file,data,gurobi_res_dir)
+        Gurobi(input_file,data,gurobi_res_dir,additional_group)
 
 
-    # runtime_list = []
-    # for input_file in input_files:
-    #     start_time = time.time()  # Start timing
-    #     print(input_file,'--------------')  # random_7.txt
-    #     input_file_path = os.path.join(input_dir, input_file)
-    #     with open(input_file_path, 'r') as file:
-    #         data = file.read()
-    #     additional_cost = 1e4
-    #     additional_group = 50
-    #     assignments_dic,agents,groups,tasks_list = parse_data(data,
-    #                                                           additional_cost = additional_cost,
-    #                                                           additional_group = additional_group)
-    #     # print('assignments_dic',assignments_dic)
-    #     model,x,combinations = gurobi_algorithm(assignments_dic,agents, groups, tasks_list)
 
-    #     end_time = time.time()  # End timing
-    #     runtime = end_time - start_time
-    #     print(f"Runtime of gurobi_algorithm: {runtime} seconds")
-    #     gurobi_runtime_file = gurobi_res_dir +'/runtime.txt'
-    #     with open(gurobi_runtime_file, 'a') as runtime_file:
-    #         runtime_file.write(f"Input File: {input_file}\n")
-    #         runtime_file.write(f"Runtime: {runtime} seconds\n")
-    #         runtime_file.write("\n")
-    #     runtime_list.append(runtime)
-    #     save_gurobi_res(model,x,combinations,gurobi_res_dir,input_file,runtime,
-    #                     additional_cost = additional_cost,
-    #                     additional_group = additional_group)
-        
-    # average_runtime = np.mean(runtime_list)
-    # frequency =  1/average_runtime
-    # print(f"Average runtime of gurobi_algorithm: {average_runtime} seconds")
-    # print(f'Frequency of !gurobi!: {frequency}')
+
+
+
+
+
+
+
+
+
+

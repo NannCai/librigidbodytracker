@@ -43,13 +43,14 @@ struct HighLevelNode {
   }
 
   friend std::ostream& operator<<(std::ostream& os, const HighLevelNode& c) {
-    os << "current HighLevelNode" << std::endl;
-    os << "id: " << c.id << " cost: " << c.cost << std::endl;
+    // os << "current HighLevelNode" << std::endl;
+    os << "id: " << c.id << " cost: " << c.cost<< " Solution size: " << c.solution.size() << std::endl;
     
     if (c.solution.empty()) {
       os << "No sets in the solution map." << std::endl;
     }
-    else{
+    // else{
+    else if (c.cost == 401){
       os << "solution:\n";
       for (const auto& s : c.solution) {
         os << s.first << ": ";
@@ -59,15 +60,14 @@ struct HighLevelNode {
         os << std::endl;
       }
     }
-
-    if (c.constraints.empty()) {
-      os << "No constraints." << std::endl;
-    } else {
-      os << "Constraints:" << std::endl;
-      for (size_t i = 0; i < c.constraints.size(); ++i) {
-        os << c.constraints[i];
-      }
-    }
+    // if (c.constraints.empty()) {
+    //   os << "No constraints." << std::endl;
+    // } else {
+    //   os << "Constraints:" << std::endl;
+    //   for (size_t i = 0; i < c.constraints.size(); ++i) {
+    //     os << c.constraints[i];
+    //   }
+    // }
     return os;
   }
 };

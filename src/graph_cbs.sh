@@ -3,7 +3,7 @@
 
 # Directory paths
 
-base_dir="maxGroup_3_maxMarker_3"
+base_dir="G5_T4_A20"
 input_dir="data/${base_dir}/random_inputs_${base_dir}"
 output_dir="data/${base_dir}/graph_cbs_${base_dir}"
 # input_dir="data/random_inputs"
