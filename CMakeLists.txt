@@ -38,12 +38,12 @@ target_link_libraries(playclouds
 )
 
 ## assignment
-add_executable(assignment
-  src/assignment.cpp
-)
-target_link_libraries(assignment
-  ${Boost_LIBRARIES}
-)
+# add_executable(assignment
+#   src/assignment.cpp
+# )
+# target_link_libraries(assignment
+#   ${Boost_LIBRARIES}
+# )
 
 # add_executable(standalone
 #   src/standalone.cpp

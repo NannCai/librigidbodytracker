@@ -8,9 +8,10 @@
 #include <pcl/registration/transformation_estimation_2D.h>
 // #include <pcl/registration/transformation_estimation_lm.h>
 #include <pcl/search/impl/search.hpp>
-#include <set>
 
+#include <set>
 #include "assignment.hpp"
+#include "cbs_group_constraint.hpp"
 
 #include <limits>
 
@@ -137,6 +138,7 @@ void RigidBodyTracker::update(std::chrono::high_resolution_clock::time_point tim
   // else if (m_trackingMode == HybridMode){
   //   updateHybrid(time, pointCloud);
   // }
+  // updatePose(time, pointCloud);
   updateHybrid(time, pointCloud);
 
 }
@@ -154,6 +156,8 @@ void RigidBodyTracker::setLogWarningCallback(
 
 bool RigidBodyTracker::initializePose(Cloud::ConstPtr markersConst)
 {
+  std::cout << "-initializePose function-" << std::endl;
+
   if (markersConst->size() == 0) {
     return false;
   }
@@ -284,7 +288,7 @@ bool RigidBodyTracker::initializePose(Cloud::ConstPtr markersConst)
 void RigidBodyTracker::updatePose(std::chrono::high_resolution_clock::time_point stamp,
   Cloud::ConstPtr markers)
 {
-  std::cout << "updatePose function\n" ;
+  std::cout << "-updatePose function-"<< std::endl ;
 
   if (markers->empty()) {
     for (auto& rigidBody : m_rigidBodies) {
@@ -326,7 +330,6 @@ void RigidBodyTracker::updatePose(std::chrono::high_resolution_clock::time_point
     double dt = elapsedSeconds.count();
 
     // Set the max correspondence distance
-    // TODO: take max here?
     const DynamicsConfiguration& dynConf = m_dynamicsConfigurations[rigidBody.m_dynamicsConfigurationIdx];
     float maxV = dynConf.maxXVelocity;
     icp.setMaxCorrespondenceDistance(maxV * dt);
@@ -419,6 +422,8 @@ void RigidBodyTracker::updatePose(std::chrono::high_resolution_clock::time_point
       }
       logWarn(sstr.str());
     }
+    std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< rigidBody.m_lastTransformation.matrix() << "\n"; 
+
   }
 
 }
@@ -572,7 +577,7 @@ void RigidBodyTracker::updatePosition(std::chrono::high_resolution_clock::time_p
 
 bool RigidBodyTracker::initializeHybrid(Cloud::ConstPtr markers)
 {
-  std::cout << "initializeHybrid function\n";
+  std::cout << "-initializeHybrid function-"<< std::endl;
   // use the config to initial
   size_t const numRigidBodies = m_rigidBodies.size();
   for (int iRb = 0; iRb < numRigidBodies; ++iRb) {
@@ -590,9 +595,11 @@ bool RigidBodyTracker::initializeHybrid(Cloud::ConstPtr markers)
 }
 
 void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_point stamp,
-  Cloud::ConstPtr markers)   //when using: updateHybrid(time, pointCloud);
+  Cloud::ConstPtr markers)   
 {
-  // std::cout << "updateHybrid function\n" ;
+  std::cout << "updateHybrid function\n" ;
+  std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+
 
   if (markers->empty()) {
     for (auto& rigidBody : m_rigidBodies) {
@@ -600,7 +607,9 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     }
     return;
   }
-  m_initialized = m_initialized || initializeHybrid(markers);
+  // m_initialized = m_initialized || initializeHybrid(markers);
+  m_initialized = m_initialized || initializePose(markers);
+
   if (!m_initialized) {
     logWarn(
       "rigid body tracker initialization failed - "
@@ -621,41 +630,42 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
 
 
   icp.setInputTarget(markers);   // 
+  CBS_Assignment<std::string, std::string> CBS_assignment;
+  std::set<CBS_InputData> cbs_data_set;
 
   for (auto& rigidBody : m_rigidBodies) {
     Cloud::Ptr &rbMarkers = m_markerConfigurations[rigidBody.m_markerConfigurationIdx];
     size_t const rbNpts = rbMarkers->size();
-    std::cout << "rbNpts: "<<rbNpts<<"  \n";
+    std::cout <<"rigidBody.m_markerConfigurationIdx: " << rigidBody.m_markerConfigurationIdx<< " rbNpts: "<<rbNpts << std::endl;
 
     if (rbNpts == 1) {
       std::cout << "skip icp\n";
       continue;
     }
 
-
     std::chrono::duration<double> elapsedSeconds = stamp-rigidBody.m_lastValidTransform;
     double dt = elapsedSeconds.count();
-
     // Set the max correspondence distance
-    // TODO: take max here?
     const DynamicsConfiguration& dynConf = m_dynamicsConfigurations[rigidBody.m_dynamicsConfigurationIdx];
     float maxV = dynConf.maxXVelocity;
-    icp.setMaxCorrespondenceDistance(maxV * dt);
-    
+    icp.setMaxCorrespondenceDistance(maxV * dt);    
     // Update input source
     icp.setInputSource(m_markerConfigurations[rigidBody.m_markerConfigurationIdx]);   // move configure to frame point cloud 
     
     // Perform the alignment for k times
-    int k= 2; // max_group_num
+    int k= 3; // max_group_num
     auto predictTransform = rigidBody.m_lastTransformation;      
     std::cout << "predictTransform/m_lastTransformation:  \n"<< predictTransform.matrix()<< "\n";
 
     // std::cout << "-----try k times icp to get different options:----  \n";
-    std::set<std::vector<size_t>>allCorrespondences;
+    // std::set<CBS_InputData> cbs_data_set;
+    double bestErr = std::numeric_limits<double>::max();
+    Eigen::Affine3f bestTransformation;    
     for (size_t i = 0; i < k; ++i)  {
-      Cloud result;
+      std::cout << "--- i: " << i << std::endl;
+      Cloud result; 
       icp.align(result, predictTransform.matrix());  // in the result there are moved config markers
-      // TODO should i have if (!icp.hasConverged()) here? 
+
       if (!icp.hasConverged()) {
         std::stringstream sstr;
         sstr << "ICP did not converge!"
@@ -663,8 +673,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
         logWarn(sstr.str());
         continue;
       }
-
-
+      CBS_InputData data;
       // Get the correspondence indices
       std::vector<size_t> correspondences;
       pcl::search::KdTree<Point>::Ptr search_tree = icp.getSearchMethodTarget();
@@ -673,8 +682,8 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
         std::vector<float> matched_distances;
         search_tree->nearestKSearch(point, 1, matched_indices, matched_distances);
         correspondences.push_back(matched_indices[0]);
+        data.taskSet.insert(std::to_string(matched_indices[0]));
       }
-      allCorrespondences.insert(correspondences);
 
       // // Print result points
       // std::cout << "Result Points/ moved config markers :" << std::endl;
@@ -686,34 +695,100 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
       // for (size_t idx : correspondences) {
       //     std::cout <<"Correspond idx: "<< idx << " Point: " << (*markers)[idx] << std::endl;
       // }
-
+      
+      // Compute cost  ref:Compute changes:
       Eigen::Matrix4f transformation = icp.getFinalTransformation();
-      // std::cout << "icp.getFinalTransformation():  \n"<< transformation << "\n";
-      Eigen::Affine3f tROTA(transformation);
-      rigidBody.m_lastTransformation = tROTA;
-      // std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< tROTA.matrix() << "\n";  
+      Eigen::Affine3f tROTA(transformation);  
+      
+      float x, y, z, roll, pitch, yaw;
+      pcl::getTranslationAndEulerAngles(tROTA, x, y, z, roll, pitch, yaw);
+      float last_x, last_y, last_z, last_roll, last_pitch, last_yaw;
+      pcl::getTranslationAndEulerAngles(rigidBody.m_lastTransformation, last_x, last_y, last_z, last_roll, last_pitch, last_yaw);
 
+      float cost = sqrt(pow(x - last_x, 2) + pow(y - last_y, 2) + pow(z - last_z, 2));
+      std::cout << "Cost: " << cost << std::endl;
+      // cost = cost* 1000;  TODO!
+      cost = cost* 10e5;
 
+      data.agent = std::to_string(rigidBody.m_markerConfigurationIdx);
+      data.cost = cost;
+      cbs_data_set.insert(data);
+      bestTransformation = icp.getFinalTransformation();
 
     }
-
-    // std::cout <<  "allCorrespondences.size() "<<allCorrespondences.size()<< "\n";
-    if (allCorrespondences.size() > 1) {
-      std::cout <<  "!!!!!!!!!!!!!!!!!more than one option!!!!!!!!!!!!\n";
-      int index = 0;
-      for (const auto& vec : allCorrespondences) {
-        std::cout << "vec" << index << " ";
-        for (int num : vec) {
-            std::cout << num << " ";
-        }
-        std::cout << "\n";
-        index++;
-      }
-    }
-
-
-
+    rigidBody.m_lastTransformation = bestTransformation;
+    
   }
+
+  std::cout << "cbs_data_set:" << std::endl;
+  for (const auto& data : cbs_data_set) {
+    std::cout <<  data << std::endl;
+    CBS_assignment.setCost(data.agent, data.taskSet, data.cost);
+  }
+
+  std::map<std::string, std::set<std::string>> solution;
+  int64_t CBS_assignment_cost = CBS_assignment.solve(solution);
+  std::cout << "CBS_assignment_cost: " << CBS_assignment_cost << std::endl;
+  HighLevelNode start;
+  start.id = 0;
+  start.cost = CBS_assignment_cost;
+  start.solution = solution;
+  std::cout << "The start HLN: ";
+  std::cout << start;
+  typename boost::heap::d_ary_heap<HighLevelNode, boost::heap::arity<2>,
+                                    boost::heap::mutable_<true> >
+      open;
+
+  auto handle = open.push(start);
+  (*handle).handle = handle;
+
+  bool outputToFile = false; 
+  solution.clear();
+  int id = 1;
+  HighLevelNode P;
+  int m_highLevelExpanded = 0; 
+  int m_lowLevelExpanded = 0;
+  int last_cost = 0;
+  std::map<std::string, std::set<std::string>> last_solution;
+  int duplicate = 0;
+  while (!open.empty()) {
+    m_highLevelExpanded++;
+    std::cout << "=========" << m_highLevelExpanded<< " Loop ==========="  << std::endl;
+    P = open.top();
+    open.pop();
+    std::cout << P;
+
+    last_cost = P.cost;
+    last_solution = P.solution;
+
+    if (P.solution.empty()) {
+      std::cout << "Cannot find a solution!" << std::endl;
+    }
+
+    std::string conflict_task;
+    if (!getFirstConflict(P.solution,conflict_task)) {
+      std::cout << "no conflict_task, Breaking out of the loop.\n";
+      outputToFile = true; 
+      break;
+    }
+    std::set<std::set<Constraint>> new_constraints;
+    createConstraintsFromConflict(P.solution,conflict_task,new_constraints);
+    for (const auto& new_constraint_set : new_constraints) {
+      HighLevelNode newNode;
+      // LowLevelSearch(new_constraint_set,inputData,P,newNode,id);
+      LowLevelSearch(new_constraint_set,cbs_data_set,P,newNode,id);
+      auto handle = open.push(newNode);
+      (*handle).handle = handle;
+    }
+  }
+
+  std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();  
+  std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>( t2-t1 );
+  // std::cout << "Input file: " << inputFile << std::endl;
+  // std::cout << "Output file: " << outputFile << std::endl;
+  std::cout << "runtime: " << time_used.count() << " seconds" << std::endl;
+  std::cout << "highLevelExpanded: " << m_highLevelExpanded << std::endl;
+  std::cout << "duplicate: " << duplicate << std::endl;
 }
 
 void RigidBodyTracker::logWarn(const std::string& msg)

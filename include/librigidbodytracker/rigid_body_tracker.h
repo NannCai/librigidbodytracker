@@ -5,14 +5,15 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <set>
 
 namespace librigidbodytracker {
 
-enum TrackingMode {
+  enum TrackingMode {
     PositionMode,
     PoseMode,
     HybridMode
-};
+  };
 
   struct DynamicsConfiguration
   {
@@ -111,8 +112,10 @@ enum TrackingMode {
       pcl::PointCloud<pcl::PointXYZ>::ConstPtr markers);
 
     void updateHybrid(std::chrono::high_resolution_clock::time_point stamp,
-      const pcl::PointCloud<pcl::PointXYZ>::ConstPtr markers);
+      pcl::PointCloud<pcl::PointXYZ>::ConstPtr markers);
 
+    void updateHybrid_old(std::chrono::high_resolution_clock::time_point stamp,
+      pcl::PointCloud<pcl::PointXYZ>::ConstPtr markers); 
 
     void logWarn(const std::string& msg);
 

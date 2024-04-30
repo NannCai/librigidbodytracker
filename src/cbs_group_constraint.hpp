@@ -2,8 +2,9 @@
 #include <fstream>
 #include <iostream>
 #include "cbs_assignment.hpp"
+#include <boost/heap/d_ary_heap.hpp>
 
-using libMultiRobotPlanning::Assignment;
+using libMultiRobotPlanning::CBS_Assignment;
 
 
 struct Constraint{
@@ -78,19 +79,45 @@ struct HighLevelNode {
   }
 };
 
-struct InputData {
-    std::string agent;
-    long cost;
-    std::set<std::string> taskSet;
-    int id;
+// struct InputData {
+//     std::string agent;
+//     long cost;
+//     std::set<std::string> taskSet;
+//     // int id;
+// };
+
+struct CBS_InputData {
+  std::string agent;
+  long cost;
+  std::set<std::string> taskSet;
+  // int id;
+  bool operator<(const CBS_InputData& other) const {
+    if (agent != other.agent) {
+      return agent < other.agent;
+    }
+    if (cost != other.cost) {
+      return cost < other.cost;
+    }
+    return taskSet < other.taskSet;
+  }
+  friend std::ostream& operator<<(std::ostream& os, const CBS_InputData& c) {
+    os << "Agent: " << c.agent << ", Cost: " << c.cost << ", Tasks: ";
+    for (const std::string& task : c.taskSet) {
+      os << task << " ";
+    }
+    os << std::endl;
+    return os;
+  }
 };
 
-void processInputFile(const std::string& inputFile, std::vector<InputData>& inputData) {
-    int input_id = 0;
+void processInputFile(const std::string& inputFile, std::set<CBS_InputData>& inputData) {
+// void processInputFile(const std::string& inputFile, std::vector<InputData>& inputData) {
+    // int input_id = 0;
     std::ifstream input(inputFile);
     for (std::string line; getline(input, line);) {
         std::stringstream stream(line);
-        InputData data;
+        CBS_InputData data;
+        // InputData data;
         stream >> data.agent;
         stream >> data.cost;
         std::string task;
@@ -104,8 +131,9 @@ void processInputFile(const std::string& inputFile, std::vector<InputData>& inpu
         }
         
         if (!skipLine) {
-            data.id = input_id++;
-            inputData.push_back(data);
+            // data.id = input_id++;
+            // inputData.push_back(data);
+            inputData.insert(data);
         }
     }
 }
@@ -128,26 +156,6 @@ bool getFirstConflict(
   }    
   return false;
 }
-
-// void createConstraintsFromConflict(
-//     const std::map<std::string, std::set<std::string>>& solution,
-//     const std::string& conflict_task, 
-//     std::vector<Constraint>& constraints){
-//   int count = 0;
-//   for (const auto& pair : solution) {
-//     std::set<std::string> current_set = pair.second;
-//     for (const std::string& task : current_set){ 
-//       if (task == conflict_task){
-//         count++;
-//         Constraint con;
-//         con.agent = pair.first;
-//         con.taskSet = pair.second;
-//         constraints.push_back(con);
-//       }
-//       if (count>1){return ;}
-//     }
-//   }
-// }
 
 void createConstraintsFromConflict(
     const std::map<std::string, std::set<std::string>>& solution,
@@ -186,7 +194,7 @@ void createConstraintsFromConflict(
 
 void LowLevelSearch(
     const std::set<Constraint>& new_constraint_set,
-    const std::vector<InputData>& inputData,
+    const std::set<CBS_InputData>& inputData,
     const HighLevelNode& P,
     HighLevelNode& newNode,
     int& id){
@@ -196,7 +204,7 @@ void LowLevelSearch(
   for (const auto& constraint : new_constraint_set) {
       newNode.constraints.insert(constraint);
   }
-  Assignment<std::string, std::string> assignment;
+  CBS_Assignment<std::string, std::string> CBS_assignment;
   for (const auto& data : inputData) {
     bool skipData = false;
     for (const auto& constraint : newNode.constraints) {
@@ -206,12 +214,12 @@ void LowLevelSearch(
       }
     }
     if (!skipData) {
-      assignment.setCost(data.agent, data.taskSet, data.cost);
+      CBS_assignment.setCost(data.agent, data.taskSet, data.cost);
     }
   }
 
   std::map<std::string, std::set<std::string>> solution;
-  int64_t cost = assignment.solve(solution);
+  int64_t cost = CBS_assignment.solve(solution);
 
   newNode.cost = cost;
   newNode.solution = solution;

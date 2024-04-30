@@ -45,7 +45,8 @@ rigid_bodies:
     # initial_position: [1,1,1]
     # initial_position: [0.01, 0.01, 0.01]
     # initial_position: [-0.0456353, -0.0531081, 0.037793]
-    initial_position: [-0.00200032, 0.00204419, 0.0412501]
+    # initial_position: [-0.00200032, 0.00204419, 0.0412501]
+    initial_position: [0.0031158425, 0.0086926175, 0.039238175]
     marker: "four_marker"
     dynamics: "default"
   # one_marker_drone:

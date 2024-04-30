@@ -76,7 +76,7 @@ if __name__ == '__main__':
         # max_group_num = 5
         root_dir = 'data/18_04'
         base_name = f'G{max_group_num}_T{max_task_num}_A{max_agent_num}'
-        gurobi_dir = f'{root_dir}/{base_name}/gurobi_{base_name}'  # TODO how to deal with group=t1_t1
+        gurobi_dir = f'{root_dir}/{base_name}/gurobi_{base_name}'  
         # graph_dir = f'{root_dir}/{base_name}/graph_cbs_{base_name}'
         graph_dir = f'{root_dir}/{base_name}/graph_cbs_{base_name}{graph_version}'
         input_dir = f'{root_dir}/{base_name}/random_inputs_{base_name}'

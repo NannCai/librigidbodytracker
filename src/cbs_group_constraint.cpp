@@ -6,13 +6,10 @@
 #include <boost/program_options.hpp>
 #include <boost/heap/d_ary_heap.hpp>
 
-// #include "assignment.hpp"
-#include "cbs_assignment.hpp"
 #include "cbs_group_constraint.hpp"
-// #include "assignment.hpp"
 
 
-using libMultiRobotPlanning::Assignment;
+using libMultiRobotPlanning::CBS_Assignment;
 
 int main(int argc, char* argv[]) {
   namespace po = boost::program_options;
@@ -41,16 +38,17 @@ int main(int argc, char* argv[]) {
   }
   std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 
-  std::vector<InputData> inputData;
+  std::set<CBS_InputData> inputData;
+  // std::vector<InputData> inputData;
   processInputFile(inputFile, inputData);
 
   // std::cout << "-----low level search: loading data, set cost;solve assignment;put solution into a HighLevelNode------" << std::endl;
-  Assignment<std::string, std::string> assignment;
+  CBS_Assignment<std::string, std::string> CBS_assignment;
   for (const auto& data : inputData) {
-    assignment.setCost(data.agent, data.taskSet, data.cost);
+    CBS_assignment.setCost(data.agent, data.taskSet, data.cost);
   }
   std::map<std::string, std::set<std::string>> solution;
-  int64_t cost = assignment.solve(solution);
+  int64_t cost = CBS_assignment.solve(solution);
   HighLevelNode start;
   start.id = 0;
   start.cost = cost;
@@ -104,7 +102,7 @@ int main(int argc, char* argv[]) {
     // std::cout << "need to find the new solution"<< std::endl;
 
     
-    // std::cout << "conflict_task: " << conflict_task << std::endl;  //TODO the conflict_task will be the same for a lot of times
+    // std::cout << "conflict_task: " << conflict_task << std::endl;  
     // std::vector<Constraint> new_constraints;  // need to be set of constraints 
     std::set<std::set<Constraint>> new_constraints;
     createConstraintsFromConflict(P.solution,conflict_task,new_constraints);

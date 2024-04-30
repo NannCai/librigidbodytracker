@@ -23,9 +23,9 @@ This method is based on maximum flow formulation.
 \tparam Task Type of task. Needs to be copy'able and comparable
 */
 template <typename Agent, typename Task>
-class Assignment {
+class CBS_Assignment {
  public:
-  Assignment()
+  CBS_Assignment()
       : m_agents(), m_tasks(), m_graph(), m_sourceVertex(), m_sinkVertex() {
     m_sourceVertex = boost::add_vertex(m_graph);
     m_sinkVertex = boost::add_vertex(m_graph);

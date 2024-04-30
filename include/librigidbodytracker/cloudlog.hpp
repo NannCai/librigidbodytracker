@@ -121,7 +121,7 @@ namespace librigidbodytracker {
 		void play(librigidbodytracker::RigidBodyTracker &tracker) const
 		{
 			for (size_t i = 0; i < clouds.size(); ++i) {
-			// for (size_t i = 280; i < 283; ++i) {
+			// for (size_t i = 0; i < 10; ++i) {
 			// for (size_t i = 1000; i < 1700; ++i) {
 				std::cout << "\n  " << i << " frame  ---------------------------------------------------\n";
 				auto dur = std::chrono::milliseconds(timestamps[i]);
@@ -140,7 +140,7 @@ namespace librigidbodytracker {
 				// Ptr& cloud refers to the same object as clouds[i] but it's a reference, so it won't make a copy.
 				const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
 				
-				// // print over each point in the point cloud.
+				// print over each point in the point cloud.
 				// for (size_t i = 0; i < cloud->size(); ++i) {
 				// 	const pcl::PointXYZ& point = (*cloud)[i];  // !!! here reference and pointer need to be figure out
 				// 	std::cout << "Point " << i << ": (" << point.x << ", " << point.y << ", " << point.z << ")\n";
