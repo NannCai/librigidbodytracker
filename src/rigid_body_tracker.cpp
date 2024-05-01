@@ -622,7 +622,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   ICP icp;
 
   // // Set the maximum number of iterations (criterion 1)
-  icp.setMaximumIterations(5);  // looks not that good as 5
+  icp.setMaximumIterations(5);  
   // // Set the transformation epsilon (criterion 2)
   // icp.setTransformationEpsilon(1e-8);
   // // Set the euclidean distance difference epsilon (criterion 3)
@@ -636,7 +636,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   for (auto& rigidBody : m_rigidBodies) {
     Cloud::Ptr &rbMarkers = m_markerConfigurations[rigidBody.m_markerConfigurationIdx];
     size_t const rbNpts = rbMarkers->size();
-    std::cout <<"rigidBody.m_markerConfigurationIdx: " << rigidBody.m_markerConfigurationIdx<< " rbNpts: "<<rbNpts << std::endl;
+    // std::cout <<"rigidBody.m_markerConfigurationIdx: " << rigidBody.m_markerConfigurationIdx<< " rbNpts: "<<rbNpts << std::endl;
 
     if (rbNpts == 1) {
       std::cout << "skip icp\n";
@@ -655,14 +655,13 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     // Perform the alignment for k times
     int k= 3; // max_group_num
     auto predictTransform = rigidBody.m_lastTransformation;      
-    std::cout << "predictTransform/m_lastTransformation:  \n"<< predictTransform.matrix()<< "\n";
+    // std::cout << "predictTransform/m_lastTransformation:  \n"<< predictTransform.matrix()<< "\n";
 
     // std::cout << "-----try k times icp to get different options:----  \n";
-    // std::set<CBS_InputData> cbs_data_set;
     double bestErr = std::numeric_limits<double>::max();
     Eigen::Affine3f bestTransformation;    
     for (size_t i = 0; i < k; ++i)  {
-      std::cout << "--- i: " << i << std::endl;
+      // std::cout << "--- i: " << i << std::endl;
       Cloud result; 
       icp.align(result, predictTransform.matrix());  // in the result there are moved config markers
 
@@ -696,7 +695,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
       //     std::cout <<"Correspond idx: "<< idx << " Point: " << (*markers)[idx] << std::endl;
       // }
       
-      // Compute cost  ref:Compute changes:
+      // Compute cost 
       Eigen::Matrix4f transformation = icp.getFinalTransformation();
       Eigen::Affine3f tROTA(transformation);  
       
@@ -706,7 +705,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
       pcl::getTranslationAndEulerAngles(rigidBody.m_lastTransformation, last_x, last_y, last_z, last_roll, last_pitch, last_yaw);
 
       float cost = sqrt(pow(x - last_x, 2) + pow(y - last_y, 2) + pow(z - last_z, 2));
-      std::cout << "Cost: " << cost << std::endl;
+      // std::cout << "Cost: " << cost << std::endl;
       // cost = cost* 1000;  TODO!
       cost = cost* 10e5;
 
@@ -722,19 +721,19 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
 
   std::cout << "cbs_data_set:" << std::endl;
   for (const auto& data : cbs_data_set) {
-    std::cout <<  data << std::endl;
+    std::cout <<  data;
     CBS_assignment.setCost(data.agent, data.taskSet, data.cost);
   }
 
   std::map<std::string, std::set<std::string>> solution;
   int64_t CBS_assignment_cost = CBS_assignment.solve(solution);
-  std::cout << "CBS_assignment_cost: " << CBS_assignment_cost << std::endl;
+  // std::cout << "CBS_assignment_cost: " << CBS_assignment_cost << std::endl;
   HighLevelNode start;
   start.id = 0;
   start.cost = CBS_assignment_cost;
   start.solution = solution;
-  std::cout << "The start HLN: ";
-  std::cout << start;
+  // std::cout << "The start HLN: ";
+  // std::cout << start;
   typename boost::heap::d_ary_heap<HighLevelNode, boost::heap::arity<2>,
                                     boost::heap::mutable_<true> >
       open;
@@ -753,10 +752,12 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   int duplicate = 0;
   while (!open.empty()) {
     m_highLevelExpanded++;
-    std::cout << "=========" << m_highLevelExpanded<< " Loop ==========="  << std::endl;
+    // std::cout << "=========" << m_highLevelExpanded<< " Loop ==========="  << std::endl;
     P = open.top();
     open.pop();
-    std::cout << P;
+    if (m_highLevelExpanded!=1){
+      std::cout << P;
+    }
 
     last_cost = P.cost;
     last_solution = P.solution;
@@ -767,7 +768,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
 
     std::string conflict_task;
     if (!getFirstConflict(P.solution,conflict_task)) {
-      std::cout << "no conflict_task, Breaking out of the loop.\n";
+      // std::cout << "no conflict_task, Breaking out of the loop.\n";
       outputToFile = true; 
       break;
     }
@@ -775,7 +776,6 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     createConstraintsFromConflict(P.solution,conflict_task,new_constraints);
     for (const auto& new_constraint_set : new_constraints) {
       HighLevelNode newNode;
-      // LowLevelSearch(new_constraint_set,inputData,P,newNode,id);
       LowLevelSearch(new_constraint_set,cbs_data_set,P,newNode,id);
       auto handle = open.push(newNode);
       (*handle).handle = handle;
@@ -786,9 +786,9 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>( t2-t1 );
   // std::cout << "Input file: " << inputFile << std::endl;
   // std::cout << "Output file: " << outputFile << std::endl;
-  std::cout << "runtime: " << time_used.count() << " seconds" << std::endl;
-  std::cout << "highLevelExpanded: " << m_highLevelExpanded << std::endl;
-  std::cout << "duplicate: " << duplicate << std::endl;
+  // std::cout << "runtime: " << time_used.count() << " seconds" << std::endl;
+  // std::cout << "highLevelExpanded: " << m_highLevelExpanded << std::endl;
+  // std::cout << "duplicate: " << duplicate << std::endl;
 }
 
 void RigidBodyTracker::logWarn(const std::string& msg)

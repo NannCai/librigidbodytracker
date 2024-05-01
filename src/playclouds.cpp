@@ -139,7 +139,7 @@ int main(int argc, char **argv)
     PointCloudPlayer player;
     player.load(argv[2]);
     player.play(tracker);
-    // player.play_compute_markerposition();
+    // player.play_compute_markerposition(7);
     // player.play_compute_offset(tracker);
   }
   else {
