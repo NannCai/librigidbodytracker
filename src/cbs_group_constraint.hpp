@@ -56,8 +56,8 @@ struct HighLevelNode {
     if (c.solution.empty()) {
       os << "No sets in the solution map." << std::endl;
     }
-    // else{
-    else if (c.cost == 401){
+    else{
+    // else if (c.cost == 401){
       os << "solution:\n";
       for (const auto& s : c.solution) {
         os << s.first << ": ";
@@ -79,17 +79,11 @@ struct HighLevelNode {
   }
 };
 
-// struct InputData {
-//     std::string agent;
-//     long cost;
-//     std::set<std::string> taskSet;
-//     // int id;
-// };
-
 struct CBS_InputData {
   std::string agent;
   long cost;
   std::set<std::string> taskSet;
+  // Eigen::Affine3f m_Transformation;
   // int id;
   bool operator<(const CBS_InputData& other) const {
     if (agent != other.agent) {

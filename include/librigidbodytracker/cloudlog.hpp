@@ -120,10 +120,10 @@ namespace librigidbodytracker {
 
 		void play(librigidbodytracker::RigidBodyTracker &tracker) const
 		{
-			// for (size_t i = 0; i < clouds.size(); ++i) {
-			for (size_t i = 0; i < 260; ++i) {
+			for (size_t i = 0; i < clouds.size(); ++i) {
+			// for (size_t i = 0; i < 260; ++i) {
 			// for (size_t i = 1000; i < 1700; ++i) {
-				std::cout << "\n  " << i << " frame  ---------------------------------------------------\n";
+				std::cout << i << " frame  ---------------------------------------------------"<< std::endl;
 				auto dur = std::chrono::milliseconds(timestamps[i]);
 				std::chrono::high_resolution_clock::time_point stamp(dur);
 				// // Delete the last point in clouds[i]
@@ -135,8 +135,8 @@ namespace librigidbodytracker {
 				// 	clouds[i]->erase(clouds[i]->begin(), clouds[i]->begin() + 3);
 				// }		
 					
-				// # new debugg print   the points in the current point cloud
-				// Ptr& cloud refers to the same object as clouds[i] but it's a reference, so it won't make a copy.
+				// // # new debugg print   the points in the current point cloud
+				// // Ptr& cloud refers to the same object as clouds[i] but it's a reference, so it won't make a copy.
 				// const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
 				// for (size_t i = 0; i < cloud->size(); ++i) {
 				// 	const pcl::PointXYZ& point = (*cloud)[i];  // !!! here reference and pointer need to be figure out

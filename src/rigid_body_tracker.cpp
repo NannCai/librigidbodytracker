@@ -575,7 +575,7 @@ void RigidBodyTracker::updatePosition(std::chrono::high_resolution_clock::time_p
 }
 
 
-bool RigidBodyTracker::initializeHybrid(Cloud::ConstPtr markers)
+bool RigidBodyTracker::initializeHybrid_old(Cloud::ConstPtr markers)
 {
   std::cout << "-initializeHybrid function-"<< std::endl;
   // use the config to initial
@@ -594,6 +594,148 @@ bool RigidBodyTracker::initializeHybrid(Cloud::ConstPtr markers)
   return true;  
 }
 
+bool RigidBodyTracker::initializeHybrid(Cloud::ConstPtr markersConst)
+{
+  std::cout << "-initializeHybrid function-" << std::endl;
+
+  if (markersConst->size() == 0) {
+    return false;
+  }
+
+  // we need to mutate the cloud by deleting points
+  // once they are assigned to an rigid body
+  Cloud::Ptr markers(new Cloud(*markersConst));
+
+  size_t const numRigidBodies = m_rigidBodies.size();
+
+  ICP icp;
+  icp.setMaximumIterations(5);
+  icp.setInputTarget(markers);
+
+  // prepare for knn query
+  std::vector<int> nearestIdx;
+  std::vector<float> nearestSqrDist;
+  std::vector<int> rbTakePts;
+  pcl::KdTreeFLANN<Point> kdtree;
+  kdtree.setInputCloud(markers);
+
+  // compute the distance between the closest 2 rigidBodies in the nominal configuration
+  // we will use this value to limit allowed deviation from nominal positions
+  float closest = std::numeric_limits<float>::max();
+  for (int i = 0; i < numRigidBodies; ++i) {
+    auto pi = m_rigidBodies[i].initialCenter();
+    for (int j = i + 1; j < numRigidBodies; ++j) {
+      float dist = (pi - m_rigidBodies[j].initialCenter()).norm();
+      closest = std::min(closest, dist);
+    }
+  }
+  float const max_deviation = closest / 3;
+
+  //printf("Rigid Body tracker: limiting distance from nominal position "
+  //  "to %f meters\n", max_deviation);
+
+  bool allFitsGood = true;
+  for (int iRb = 0; iRb < numRigidBodies; ++iRb) {
+    RigidBody& rigidBody = m_rigidBodies[iRb];
+    Cloud::Ptr &rbMarkers =
+      m_markerConfigurations[rigidBody.m_markerConfigurationIdx];
+    icp.setInputSource(rbMarkers);
+
+    // find the points nearest to the rigidBodie's nominal position
+    // (initial pos was loaded into lastTransformation from config file)
+    size_t const rbNpts = rbMarkers->size();
+    nearestIdx.resize(rbNpts);
+    nearestSqrDist.resize(rbNpts);
+    auto nominalCenter = eig2pcl(rigidBody.initialCenter());
+    int nFound = kdtree.nearestKSearch(
+      nominalCenter, rbNpts, nearestIdx, nearestSqrDist);
+
+    if (nFound < rbNpts) {
+      std::stringstream sstr;
+      sstr << "error: only " << nFound
+           << " neighbors found for rigid body " << rigidBody.name()
+           << " (need " << rbNpts << ")";
+      logWarn(sstr.str());
+      allFitsGood = false;
+      continue;
+    }
+
+    if (rbNpts == 1) {
+      Eigen::Vector3f configinitialCenter = rigidBody.initialCenter();
+      Eigen::Matrix4f configTransformation = pcl::getTransformation(
+        configinitialCenter.x(), configinitialCenter.y(), configinitialCenter.z(),
+        0, 0, 0).matrix();
+
+      rigidBody.m_lastTransformation = configTransformation;
+      std::cout << "rigidBody.m_lastTransformation:  \n"<< configTransformation << "\n";
+      continue;
+    }
+
+    // only try to fit the rigid body if the k nearest neighbors
+    // are reasonably close to the nominal rigid body position
+    Eigen::Vector3f actualCenter(0, 0, 0);
+    for (int i = 0; i < rbNpts; ++i) {
+      actualCenter += pcl2eig((*markers)[nearestIdx[i]]);
+    }
+    actualCenter /= rbNpts;
+    if ((actualCenter - pcl2eig(nominalCenter)).norm() > max_deviation) {
+      std::stringstream sstr;
+      sstr << "error: nearest neighbors of rigid body " << rigidBody.name()
+           << " are centered at " << actualCenter
+           << " instead of " << nominalCenter;
+      logWarn(sstr.str());
+      allFitsGood = false;
+      continue;
+    }
+
+    // try ICP with guesses of many different yaws about knn centroid
+    Cloud result;
+    static int const N_YAW = 20;
+    double bestErr = std::numeric_limits<double>::max();
+    Eigen::Affine3f bestTransformation;
+    for (int i = 0; i < N_YAW; ++i) {
+      float yaw = i * (2 * M_PI / N_YAW);
+      Eigen::Matrix4f tryMatrix = pcl::getTransformation(
+        actualCenter.x(), actualCenter.y(), actualCenter.z(),
+        0, 0, yaw).matrix();
+      icp.align(result, tryMatrix);
+      if (icp.hasConverged()) {
+        double err = icp.getFitnessScore();
+        if (err < bestErr) {
+          bestErr = err;
+          bestTransformation = icp.getFinalTransformation();
+        }
+      }
+    }
+
+    const DynamicsConfiguration& dynConf = m_dynamicsConfigurations[rigidBody.m_dynamicsConfigurationIdx];
+    if (bestErr >= dynConf.maxFitnessScore) {
+      std::stringstream sstr;
+      sstr << "Initialize did not succeed (fitness too low) "
+           << " for rigidBody " << rigidBody.name();
+      logWarn(sstr.str());
+      allFitsGood = false;
+      continue;
+    }
+
+    // if the fit was good, this rigid body "takes" the markers, and they become
+    // unavailable to all other rigidBodies so we don't double-assign markers
+    // (TODO: this is so greedy... do we need a more global approach?)
+    rigidBody.m_lastTransformation = bestTransformation;
+    // remove highest indices first
+    std::sort(rbTakePts.rbegin(), rbTakePts.rend());
+    for (int idx : rbTakePts) {
+      markers->erase(markers->begin() + idx);
+    }
+    // update search structures after deleting markers
+    icp.setInputTarget(markers);
+    kdtree.setInputCloud(markers);
+  }
+
+  ++m_init_attempts;
+  return allFitsGood;
+}
+
 void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_point stamp,
   Cloud::ConstPtr markers)   
 {
@@ -607,9 +749,8 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     }
     return;
   }
-  // m_initialized = m_initialized || initializeHybrid(markers);
-  m_initialized = m_initialized || initializePose(markers);
-
+  m_initialized = m_initialized || initializeHybrid(markers);
+  // m_initialized = m_initialized || initializePose(markers);  // TODO add single marker part also
   if (!m_initialized) {
     logWarn(
       "rigid body tracker initialization failed - "
@@ -620,33 +761,91 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   }
 
   ICP icp;
-
-  // // Set the maximum number of iterations (criterion 1)
   icp.setMaximumIterations(5);  
-  // // Set the transformation epsilon (criterion 2)
-  // icp.setTransformationEpsilon(1e-8);
-  // // Set the euclidean distance difference epsilon (criterion 3)
-  // icp.setEuclideanFitnessEpsilon(1);
+  icp.setInputTarget(markers);   
 
 
-  icp.setInputTarget(markers);   // 
+  // prepare for knn query
+  std::vector<int> nearestIdx(5); // tune maximum number of neighbors here
+  std::vector<float> nearestSqrDist(nearestIdx.size());
+  pcl::KdTreeFLANN<Point> kdtree;
+  kdtree.setInputCloud(markers);
+
   CBS_Assignment<std::string, std::string> CBS_assignment;
   std::set<CBS_InputData> cbs_data_set;
 
-  for (auto& rigidBody : m_rigidBodies) {
+  // for (auto& rigidBody : m_rigidBodies) {
+  size_t const numRigidBodies = m_rigidBodies.size();
+  for (int iRb = 0; iRb < numRigidBodies; ++iRb) {
+    RigidBody& rigidBody = m_rigidBodies[iRb];
+
     Cloud::Ptr &rbMarkers = m_markerConfigurations[rigidBody.m_markerConfigurationIdx];
+
     size_t const rbNpts = rbMarkers->size();
     // std::cout <<"rigidBody.m_markerConfigurationIdx: " << rigidBody.m_markerConfigurationIdx<< " rbNpts: "<<rbNpts << std::endl;
-
-    if (rbNpts == 1) {
-      std::cout << "skip icp\n";
-      continue;
-    }
-
+    // std::cout << "rigidBody.m_lastValidTransform: " << (rigidBody.m_lastValidTransform.time_since_epoch().count()) << std::endl;
     std::chrono::duration<double> elapsedSeconds = stamp-rigidBody.m_lastValidTransform;
     double dt = elapsedSeconds.count();
     // Set the max correspondence distance
     const DynamicsConfiguration& dynConf = m_dynamicsConfigurations[rigidBody.m_dynamicsConfigurationIdx];
+
+    if (rbNpts == 1) {
+      std::cout << "single marker drone---"<< std::endl;
+      if (dt > 0.5) {
+        std::stringstream sstr;
+        sstr << "Lost tracking for rigidBody " << rigidBody.name()<< "dt"<< dt << " skipping";
+        logWarn(sstr.str());
+        continue;
+      }
+
+      auto nominalCenter = eig2pcl(rigidBody.center());
+      int nFound = kdtree.nearestKSearch(
+        nominalCenter, nearestIdx.size(), nearestIdx, nearestSqrDist);
+      if (nFound < 1) {
+        std::stringstream sstr;
+        sstr << "error: no neighbors found for rigidBody " << rigidBody.name();
+        logWarn(sstr.str());
+        continue;
+      }
+
+
+      Eigen::Vector3f offset = pcl2eig((*m_markerConfigurations[rigidBody.m_markerConfigurationIdx])[0]);
+      bool foundPotentialMarker = false;
+      for (int iMarker = 0; iMarker < nFound; ++iMarker) {   // loop all the near markers
+        Eigen::Vector3f marker = pcl2eig((*markers)[nearestIdx[iMarker]]);
+
+        // Compute changes:
+        Eigen::Vector3f velocity = (marker - rigidBody.center() + offset) / dt;
+        float vx = velocity.x();
+        float vy = velocity.y();
+        float vz = velocity.z();
+
+        if (   fabs(vx) < dynConf.maxXVelocity
+            && fabs(vy) < dynConf.maxYVelocity
+            && fabs(vz) < dynConf.maxZVelocity)
+        {
+          float dist = (marker - rigidBody.center() + offset).norm();
+          // long cost = dist * 1000; // cost needs to be an integer -> convert to mm
+          long cost = dist* 10e5; // TODO 1000
+          // assignment.setCost(iRb, nearestIdx[iMarker], cost);
+          CBS_InputData data;
+          data.taskSet.insert(std::to_string(nearestIdx[iMarker]));
+          data.agent = std::to_string(iRb);
+          data.cost = cost;
+          cbs_data_set.insert(data);
+          foundPotentialMarker = true;
+        }
+      }
+      if (!foundPotentialMarker) {
+        std::stringstream sstr;
+        sstr << "all dynamic check failed for rigidBody " << rigidBody.name() << std::endl;
+        logWarn(sstr.str());
+      }
+      continue;
+    }
+
+    std::cout << "multi marker drone---"<< std::endl;
+
     float maxV = dynConf.maxXVelocity;
     icp.setMaxCorrespondenceDistance(maxV * dt);    
     // Update input source
@@ -704,24 +903,24 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
       float last_x, last_y, last_z, last_roll, last_pitch, last_yaw;
       pcl::getTranslationAndEulerAngles(rigidBody.m_lastTransformation, last_x, last_y, last_z, last_roll, last_pitch, last_yaw);
 
-      float cost = sqrt(pow(x - last_x, 2) + pow(y - last_y, 2) + pow(z - last_z, 2));
+      float dist = sqrt(pow(x - last_x, 2) + pow(y - last_y, 2) + pow(z - last_z, 2));
       // std::cout << "Cost: " << cost << std::endl;
       // cost = cost* 1000;  TODO!
-      cost = cost* 10e5;
+      long cost = dist* 10e5;
 
-      data.agent = std::to_string(rigidBody.m_markerConfigurationIdx);
+      data.agent = std::to_string(iRb);
       data.cost = cost;
       cbs_data_set.insert(data);
       bestTransformation = icp.getFinalTransformation();
 
     }
-    rigidBody.m_lastTransformation = bestTransformation;
-    
+    rigidBody.m_lastTransformation = bestTransformation;  // TODO need to do this after cbs assignment
+    rigidBody.m_velocity = (bestTransformation.translation() - rigidBody.center()) / dt;
   }
 
-  std::cout << "cbs_data_set:" << std::endl;
+  // std::cout << "cbs_data_set:" << std::endl;
   for (const auto& data : cbs_data_set) {
-    std::cout <<  data;
+    // std::cout <<  data;
     CBS_assignment.setCost(data.agent, data.taskSet, data.cost);
   }
 
@@ -747,8 +946,8 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   HighLevelNode P;
   int m_highLevelExpanded = 0; 
   int m_lowLevelExpanded = 0;
-  int last_cost = 0;
-  std::map<std::string, std::set<std::string>> last_solution;
+  // int last_cost = 0;
+  // std::map<std::string, std::set<std::string>> last_solution;
   int duplicate = 0;
   while (!open.empty()) {
     m_highLevelExpanded++;
@@ -757,10 +956,14 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     open.pop();
     if (m_highLevelExpanded!=1){
       std::cout << P;
+      exit(0);
+    }
+    else{
+      std::cout << "m_highLevelExpanded: " << m_highLevelExpanded << std::endl; // it always here
     }
 
-    last_cost = P.cost;
-    last_solution = P.solution;
+    // last_cost = P.cost;
+    // last_solution = P.solution;
 
     if (P.solution.empty()) {
       std::cout << "Cannot find a solution!" << std::endl;
@@ -781,6 +984,34 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
       (*handle).handle = handle;
     }
   }
+
+  for (const auto& s : P.solution) {
+    auto& rigidBody = m_rigidBodies[std::stoi(s.first)];  // TODO change the type of s.first
+    std::set<std::string> current_set = s.second;
+    // std::cout << "Marker Configuration Index: " << rigidBody.m_markerConfigurationIdx << std::endl; // done print
+    // std::cout << "Marker Configuration Value: " << *m_markerConfigurations[rigidBody.m_markerConfigurationIdx] << std::endl;
+    if (current_set.size() == 1) {
+        // std::cout << "Only one element in the set: " << *current_set.begin() << std::endl;
+        int markerIndex = std::stoi(*current_set.begin());
+        Eigen::Vector3f marker = pcl2eig((*markers)[markerIndex]);
+        Eigen::Vector3f offset = pcl2eig((*m_markerConfigurations[rigidBody.m_markerConfigurationIdx])[0]);  // problem is here h
+        std::chrono::duration<double> elapsedSeconds = stamp-rigidBody.m_lastValidTransform;
+        double dt = elapsedSeconds.count();
+
+        rigidBody.m_velocity = (marker - rigidBody.center() + offset) / dt;
+        rigidBody.m_lastTransformation = Eigen::Translation3f(marker + offset);
+        rigidBody.m_lastValidTransform = stamp;
+        rigidBody.m_lastTransformationValid = true;
+        rigidBody.m_hasOrientation = false;
+    }
+    else{ // TODO 
+      // std::cout << "More than one element in the set." << std::endl;
+      rigidBody.m_lastValidTransform = stamp;
+      rigidBody.m_lastTransformationValid = true;
+      rigidBody.m_hasOrientation = false;
+    }
+  }
+
 
   std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();  
   std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>( t2-t1 );
