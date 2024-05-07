@@ -773,6 +773,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
 
   CBS_Assignment<std::string, std::string> CBS_assignment;
   std::set<CBS_InputData> cbs_data_set;
+  std::map<std::set<std::string>, Eigen::Affine3f> groupsMap_Affine;
 
   // for (auto& rigidBody : m_rigidBodies) {
   size_t const numRigidBodies = m_rigidBodies.size();
@@ -783,7 +784,9 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
 
     size_t const rbNpts = rbMarkers->size();
     // std::cout <<"rigidBody.m_markerConfigurationIdx: " << rigidBody.m_markerConfigurationIdx<< " rbNpts: "<<rbNpts << std::endl;
-    // std::cout << "rigidBody.m_lastValidTransform: " << (rigidBody.m_lastValidTransform.time_since_epoch().count()) << std::endl;
+    std::cout << "rigidBody.m_lastValidTransform: " << (rigidBody.m_lastValidTransform.time_since_epoch().count()) << std::endl;
+    std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< rigidBody.m_lastTransformation.matrix() << "\n"; 
+
     std::chrono::duration<double> elapsedSeconds = stamp-rigidBody.m_lastValidTransform;
     double dt = elapsedSeconds.count();
     // Set the max correspondence distance
@@ -855,10 +858,9 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     int k= 3; // max_group_num
     auto predictTransform = rigidBody.m_lastTransformation;      
     // std::cout << "predictTransform/m_lastTransformation:  \n"<< predictTransform.matrix()<< "\n";
+    // std::map<std::set<std::string>, Eigen::Affine3f> groupsMap_Affine;
 
-    // std::cout << "-----try k times icp to get different options:----  \n";
-    double bestErr = std::numeric_limits<double>::max();
-    Eigen::Affine3f bestTransformation;    
+    // std::cout << "-----try k times icp to get different options:----  \n";   
     for (size_t i = 0; i < k; ++i)  {
       // std::cout << "--- i: " << i << std::endl;
       Cloud result; 
@@ -871,51 +873,106 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
         logWarn(sstr.str());
         continue;
       }
-      CBS_InputData data;
-      // Get the correspondence indices
-      std::vector<size_t> correspondences;
-      pcl::search::KdTree<Point>::Ptr search_tree = icp.getSearchMethodTarget();
-      for (auto point : result.points) {
-        std::vector<int> matched_indices;
-        std::vector<float> matched_distances;
-        search_tree->nearestKSearch(point, 1, matched_indices, matched_distances);
-        correspondences.push_back(matched_indices[0]);
-        data.taskSet.insert(std::to_string(matched_indices[0]));
-      }
 
-      // // Print result points
-      // std::cout << "Result Points/ moved config markers :" << std::endl;
-      // for (auto point : result.points) {
-      //     std::cout << "Point: " << point << std::endl;
-      // }
-      // // Print correspondences
-      // std::cout << "Correspondences/ markers that are found for current drones:" << std::endl;
-      // for (size_t idx : correspondences) {
-      //     std::cout <<"Correspond idx: "<< idx << " Point: " << (*markers)[idx] << std::endl;
-      // }
-      
-      // Compute cost 
       Eigen::Matrix4f transformation = icp.getFinalTransformation();
-      Eigen::Affine3f tROTA(transformation);  
-      
+      Eigen::Affine3f tROTA(transformation);
+
       float x, y, z, roll, pitch, yaw;
       pcl::getTranslationAndEulerAngles(tROTA, x, y, z, roll, pitch, yaw);
       float last_x, last_y, last_z, last_roll, last_pitch, last_yaw;
       pcl::getTranslationAndEulerAngles(rigidBody.m_lastTransformation, last_x, last_y, last_z, last_roll, last_pitch, last_yaw);
 
-      float dist = sqrt(pow(x - last_x, 2) + pow(y - last_y, 2) + pow(z - last_z, 2));
-      // std::cout << "Cost: " << cost << std::endl;
-      // cost = cost* 1000;  TODO!
-      long cost = dist* 10e5;
+      float vx = (x - last_x) / dt;
+      float vy = (y - last_y) / dt;
+      float vz = (z - last_z) / dt;
+      float wroll = deltaAngle(roll, last_roll) / dt;
+      float wpitch = deltaAngle(pitch, last_pitch) / dt;
+      float wyaw = deltaAngle(yaw, last_yaw) / dt;
 
-      data.agent = std::to_string(iRb);
-      data.cost = cost;
-      cbs_data_set.insert(data);
-      bestTransformation = icp.getFinalTransformation();
+      // ROS_INFO("v: %f,%f,%f, w: %f,%f,%f, dt: %f", vx, vy, vz, wroll, wpitch, wyaw, dt);
 
+      if (   fabs(vx) < dynConf.maxXVelocity
+          && fabs(vy) < dynConf.maxYVelocity
+          && fabs(vz) < dynConf.maxZVelocity
+          && fabs(wroll) < dynConf.maxRollRate
+          && fabs(wpitch) < dynConf.maxPitchRate
+          && fabs(wyaw) < dynConf.maxYawRate
+          && fabs(roll) < dynConf.maxRoll
+          && fabs(pitch) < dynConf.maxPitch
+          && icp.getFitnessScore() < dynConf.maxFitnessScore)
+      {
+        CBS_InputData data;
+        // Get the correspondence indices
+        std::vector<size_t> correspondences;
+        pcl::search::KdTree<Point>::Ptr search_tree = icp.getSearchMethodTarget();
+        for (auto point : result.points) {
+          std::vector<int> matched_indices;
+          std::vector<float> matched_distances;
+          search_tree->nearestKSearch(point, 1, matched_indices, matched_distances);
+          correspondences.push_back(matched_indices[0]);
+          data.taskSet.insert(std::to_string(matched_indices[0]));
+        }
+
+        // // Print result points
+        // std::cout << "Result Points/ moved config markers :" << std::endl;
+        // for (auto point : result.points) {
+        //     std::cout << "Point: " << point << std::endl;
+        // }
+        // // Print correspondences
+        // std::cout << "Correspondences/ markers that are found for current drones:" << std::endl;
+        // for (size_t idx : correspondences) {
+        //     std::cout <<"Correspond idx: "<< idx << " Point: " << (*markers)[idx] << std::endl;
+        // }
+        
+        // Compute cost   
+        float dist = sqrt(pow(x - last_x, 2) + pow(y - last_y, 2) + pow(z - last_z, 2));
+        // cost = cost* 1000;  TODO!
+        long cost = dist* 10e5;
+
+        data.agent = std::to_string(iRb);
+        data.cost = cost;
+        cbs_data_set.insert(data);
+
+        // std::set<std::string> keySet = data.taskSet;
+        // keySet.insert(std::to_string(data.cost));
+        groupsMap_Affine[data.taskSet] = tROTA;  // TODO maybe sth wrong
+
+
+      } else {
+        std::stringstream sstr;
+        sstr << "Dynamic check failed for rigidBody " << rigidBody.name() << std::endl;
+        if (fabs(vx) >= dynConf.maxXVelocity) {
+          sstr << "vx: " << vx << " >= " << dynConf.maxXVelocity << std::endl;
+        }
+        if (fabs(vy) >= dynConf.maxYVelocity) {
+          sstr << "vy: " << vy << " >= " << dynConf.maxYVelocity << std::endl;
+        }
+        if (fabs(vz) >= dynConf.maxZVelocity) {
+          sstr << "vz: " << vz << " >= " << dynConf.maxZVelocity << std::endl;
+        }
+        if (fabs(wroll) >= dynConf.maxRollRate) {
+          sstr << "wroll: " << wroll << " >= " << dynConf.maxRollRate << std::endl;
+        }
+        if (fabs(wpitch) >= dynConf.maxPitchRate) {
+          sstr << "wpitch: " << wpitch << " >= " << dynConf.maxPitchRate << std::endl;
+        }
+        if (fabs(wyaw) >= dynConf.maxYawRate) {
+          sstr << "wyaw: " << wyaw << " >= " << dynConf.maxYawRate << std::endl;
+        }
+        if (fabs(roll) >= dynConf.maxRoll) {
+          sstr << "roll: " << roll << " >= " << dynConf.maxRoll << std::endl;
+        }
+        if (fabs(pitch) >= dynConf.maxPitch) {
+          sstr << "pitch: " << pitch << " >= " << dynConf.maxPitch << std::endl;
+        }
+        if (icp.getFitnessScore() >= dynConf.maxFitnessScore) {
+          sstr << "fitness: " << icp.getFitnessScore() << " >= " << dynConf.maxFitnessScore << std::endl;
+        }
+        logWarn(sstr.str());
+      }
     }
-    rigidBody.m_lastTransformation = bestTransformation;  // TODO need to do this after cbs assignment
-    rigidBody.m_velocity = (bestTransformation.translation() - rigidBody.center()) / dt;
+    // rigidBody.m_lastTransformation = bestTransformation;  // TODO need to do this after cbs assignment
+    // rigidBody.m_velocity = (bestTransformation.translation() - rigidBody.center()) / dt;
   }
 
   // std::cout << "cbs_data_set:" << std::endl;
@@ -990,13 +1047,14 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     std::set<std::string> current_set = s.second;
     // std::cout << "Marker Configuration Index: " << rigidBody.m_markerConfigurationIdx << std::endl; // done print
     // std::cout << "Marker Configuration Value: " << *m_markerConfigurations[rigidBody.m_markerConfigurationIdx] << std::endl;
+    std::chrono::duration<double> elapsedSeconds = stamp-rigidBody.m_lastValidTransform;
+    double dt = elapsedSeconds.count();
+
     if (current_set.size() == 1) {
         // std::cout << "Only one element in the set: " << *current_set.begin() << std::endl;
         int markerIndex = std::stoi(*current_set.begin());
         Eigen::Vector3f marker = pcl2eig((*markers)[markerIndex]);
         Eigen::Vector3f offset = pcl2eig((*m_markerConfigurations[rigidBody.m_markerConfigurationIdx])[0]);  // problem is here h
-        std::chrono::duration<double> elapsedSeconds = stamp-rigidBody.m_lastValidTransform;
-        double dt = elapsedSeconds.count();
 
         rigidBody.m_velocity = (marker - rigidBody.center() + offset) / dt;
         rigidBody.m_lastTransformation = Eigen::Translation3f(marker + offset);
@@ -1006,6 +1064,8 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     }
     else{ // TODO 
       // std::cout << "More than one element in the set." << std::endl;
+      rigidBody.m_lastTransformation = groupsMap_Affine[s.second];
+      rigidBody.m_velocity = (rigidBody.m_lastTransformation.translation() - rigidBody.center()) / dt;
       rigidBody.m_lastValidTransform = stamp;
       rigidBody.m_lastTransformationValid = true;
       rigidBody.m_hasOrientation = false;

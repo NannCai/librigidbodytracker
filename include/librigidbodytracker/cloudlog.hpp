@@ -120,8 +120,8 @@ namespace librigidbodytracker {
 
 		void play(librigidbodytracker::RigidBodyTracker &tracker) const
 		{
-			for (size_t i = 0; i < clouds.size(); ++i) {
-			// for (size_t i = 0; i < 260; ++i) {
+			// for (size_t i = 0; i < clouds.size(); ++i) {
+			for (size_t i = 0; i < 500; ++i) {
 			// for (size_t i = 1000; i < 1700; ++i) {
 				std::cout << i << " frame  ---------------------------------------------------"<< std::endl;
 				auto dur = std::chrono::milliseconds(timestamps[i]);
