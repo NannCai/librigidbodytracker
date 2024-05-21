@@ -86,7 +86,7 @@ namespace librigidbodytracker {
 
     // for faster-than-real-time file playback
     void update(std::chrono::high_resolution_clock::time_point stamp,
-      pcl::PointCloud<pcl::PointXYZ>::Ptr pointCloud);
+      pcl::PointCloud<pcl::PointXYZ>::Ptr pointCloud,std::string inputP = "");
 
     const std::vector<RigidBody>& rigidBodies() const;
 
@@ -128,6 +128,8 @@ namespace librigidbodytracker {
     bool m_trackPositionOnly;
     TrackingMode m_trackingMode;
     std::function<void(const std::string&)> m_logWarn;
+    std::string inputPath;
+
   };
 
 } // namespace librigidbodytracker

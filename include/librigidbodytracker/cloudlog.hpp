@@ -98,6 +98,7 @@ namespace librigidbodytracker {
 			if (!s) {
 				throw std::runtime_error("PointCloudPlayer: bad file path.");
 			}
+			inputPath = path;
 			while (s) {
 				uint32_t millis = read<uint32_t>(s);
 				// TODO cleaner loop?
@@ -120,8 +121,21 @@ namespace librigidbodytracker {
 
 		void play(librigidbodytracker::RigidBodyTracker &tracker) const
 		{
-			// for (size_t i = 0; i < clouds.size(); ++i) {
-			for (size_t i = 0; i < 500; ++i) {
+			std::string inputfileName = inputPath.substr(inputPath.find_last_of("/\\") + 1);
+			std::string outputDir = "./data/output/";
+			auto now = std::chrono::system_clock::now();
+			auto epoch = now.time_since_epoch();
+			auto minutes = std::chrono::duration_cast<std::chrono::minutes>(epoch).count();
+			std::cout << "Minutes: " << minutes << std::endl;
+			std::string outputFile = outputDir + inputfileName+"_" + std::to_string(minutes) + "_pointcloud";  // + inputFile
+			outputFile = outputFile + ".txt";
+			std::ofstream out(outputFile, std::ios::out); // Open in append mode
+			if (!out.is_open()) {
+				std::cout << "File does not exist, creating a new file..." << std::endl;
+				out.open(outputFile);
+			}
+			for (size_t i = 0; i < clouds.size(); ++i) {
+			// for (size_t i = 0; i < 426; ++i) {
 			// for (size_t i = 1000; i < 1700; ++i) {
 				std::cout << i << " frame  ---------------------------------------------------"<< std::endl;
 				auto dur = std::chrono::milliseconds(timestamps[i]);
@@ -138,14 +152,42 @@ namespace librigidbodytracker {
 				// // # new debugg print   the points in the current point cloud
 				// // Ptr& cloud refers to the same object as clouds[i] but it's a reference, so it won't make a copy.
 				// const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
+				// // std::cout << "Cloud size: " << cloud->size() << "------------" << std::endl;   // between 8,9,10 maybe my shoes
 				// for (size_t i = 0; i < cloud->size(); ++i) {
 				// 	const pcl::PointXYZ& point = (*cloud)[i];  // !!! here reference and pointer need to be figure out
-				// 	std::cout << "Point " << i << ": (" << point.x << ", " << point.y << ", " << point.z << ")\n";
+				// 	std::cout << "Point " << i << ": (" << point.x << ", " << point.y << ", " << point.z << ")"<< std::endl;
 				// }
 
 
-				tracker.update(stamp, clouds[i]);
+				// std::string inputfileName = inputPath.substr(inputPath.find_last_of("/\\") + 1);
+				// std::string outputDir = "./data/output/";
+				// // auto now = std::chrono::system_clock::now();
+				// // auto epoch = now.time_since_epoch();
+				// // auto minutes = std::chrono::duration_cast<std::chrono::minutes>(epoch).count();
+				// // std::cout << "Minutes: " << minutes << std::endl;
+				// std::string outputFile = outputDir + inputfileName+"_pointcloud";  // + inputFile
+				// outputFile = outputFile + ".txt";
+				std::ofstream out(outputFile, std::ios_base::app); // Open in append mode
+				// if (!out.is_open()) {
+				// 	std::cout << "File does not exist, creating a new file..." << std::endl;
+				// 	out.open(outputFile);
+				// }
+				out << "stamp: " << stamp.time_since_epoch().count() << std::endl;
+				const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
+				for (size_t i = 0; i < cloud->size(); ++i) {
+					const pcl::PointXYZ& point = (*cloud)[i];  // !!! here reference and pointer need to be figure out
+					out << point.x << ", " << point.y << ", " << point.z << std::endl;
+				}
+				
+
+
+
+
+
+				// tracker.update(stamp, clouds[i]);
+				tracker.update(stamp, clouds[i], inputPath);
 			}
+			std::cout << "Total clouds size: " << clouds.size() << std::endl;
 		}
 
 		void play_compute_offset(librigidbodytracker::RigidBodyTracker &tracker) const
@@ -217,8 +259,8 @@ namespace librigidbodytracker {
 			std::vector<pcl::PointXYZ> totalPoints(numPoints, {0.0, 0.0, 0.0});
 			size_t validCloudsCount = 0;
 
-			// for (size_t i = 0; i < clouds.size(); ++i) {
-			for (size_t i = 0; i < 10; ++i) {
+			for (size_t i = 0; i < clouds.size(); ++i) {
+			// for (size_t i = 0; i < 10; ++i) {
 				std::cout << "\n  " << i << "  ------------------------------\n";
 				auto dur = std::chrono::milliseconds(timestamps[i]);
 				std::chrono::high_resolution_clock::time_point stamp(dur);
@@ -232,6 +274,7 @@ namespace librigidbodytracker {
 
 				for (size_t j = 0; j < numPoints; ++j) {
 					const pcl::PointXYZ& point = (*cloud)[j];
+					// std::cout << "Point " << j << ": (" << point.x << ", " << point.y << ", " << point.z << ")\n";
 					totalPoints[j].x += point.x;
 					totalPoints[j].y += point.y;
 					totalPoints[j].z += point.z;
@@ -254,7 +297,8 @@ namespace librigidbodytracker {
 		}
 
 
-
+	private:
+		std::string inputPath;
 	protected:
 		template <typename T>
 		T read(std::ifstream &s)

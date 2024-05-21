@@ -122,7 +122,7 @@ void RigidBodyTracker::update(Cloud::Ptr pointCloud)
   update(std::chrono::high_resolution_clock::now(), pointCloud);
 }
 void RigidBodyTracker::update(std::chrono::high_resolution_clock::time_point time,
-  Cloud::Ptr pointCloud)
+  Cloud::Ptr pointCloud, std::string inputP)
 {
   // if (m_trackPositionOnly) {
   //   updatePosition(time, pointCloud);
@@ -139,6 +139,7 @@ void RigidBodyTracker::update(std::chrono::high_resolution_clock::time_point tim
   //   updateHybrid(time, pointCloud);
   // }
   // updatePose(time, pointCloud);
+  inputPath = inputP;
   updateHybrid(time, pointCloud);
 
 }
@@ -784,8 +785,8 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
 
     size_t const rbNpts = rbMarkers->size();
     // std::cout <<"rigidBody.m_markerConfigurationIdx: " << rigidBody.m_markerConfigurationIdx<< " rbNpts: "<<rbNpts << std::endl;
-    std::cout << "rigidBody.m_lastValidTransform: " << (rigidBody.m_lastValidTransform.time_since_epoch().count()) << std::endl;
-    std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< rigidBody.m_lastTransformation.matrix() << "\n"; 
+    // std::cout << "rigidBody.m_lastValidTransform: " << (rigidBody.m_lastValidTransform.time_since_epoch().count()) << std::endl;
+    // std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< rigidBody.m_lastTransformation.matrix() << "\n"; 
 
     std::chrono::duration<double> elapsedSeconds = stamp-rigidBody.m_lastValidTransform;
     double dt = elapsedSeconds.count();
@@ -822,14 +823,18 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
         float vx = velocity.x();
         float vy = velocity.y();
         float vz = velocity.z();
+        // std::cout << "marker: " << marker.transpose() << ", rigidBody.center(): " << rigidBody.center().transpose() << std::endl;
+        // std::cout << "Velocity: (" << vx << ", " << vy << ", " << vz << ")"<< std::endl;
+        // std::cout << "maxXVelocity: " << dynConf.maxXVelocity << std::endl;
+        // std::cout << "maxYVelocity: " << dynConf.maxYVelocity << std::endl;
+        // std::cout << "maxZVelocity: " << dynConf.maxZVelocity << std::endl;
 
         if (   fabs(vx) < dynConf.maxXVelocity
             && fabs(vy) < dynConf.maxYVelocity
             && fabs(vz) < dynConf.maxZVelocity)
         {
           float dist = (marker - rigidBody.center() + offset).norm();
-          // long cost = dist * 1000; // cost needs to be an integer -> convert to mm
-          long cost = dist* 10e5; // TODO 1000
+          long cost = dist* 10e3;
           // assignment.setCost(iRb, nearestIdx[iMarker], cost);
           CBS_InputData data;
           data.taskSet.insert(std::to_string(nearestIdx[iMarker]));
@@ -850,7 +855,9 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     std::cout << "multi marker drone---"<< std::endl;
 
     float maxV = dynConf.maxXVelocity;
-    icp.setMaxCorrespondenceDistance(maxV * dt);    
+    icp.setMaxCorrespondenceDistance(maxV * dt * 5);    // TODO fix this when using in the real flight test
+    // std::cout << "icp.setMaxCorrespondenceDistance(maxV * dt);  maxV * dt:" <<maxV * dt * 5<< std::endl;
+
     // Update input source
     icp.setInputSource(m_markerConfigurations[rigidBody.m_markerConfigurationIdx]);   // move configure to frame point cloud 
     
@@ -858,7 +865,6 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     int k= 3; // max_group_num
     auto predictTransform = rigidBody.m_lastTransformation;      
     // std::cout << "predictTransform/m_lastTransformation:  \n"<< predictTransform.matrix()<< "\n";
-    // std::map<std::set<std::string>, Eigen::Affine3f> groupsMap_Affine;
 
     // std::cout << "-----try k times icp to get different options:----  \n";   
     for (size_t i = 0; i < k; ++i)  {
@@ -926,8 +932,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
         
         // Compute cost   
         float dist = sqrt(pow(x - last_x, 2) + pow(y - last_y, 2) + pow(z - last_z, 2));
-        // cost = cost* 1000;  TODO!
-        long cost = dist* 10e5;
+        long cost = dist* 10e3;
 
         data.agent = std::to_string(iRb);
         data.cost = cost;
@@ -1003,24 +1008,20 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   HighLevelNode P;
   int m_highLevelExpanded = 0; 
   int m_lowLevelExpanded = 0;
-  // int last_cost = 0;
-  // std::map<std::string, std::set<std::string>> last_solution;
   int duplicate = 0;
   while (!open.empty()) {
     m_highLevelExpanded++;
     // std::cout << "=========" << m_highLevelExpanded<< " Loop ==========="  << std::endl;
     P = open.top();
     open.pop();
+    // std::cout << P;
     if (m_highLevelExpanded!=1){
+      std::cout << "m_highLevelExpanded: " << m_highLevelExpanded << std::endl; // it always here
+      std::cout << "start node:"<< start;
       std::cout << P;
       exit(0);
     }
-    else{
-      std::cout << "m_highLevelExpanded: " << m_highLevelExpanded << std::endl; // it always here
-    }
 
-    // last_cost = P.cost;
-    // last_solution = P.solution;
 
     if (P.solution.empty()) {
       std::cout << "Cannot find a solution!" << std::endl;
@@ -1075,11 +1076,60 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
 
   std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();  
   std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>( t2-t1 );
-  // std::cout << "Input file: " << inputFile << std::endl;
-  // std::cout << "Output file: " << outputFile << std::endl;
-  // std::cout << "runtime: " << time_used.count() << " seconds" << std::endl;
+  
+
+  std::string inputfileName = inputPath.substr(inputPath.find_last_of("/\\") + 1);
+  std::string outputDir = "./data/output/";
+  auto now = std::chrono::system_clock::now();
+  auto epoch = now.time_since_epoch();
+  auto minutes = std::chrono::duration_cast<std::chrono::minutes>(epoch).count();
+  // std::cout << "Minutes: " << minutes << std::endl;
+  std::string outputFile = outputDir + inputfileName+"_"+ std::to_string(minutes);  // + inputFile
+  outputFile = outputFile + ".yaml";
+  
+
+  std::cout << "Input File: " << inputfileName << std::endl;
+  std::cout << "Output file: " << outputFile << std::endl;
+  std::cout << "runtime: " << time_used.count() << " seconds" << std::endl;
   // std::cout << "highLevelExpanded: " << m_highLevelExpanded << std::endl;
   // std::cout << "duplicate: " << duplicate << std::endl;
+
+
+  std::ofstream out(outputFile, std::ios_base::app); // Open in append mode
+
+  if (!out.is_open()) {
+    std::cout << "File does not exist, creating a new file..." << std::endl;
+    out.open(outputFile);
+  }
+  // out << "Input File: " << inputFile << std::endl;
+  // out << "elapsedSeconds: " << elapsedSeconds << std::endl;  std::cout << "stamp: " << stamp.time_since_epoch().count() << std::endl;
+  // std::cout << "stamp: " << stamp.time_since_epoch().count() << std::endl;
+  out << "stamp: " << stamp.time_since_epoch().count() << std::endl;
+  out << "Runtime: " << time_used.count() << " seconds" << std::endl;
+  out << P;
+  
+  for (int iRb = 0; iRb < numRigidBodies; ++iRb) {
+    RigidBody& rigidBody = m_rigidBodies[iRb];
+    Eigen::Quaternionf q(rigidBody.m_lastTransformation.rotation());
+    // rigidBody.m_lastTransformation.translation()
+    // Eigen::Vector3d rigidBodyTranslation = rigidBody.m_lastTransformation.translation();
+    // std::cout << "Translation: " << rigidBodyTranslation.transpose() << std::endl;
+
+    // std::cout << "Quaternion: " << q.coeffs().transpose() << std::endl;
+    // std::cout << "Translation: " << rigidBodyTranslation.transpose() 
+    // out << s.first<< ": "  <<rigidBody.m_lastTransformation.translation().transpose()<<std::endl; // << " " << rigidBody.m_lastTransformation.translation().y << " " << rigidBody.m_lastTransformation.translation().z <<std::endl;
+    out << iRb<< ": "  <<rigidBody.m_lastTransformation.translation().x()
+    << " " <<rigidBody.m_lastTransformation.translation().y()
+    << " " <<rigidBody.m_lastTransformation.translation().z()
+    << " " <<q.x()
+    << " " <<q.y()
+    << " " <<q.z()
+    << " " <<q.w()
+    <<std::endl;
+
+
+  }
+
 }
 
 void RigidBodyTracker::logWarn(const std::string& msg)
