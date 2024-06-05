@@ -751,7 +751,6 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     return;
   }
   m_initialized = m_initialized || initializeHybrid(markers);
-  // m_initialized = m_initialized || initializePose(markers);  // TODO add single marker part also
   if (!m_initialized) {
     logWarn(
       "rigid body tracker initialization failed - "
@@ -855,8 +854,8 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     std::cout << "multi marker drone---"<< std::endl;
 
     float maxV = dynConf.maxXVelocity;
-    icp.setMaxCorrespondenceDistance(maxV * dt * 5);    // TODO fix this when using in the real flight test
-    // std::cout << "icp.setMaxCorrespondenceDistance(maxV * dt);  maxV * dt:" <<maxV * dt * 5<< std::endl;
+    icp.setMaxCorrespondenceDistance(maxV * dt);   
+    // std::cout << "icp.setMaxCorrespondenceDistance(maxV * dt);  maxV * dt:" << maxV * dt << std::endl;
 
     // Update input source
     icp.setInputSource(m_markerConfigurations[rigidBody.m_markerConfigurationIdx]);   // move configure to frame point cloud 
@@ -976,8 +975,6 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
         logWarn(sstr.str());
       }
     }
-    // rigidBody.m_lastTransformation = bestTransformation;  // TODO need to do this after cbs assignment
-    // rigidBody.m_velocity = (bestTransformation.translation() - rigidBody.center()) / dt;
   }
 
   // std::cout << "cbs_data_set:" << std::endl;
@@ -1019,7 +1016,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
       std::cout << "m_highLevelExpanded: " << m_highLevelExpanded << std::endl; // it always here
       std::cout << "start node:"<< start;
       std::cout << P;
-      exit(0);
+      // exit(0);
     }
 
 
@@ -1063,7 +1060,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
         rigidBody.m_lastTransformationValid = true;
         rigidBody.m_hasOrientation = false;
     }
-    else{ // TODO 
+    else{ // TODO groupsMap_Affine maybe not a good match 
       // std::cout << "More than one element in the set." << std::endl;
       rigidBody.m_lastTransformation = groupsMap_Affine[s.second];
       rigidBody.m_velocity = (rigidBody.m_lastTransformation.translation() - rigidBody.center()) / dt;
@@ -1085,7 +1082,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   auto minutes = std::chrono::duration_cast<std::chrono::minutes>(epoch).count();
   // std::cout << "Minutes: " << minutes << std::endl;
   std::string outputFile = outputDir + inputfileName+"_"+ std::to_string(minutes);  // + inputFile
-  outputFile = outputFile + ".yaml";
+  outputFile = outputFile + ".txt";
   
 
   std::cout << "Input File: " << inputfileName << std::endl;
@@ -1108,6 +1105,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   out << "Runtime: " << time_used.count() << " seconds" << std::endl;
   out << P;
   
+  out << "transformation:"<< std::endl;
   for (int iRb = 0; iRb < numRigidBodies; ++iRb) {
     RigidBody& rigidBody = m_rigidBodies[iRb];
     Eigen::Quaternionf q(rigidBody.m_lastTransformation.rotation());
@@ -1117,7 +1115,6 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
 
     // std::cout << "Quaternion: " << q.coeffs().transpose() << std::endl;
     // std::cout << "Translation: " << rigidBodyTranslation.transpose() 
-    // out << s.first<< ": "  <<rigidBody.m_lastTransformation.translation().transpose()<<std::endl; // << " " << rigidBody.m_lastTransformation.translation().y << " " << rigidBody.m_lastTransformation.translation().z <<std::endl;
     out << iRb<< ": "  <<rigidBody.m_lastTransformation.translation().x()
     << " " <<rigidBody.m_lastTransformation.translation().y()
     << " " <<rigidBody.m_lastTransformation.translation().z()
