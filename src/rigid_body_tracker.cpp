@@ -12,6 +12,8 @@
 #include <set>
 #include "assignment.hpp"
 #include "cbs_group_constraint.hpp"
+#include <random>
+
 
 #include <limits>
 
@@ -763,6 +765,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   ICP icp;
   icp.setMaximumIterations(5);  
   icp.setInputTarget(markers);   
+  icp.setRANSACOutlierRejectionThreshold (0.04);
 
 
   // prepare for knn query
@@ -779,6 +782,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   size_t const numRigidBodies = m_rigidBodies.size();
   for (int iRb = 0; iRb < numRigidBodies; ++iRb) {
     RigidBody& rigidBody = m_rigidBodies[iRb];
+    std::cout << "Rigid Body Name: " << rigidBody.name() << "---------" << std::endl;
 
     Cloud::Ptr &rbMarkers = m_markerConfigurations[rigidBody.m_markerConfigurationIdx];
 
@@ -851,7 +855,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
       continue;
     }
 
-    std::cout << "multi marker drone---"<< std::endl;
+    // std::cout << "multi marker drone---"<< std::endl;
 
     float maxV = dynConf.maxXVelocity;
     icp.setMaxCorrespondenceDistance(maxV * dt);   
@@ -862,14 +866,53 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     
     // Perform the alignment for k times
     int k= 3; // max_group_num
-    auto predictTransform = rigidBody.m_lastTransformation;      
-    // std::cout << "predictTransform/m_lastTransformation:  \n"<< predictTransform.matrix()<< "\n";
+    auto predictTransform = rigidBody.m_lastTransformation;  
+
+
+    // double noiseStdDev = 0.0001; // TODO test different para 0.01 0.001 0.1
+    // std::default_random_engine generator;
+    // std::normal_distribution<double> distribution(0, noiseStdDev);
+
+
+
+    double translationNoiseStdDev = 0.01; 
+    double rotationNoiseStdDev = 0.01; 
+
+    // Create a random number generator
+    std::default_random_engine generator;
+    std::normal_distribution<double> translationDistribution(0, translationNoiseStdDev);
+    std::normal_distribution<double> rotationDistribution(0, rotationNoiseStdDev);
+
+
+    std::cout << "predictTransform/m_lastTransformation:  \n"<< predictTransform.matrix()<< "\n";
+    static Eigen::Matrix4f lastTransformation; 
 
     // std::cout << "-----try k times icp to get different options:----  \n";   
     for (size_t i = 0; i < k; ++i)  {
-      // std::cout << "--- i: " << i << std::endl;
+      std::cout << "icp: " << i<< std::endl;
       Cloud result; 
-      icp.align(result, predictTransform.matrix());  // in the result there are moved config markers
+
+
+      // Extract translation and Euler angles
+      float p_x, p_y, p_z, p_roll, p_pitch, p_yaw;
+      pcl::getTranslationAndEulerAngles(predictTransform, p_x, p_y, p_z, p_roll, p_pitch, p_yaw);
+
+      // Add noise to translation and Euler angles
+      p_x += translationDistribution(generator);
+      p_y += translationDistribution(generator);
+      p_z += translationDistribution(generator);
+      p_roll += rotationDistribution(generator);
+      p_pitch += rotationDistribution(generator);
+      p_yaw += rotationDistribution(generator);
+
+      // Reconstruct the transformation matrix with noise
+      Eigen::Affine3f noisyTransform = pcl::getTransformation(p_x, p_y, p_z, p_roll, p_pitch, p_yaw).cast<float>();
+
+      // // Debug output to check the noisy transformation matrix
+      // std::cout << "Noisy predictTransform/m_lastTransformation:  \n" << noisyTransform.matrix() << "\n";
+
+      // icp.align(result, predictTransform.matrix());  // in the result there are moved config markers
+      icp.align(result, noisyTransform.matrix());
 
       if (!icp.hasConverged()) {
         std::stringstream sstr;
@@ -880,6 +923,14 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
       }
 
       Eigen::Matrix4f transformation = icp.getFinalTransformation();
+      // std::cout << "transformation:" << transformation << std::endl;
+      if (i > 0 && !transformation.isApprox(lastTransformation)) {
+          std::cout << "Transformation changed:" << std::endl;
+          std::cout << "last" << lastTransformation << std::endl;
+          std::cout << "current" << transformation << std::endl;
+      }
+      lastTransformation = transformation;  // Update the last transformation
+
       Eigen::Affine3f tROTA(transformation);
 
       float x, y, z, roll, pitch, yaw;
@@ -990,8 +1041,8 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   start.id = 0;
   start.cost = CBS_assignment_cost;
   start.solution = solution;
-  // std::cout << "The start HLN: ";
-  // std::cout << start;
+  std::cout << "The start HLN: ";
+  std::cout << start;
   typename boost::heap::d_ary_heap<HighLevelNode, boost::heap::arity<2>,
                                     boost::heap::mutable_<true> >
       open;
@@ -1085,9 +1136,9 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   outputFile = outputFile + ".txt";
   
 
-  std::cout << "Input File: " << inputfileName << std::endl;
+  // std::cout << "Input File: " << inputfileName << std::endl;
   std::cout << "Output file: " << outputFile << std::endl;
-  std::cout << "runtime: " << time_used.count() << " seconds" << std::endl;
+  // std::cout << "runtime: " << time_used.count() << " seconds" << std::endl;
   // std::cout << "highLevelExpanded: " << m_highLevelExpanded << std::endl;
   // std::cout << "duplicate: " << duplicate << std::endl;
 

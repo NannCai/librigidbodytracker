@@ -198,8 +198,6 @@ namespace librigidbodytracker {
 						std::cout << "Removing point with id: " << idx << std::endl;
 						clouds[i]->erase(clouds[i]->begin() + idx);
 					}
-				    // clouds[i]->erase(clouds[i]->begin() + rand() % clouds[i]->size());   // rand() is the old style in c++, the dis(gen) is the old style in c++
-
 				}
 					
 				// // # new debug print   the points in the current point cloud
