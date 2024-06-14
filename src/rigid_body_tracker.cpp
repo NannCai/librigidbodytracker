@@ -765,7 +765,10 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   ICP icp;
   icp.setMaximumIterations(5);  
   icp.setInputTarget(markers);   
-  icp.setRANSACOutlierRejectionThreshold (0.04);
+  icp.setRANSACOutlierRejectionThreshold(0.05);
+  // icp.setTransformationEpsilon(0.01);
+	// icp.setEuclideanFitnessEpsilon(EuclideanEpsilon);
+  // icp.setRANSACIterations(3);
 
 
   // prepare for knn query
