@@ -130,17 +130,17 @@ void RigidBodyTracker::update(std::chrono::high_resolution_clock::time_point tim
   //   updatePose(time, pointCloud);
   // }
 
-  // if (m_trackingMode == PositionMode) {
-  //   updatePosition(time, pointCloud);
-  // } else if (m_trackingMode == PoseMode) {
-  //   updatePose(time, pointCloud);
-  // }
-  // else if (m_trackingMode == HybridMode){
-  //   updateHybrid(time, pointCloud);
-  // }
+  if (m_trackingMode == PositionMode) {
+    updatePosition(time, pointCloud);
+  } else if (m_trackingMode == PoseMode) {
+    updatePose(time, pointCloud);
+  }
+  else if (m_trackingMode == HybridMode){
+    updateHybrid(time, pointCloud);
+  }
   // updatePose(time, pointCloud);
   inputPath = inputP;
-  updateHybrid(time, pointCloud);
+  // updateHybrid(time, pointCloud);
 
 }
 
@@ -465,6 +465,7 @@ bool RigidBodyTracker::initializePosition(
 void RigidBodyTracker::updatePosition(std::chrono::high_resolution_clock::time_point stamp,
   Cloud::ConstPtr markers)
 {
+  std::cout << "-updatePosition function-"<< std::endl;
   static std::chrono::high_resolution_clock::time_point lastCall;
   std::chrono::duration<double> lastCallElapsedSeconds = stamp-lastCall;
   double lastCalldt = lastCallElapsedSeconds.count();
@@ -1073,58 +1074,58 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
 
   std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();  
   std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>( t2-t1 );
-  
-
-  std::string inputfileName = inputPath.substr(inputPath.find_last_of("/\\") + 1);
-  std::string outputDir = "./data/output/";
-  auto now = std::chrono::system_clock::now();
-  auto epoch = now.time_since_epoch();
-  auto minutes = std::chrono::duration_cast<std::chrono::minutes>(epoch).count();
-  // std::cout << "Minutes: " << minutes << std::endl;
-  std::string outputFile = outputDir + inputfileName+"_"+ std::to_string(minutes);  // + inputFile
-  outputFile = outputFile + ".txt";
-  
-
-  std::cout << "Input File: " << inputfileName << std::endl;
-  std::cout << "Output file: " << outputFile << std::endl;
   std::cout << "runtime: " << time_used.count() << " seconds" << std::endl;
   // std::cout << "highLevelExpanded: " << m_highLevelExpanded << std::endl;
   // std::cout << "duplicate: " << duplicate << std::endl;
 
+  std::cout << "Input Path: " << inputPath << std::endl;
+  if (!inputPath.empty()) {
+    std::string inputfileName = inputPath.substr(inputPath.find_last_of("/\\") + 1);
+    std::string outputDir = "./data/output/";
+    auto now = std::chrono::system_clock::now();
+    auto epoch = now.time_since_epoch();
+    auto minutes = std::chrono::duration_cast<std::chrono::minutes>(epoch).count();
+    // std::cout << "Minutes: " << minutes << std::endl;
+    std::string outputFile = outputDir + inputfileName+"_"+ std::to_string(minutes);  // + inputFile
+    outputFile = outputFile + ".txt";
+    
+    std::cout << "Input File: " << inputfileName << std::endl;
+    std::cout << "Output file: " << outputFile << std::endl;
 
-  std::ofstream out(outputFile, std::ios_base::app); // Open in append mode
+    std::ofstream out(outputFile, std::ios_base::app); // Open in append mode
 
-  if (!out.is_open()) {
-    std::cout << "File does not exist, creating a new file..." << std::endl;
-    out.open(outputFile);
-  }
-  // out << "Input File: " << inputFile << std::endl;
-  // out << "elapsedSeconds: " << elapsedSeconds << std::endl;  std::cout << "stamp: " << stamp.time_since_epoch().count() << std::endl;
-  // std::cout << "stamp: " << stamp.time_since_epoch().count() << std::endl;
-  out << "stamp: " << stamp.time_since_epoch().count() << std::endl;
-  out << "Runtime: " << time_used.count() << " seconds" << std::endl;
-  out << P;
-  
-  out << "transformation:"<< std::endl;
-  for (int iRb = 0; iRb < numRigidBodies; ++iRb) {
-    RigidBody& rigidBody = m_rigidBodies[iRb];
-    Eigen::Quaternionf q(rigidBody.m_lastTransformation.rotation());
-    // rigidBody.m_lastTransformation.translation()
-    // Eigen::Vector3d rigidBodyTranslation = rigidBody.m_lastTransformation.translation();
-    // std::cout << "Translation: " << rigidBodyTranslation.transpose() << std::endl;
+    if (!out.is_open()) {
+      std::cout << "File does not exist, creating a new file..." << std::endl;
+      out.open(outputFile);
+    }
+    // out << "Input File: " << inputFile << std::endl;
+    // out << "elapsedSeconds: " << elapsedSeconds << std::endl;  std::cout << "stamp: " << stamp.time_since_epoch().count() << std::endl;
+    // std::cout << "stamp: " << stamp.time_since_epoch().count() << std::endl;
+    out << "stamp: " << stamp.time_since_epoch().count() << std::endl;
+    out << "Runtime: " << time_used.count() << " seconds" << std::endl;
+    out << P;
+    
+    out << "transformation:"<< std::endl;
+    for (int iRb = 0; iRb < numRigidBodies; ++iRb) {
+      RigidBody& rigidBody = m_rigidBodies[iRb];
+      Eigen::Quaternionf q(rigidBody.m_lastTransformation.rotation());
+      // rigidBody.m_lastTransformation.translation()
+      // Eigen::Vector3d rigidBodyTranslation = rigidBody.m_lastTransformation.translation();
+      // std::cout << "Translation: " << rigidBodyTranslation.transpose() << std::endl;
 
-    // std::cout << "Quaternion: " << q.coeffs().transpose() << std::endl;
-    // std::cout << "Translation: " << rigidBodyTranslation.transpose() 
-    out << iRb<< ": "  <<rigidBody.m_lastTransformation.translation().x()
-    << " " <<rigidBody.m_lastTransformation.translation().y()
-    << " " <<rigidBody.m_lastTransformation.translation().z()
-    << " " <<q.x()
-    << " " <<q.y()
-    << " " <<q.z()
-    << " " <<q.w()
-    <<std::endl;
+      // std::cout << "Quaternion: " << q.coeffs().transpose() << std::endl;
+      // std::cout << "Translation: " << rigidBodyTranslation.transpose() 
+      out << iRb<< ": "  <<rigidBody.m_lastTransformation.translation().x()
+      << " " <<rigidBody.m_lastTransformation.translation().y()
+      << " " <<rigidBody.m_lastTransformation.translation().z()
+      << " " <<q.x()
+      << " " <<q.y()
+      << " " <<q.z()
+      << " " <<q.w()
+      <<std::endl;
 
 
+    }
   }
 
 }

@@ -123,24 +123,24 @@ namespace librigidbodytracker {
 
 		void play(librigidbodytracker::RigidBodyTracker &tracker) const
 		{
-			std::string inputfileName = inputPath.substr(inputPath.find_last_of("/\\") + 1);
-			std::string outputDir = "./data/output/";
-			auto now = std::chrono::system_clock::now();
-			auto epoch = now.time_since_epoch();
-			auto minutes = std::chrono::duration_cast<std::chrono::minutes>(epoch).count();
-			std::cout << "Minutes: " << minutes << std::endl;
-			std::string outputFile = outputDir + inputfileName+"_" + std::to_string(minutes) + "_pointcloud";  // + inputFile
-			outputFile = outputFile + ".txt";
-			std::ofstream out(outputFile, std::ios::out); // Open in append mode
-			if (!out.is_open()) {
-				std::cout << "File does not exist, creating a new file..." << std::endl;
-				out.open(outputFile);
-			}
+			// std::string inputfileName = inputPath.substr(inputPath.find_last_of("/\\") + 1);
+			// std::string outputDir = "./data/output/";
+			// auto now = std::chrono::system_clock::now();
+			// auto epoch = now.time_since_epoch();
+			// auto minutes = std::chrono::duration_cast<std::chrono::minutes>(epoch).count();
+			// // std::cout << "Minutes: " << minutes << std::endl;
+			// std::string outputFile = outputDir + inputfileName+"_" + std::to_string(minutes) + "_pointcloud";  // + inputFile
+			// outputFile = outputFile + ".txt";
+			// std::ofstream out(outputFile, std::ios::out); // Open in append mode
+			// if (!out.is_open()) {
+			// 	std::cout << "File does not exist, creating a new file..." << std::endl;
+			// 	out.open(outputFile);
+			// }
 
-		    const double pick_probability = 0.1;
-			std::random_device rd;
-			std::mt19937 gen(rd());
-			std::uniform_real_distribution<> dis(0.0, 1.0);
+		    // const double pick_probability = 0.1;
+			// std::random_device rd;
+			// std::mt19937 gen(rd());
+			// std::uniform_real_distribution<> dis(0.0, 1.0);
 
 			for (size_t i = 0; i < clouds.size(); ++i) {
 			// for (size_t i = 0; i < 26; ++i) {
@@ -149,58 +149,6 @@ namespace librigidbodytracker {
 				std::chrono::high_resolution_clock::time_point stamp(dur);
 				if (clouds[i]->empty()) {continue;}
 
-
-				// noise: add point
-				// if (dis(gen) < pick_probability) {
-				// 	std::cout << i << " frame, add "<< std::endl;
-
-				// 	double range_x = 1.0; // Range for x coordinate
-				// 	double range_y = 1.0; // Range for y coordinate
-				// 	double range_z = 1.0; // Range for z coordinate
-				// 	double min_x = -0.5; // Minimum value for x coordinate
-				// 	double min_y = -0.5; // Minimum value for y coordinate
-				// 	double min_z = 0.0; // Minimum value for z coordinate
-				// 	// Generate random x, y, z coordinates within a specific range
-				// 	double random_x = ((double)rand() / RAND_MAX) * range_x + min_x;
-				// 	double random_y = ((double)rand() / RAND_MAX) * range_y + min_y;
-				// 	double random_z = ((double)rand() / RAND_MAX) * range_z + min_z;
-
-				// 	// Add the point with random coordinates to clouds[i]
-				// 	clouds[i]->push_back(pcl::PointXYZ(random_x, random_y, random_z));
-				// 	// clouds[i]->insert(clouds[i]->begin(), pcl::PointXYZ(random_x, random_y, random_z));  // this is also not a good way to do it
-				// 	// clouds[i]->push_back(pcl::PointXYZ(1.0, 1.0, 1.0));
-				// }
-
-				// noise: remove point
-				if (dis(gen) < pick_probability) {
-					// std::cout << i << " frame, remove "<< std::endl;
-					// int max_agent_num = 10; 
-					int max_agent_num = clouds[i]->size(); 
-					int lambda = max_agent_num/3;
-					// std::uniform_int_distribution<> dis_uni_int(1, max_agent_num);
-				    // std::poisson_distribution<int> dis_poisson(lambda); // Poisson distribution with lambda = 5
-				    std::poisson_distribution<int> dis_poisson(1); // Poisson distribution with lambda = 5
-
-					int num_agent = dis_poisson(gen);
-					std::cout << "Number of removed agents: " << num_agent << std::endl;
-
-					std::set<int> indices_set;
-					while (indices_set.size() < num_agent) {
-						indices_set.insert(rand() % max_agent_num);
-					}
-
-					// Convert set to vector and sort in descending order to avoid invalidation issues
-					std::vector<int> indices(indices_set.begin(), indices_set.end());
-					std::sort(indices.rbegin(), indices.rend());
-
-					// Erase the points with the generated indices
-					for (int idx : indices) {
-						std::cout << "Removing point with id: " << idx << std::endl;
-						clouds[i]->erase(clouds[i]->begin() + idx);
-					}
-				    // clouds[i]->erase(clouds[i]->begin() + rand() % clouds[i]->size());   // rand() is the old style in c++, the dis(gen) is the old style in c++
-
-				}
 					
 				// // # new debug print   the points in the current point cloud
 				// // Ptr& cloud refers to the same object as clouds[i] but it's a reference, so it won't make a copy.
@@ -212,16 +160,16 @@ namespace librigidbodytracker {
 				// }
 
 
-				std::ofstream out(outputFile, std::ios_base::app); // Open in append mode
-				out << "stamp: " << stamp.time_since_epoch().count() << std::endl;
-				const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
-				for (size_t i = 0; i < cloud->size(); ++i) {
-					const pcl::PointXYZ& point = (*cloud)[i];  // !!! here reference and pointer need to be figure out
-					out << point.x << ", " << point.y << ", " << point.z << std::endl;
-				}
+				// std::ofstream out(outputFile, std::ios_base::app); // Open in append mode
+				// out << "stamp: " << stamp.time_since_epoch().count() << std::endl;
+				// const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
+				// for (size_t i = 0; i < cloud->size(); ++i) {
+				// 	const pcl::PointXYZ& point = (*cloud)[i];  // !!! here reference and pointer need to be figure out
+				// 	out << point.x << ", " << point.y << ", " << point.z << std::endl;
+				// }
 
-				// tracker.update(stamp, clouds[i]);
-				tracker.update(stamp, clouds[i], inputPath);
+				tracker.update(stamp, clouds[i]);
+				// tracker.update(stamp, clouds[i], inputPath);
 			}
 			std::cout << "Total clouds size: " << clouds.size() << std::endl;
 		}
