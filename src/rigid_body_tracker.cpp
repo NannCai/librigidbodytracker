@@ -745,12 +745,20 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 
 
+  std::cout << "-updatePosition function-"<< std::endl;
+  static std::chrono::high_resolution_clock::time_point lastCall;
+  std::chrono::duration<double> lastCallElapsedSeconds = stamp-lastCall;
+  double lastCalldt = lastCallElapsedSeconds.count();
+  lastCall = stamp;
+
   if (markers->empty()) {
     for (auto& rigidBody : m_rigidBodies) {
       rigidBody.m_lastTransformationValid = false;
     }
     return;
   }
+
+
   m_initialized = m_initialized || initializeHybrid(markers);
   if (!m_initialized) {
     logWarn(
@@ -760,6 +768,14 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     // Doesn't make too much sense to continue here - lets wait to be fully initialized
     return;
   }
+  if (lastCalldt > 0.4){
+    m_initialized = initializeHybrid(markers);
+  }
+  if (m_initialized) {
+    std::cout << "m_initialized" << m_initialized << std::endl;
+    return;
+  }
+
 
   ICP icp;
   icp.setMaximumIterations(5);  
@@ -784,9 +800,9 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     Cloud::Ptr &rbMarkers = m_markerConfigurations[rigidBody.m_markerConfigurationIdx];
 
     size_t const rbNpts = rbMarkers->size();
-    // std::cout <<"rigidBody.m_markerConfigurationIdx: " << rigidBody.m_markerConfigurationIdx<< " rbNpts: "<<rbNpts << std::endl;
-    // std::cout << "rigidBody.m_lastValidTransform: " << (rigidBody.m_lastValidTransform.time_since_epoch().count()) << std::endl;
-    // std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< rigidBody.m_lastTransformation.matrix() << "\n"; 
+    std::cout <<"rigidBody.m_markerConfigurationIdx: " << rigidBody.m_markerConfigurationIdx<< " rbNpts: "<<rbNpts << std::endl;
+    std::cout << "rigidBody.m_lastValidTransform: " << (rigidBody.m_lastValidTransform.time_since_epoch().count()) << std::endl;
+    std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< rigidBody.m_lastTransformation.matrix() << "\n"; 
 
     std::chrono::duration<double> elapsedSeconds = stamp-rigidBody.m_lastValidTransform;
     double dt = elapsedSeconds.count();
@@ -1102,7 +1118,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     // out << "elapsedSeconds: " << elapsedSeconds << std::endl;  std::cout << "stamp: " << stamp.time_since_epoch().count() << std::endl;
     // std::cout << "stamp: " << stamp.time_since_epoch().count() << std::endl;
     out << "stamp: " << stamp.time_since_epoch().count() << std::endl;
-    out << "Runtime: " << time_used.count() << " seconds" << std::endl;
+    // out << "Runtime: " << time_used.count() << " seconds" << std::endl;
     out << P;
     
     out << "transformation:"<< std::endl;
