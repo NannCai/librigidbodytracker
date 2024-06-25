@@ -423,7 +423,7 @@ void RigidBodyTracker::updatePose(std::chrono::high_resolution_clock::time_point
       }
       logWarn(sstr.str());
     }
-    std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< rigidBody.m_lastTransformation.matrix() << "\n"; 
+    // std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< rigidBody.m_lastTransformation.matrix() << "\n"; 
 
   }
 
@@ -1072,13 +1072,13 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   }
 
 
-  std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();  
-  std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>( t2-t1 );
-  std::cout << "runtime: " << time_used.count() << " seconds" << std::endl;
+  // std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();  
+  // std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>( t2-t1 );
+  // std::cout << "runtime: " << time_used.count() << " seconds" << std::endl;
   // std::cout << "highLevelExpanded: " << m_highLevelExpanded << std::endl;
   // std::cout << "duplicate: " << duplicate << std::endl;
 
-  std::cout << "Input Path: " << inputPath << std::endl;
+  // std::cout << "Input Path: " << inputPath << std::endl;
   if (!inputPath.empty()) {
     std::string inputfileName = inputPath.substr(inputPath.find_last_of("/\\") + 1);
     std::string outputDir = "./data/output/";
