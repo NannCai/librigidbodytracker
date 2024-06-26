@@ -121,6 +121,8 @@ namespace librigidbodytracker {
 			}
 		}
 
+		// IF want output the pc and tracking txt result: 
+		// 1 out.is_open() 2 std::ofstream out(outputFile 3 tracker.update(stamp, clouds[i], inputPath);
 		void play(librigidbodytracker::RigidBodyTracker &tracker) const
 		{
 			// std::string inputfileName = inputPath.substr(inputPath.find_last_of("/\\") + 1);
@@ -143,7 +145,7 @@ namespace librigidbodytracker {
 			// std::uniform_real_distribution<> dis(0.0, 1.0);
 
 			for (size_t i = 0; i < clouds.size(); ++i) {
-			// for (size_t i = 0; i < 26; ++i) {
+			// for (size_t i = 0; i < 10; ++i) {
 				std::cout << i << " frame  ---------------------------------------------------"<< std::endl;
 				auto dur = std::chrono::milliseconds(timestamps[i]);
 				std::chrono::high_resolution_clock::time_point stamp(dur);
@@ -168,8 +170,9 @@ namespace librigidbodytracker {
 				// 	out << point.x << ", " << point.y << ", " << point.z << std::endl;
 				// }
 
-				tracker.update(stamp, clouds[i]);
 				// tracker.update(stamp, clouds[i], inputPath);
+				tracker.update(stamp, clouds[i]);
+
 			}
 			std::cout << "Total clouds size: " << clouds.size() << std::endl;
 		}

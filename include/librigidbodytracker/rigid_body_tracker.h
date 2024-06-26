@@ -111,7 +111,7 @@ namespace librigidbodytracker {
     bool initializeHybrid_old(
       pcl::PointCloud<pcl::PointXYZ>::ConstPtr markers);
 
-    bool initializeHybrid(
+    bool initializeHybrid(std::chrono::high_resolution_clock::time_point stamp,
       pcl::PointCloud<pcl::PointXYZ>::ConstPtr markers);
 
     void updateHybrid(std::chrono::high_resolution_clock::time_point stamp,

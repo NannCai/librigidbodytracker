@@ -596,7 +596,9 @@ bool RigidBodyTracker::initializeHybrid_old(Cloud::ConstPtr markers)
   return true;  
 }
 
-bool RigidBodyTracker::initializeHybrid(Cloud::ConstPtr markersConst)
+bool RigidBodyTracker::initializeHybrid(
+  std::chrono::high_resolution_clock::time_point stamp, 
+  Cloud::ConstPtr markersConst)
 {
   std::cout << "-initializeHybrid function-" << std::endl;
 
@@ -662,14 +664,33 @@ bool RigidBodyTracker::initializeHybrid(Cloud::ConstPtr markersConst)
       continue;
     }
 
-    if (rbNpts == 1) {
-      Eigen::Vector3f configinitialCenter = rigidBody.initialCenter();
-      Eigen::Matrix4f configTransformation = pcl::getTransformation(
-        configinitialCenter.x(), configinitialCenter.y(), configinitialCenter.z(),
-        0, 0, 0).matrix();
+    if (rbNpts == 1 && nFound == 1)  {  // TODO and nFound ==1
+      // Eigen::Vector3f configinitialCenter = rigidBody.initialCenter();
+      // Eigen::Matrix4f configTransformation = pcl::getTransformation(
+      //   configinitialCenter.x(), configinitialCenter.y(), configinitialCenter.z(),
+      //   0, 0, 0).matrix();
+      // rigidBody.m_lastTransformation = configTransformation;
 
-      rigidBody.m_lastTransformation = configTransformation;
-      std::cout << "rigidBody.m_lastTransformation:  \n"<< configTransformation << "\n";
+      Eigen::Vector3f marker = pcl2eig((*markers)[nearestIdx[0]]);
+      auto pi = rigidBody.initialCenter();
+      float dist = (pi - marker).norm();
+      std::cout << "Distance between pi and marker: " << dist << std::endl; 
+
+      Eigen::Vector3f offset = pcl2eig((*m_markerConfigurations[rigidBody.m_markerConfigurationIdx])[0]);
+      rigidBody.m_lastTransformation = Eigen::Translation3f(marker + offset);
+      // rigidBody.m_lastValidTransform = stamp;
+      rigidBody.m_lastTransformationValid = true;
+      rigidBody.m_hasOrientation = false;
+      std::cout << "rigidBody.m_lastValidTransform: " << (rigidBody.m_lastValidTransform.time_since_epoch().count()) << std::endl;
+      std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< rigidBody.m_lastTransformation.matrix() << "\n"; 
+      continue;
+    }
+    else if (rbNpts == 1){
+      std::stringstream sstr;
+      sstr << "error: only " << nFound
+           << " neighbors found for rigid body " << rigidBody.name()
+           << " (need " << rbNpts << ")";
+      logWarn(sstr.str());
       continue;
     }
 
@@ -744,8 +765,6 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   std::cout << "updateHybrid function\n" ;
   std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 
-
-  std::cout << "-updatePosition function-"<< std::endl;
   static std::chrono::high_resolution_clock::time_point lastCall;
   std::chrono::duration<double> lastCallElapsedSeconds = stamp-lastCall;
   double lastCalldt = lastCallElapsedSeconds.count();
@@ -759,7 +778,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   }
 
 
-  m_initialized = m_initialized || initializeHybrid(markers);
+  m_initialized = m_initialized || initializeHybrid(stamp,markers);
   if (!m_initialized) {
     logWarn(
       "rigid body tracker initialization failed - "
@@ -769,13 +788,14 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     return;
   }
   if (lastCalldt > 0.4){
-    m_initialized = initializeHybrid(markers);
+    m_initialized = initializeHybrid(stamp,markers);
   }
-  if (m_initialized) {
-    std::cout << "m_initialized" << m_initialized << std::endl;
-    return;
-  }
+  // if (m_initialized) {
+  //   std::cout << "m_initialized" << m_initialized << std::endl;
+  //   return;
+  // }
 
+  std::cout << "-initializeHybrid end-"<< std::endl;
 
   ICP icp;
   icp.setMaximumIterations(5);  
@@ -795,10 +815,10 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   // for (auto& rigidBody : m_rigidBodies) {
   size_t const numRigidBodies = m_rigidBodies.size();
   for (int iRb = 0; iRb < numRigidBodies; ++iRb) {
+    std::cout << "------RigidBody start------"<< std::endl;
+
     RigidBody& rigidBody = m_rigidBodies[iRb];
-
     Cloud::Ptr &rbMarkers = m_markerConfigurations[rigidBody.m_markerConfigurationIdx];
-
     size_t const rbNpts = rbMarkers->size();
     std::cout <<"rigidBody.m_markerConfigurationIdx: " << rigidBody.m_markerConfigurationIdx<< " rbNpts: "<<rbNpts << std::endl;
     std::cout << "rigidBody.m_lastValidTransform: " << (rigidBody.m_lastValidTransform.time_since_epoch().count()) << std::endl;
@@ -806,6 +826,8 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
 
     std::chrono::duration<double> elapsedSeconds = stamp-rigidBody.m_lastValidTransform;
     double dt = elapsedSeconds.count();
+    std::cout << "dt: " << dt << std::endl;
+
     // Set the max correspondence distance
     const DynamicsConfiguration& dynConf = m_dynamicsConfigurations[rigidBody.m_dynamicsConfigurationIdx];
 
@@ -839,11 +861,13 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
         float vx = velocity.x();
         float vy = velocity.y();
         float vz = velocity.z();
-        // std::cout << "marker: " << marker.transpose() << ", rigidBody.center(): " << rigidBody.center().transpose() << std::endl;
-        // std::cout << "Velocity: (" << vx << ", " << vy << ", " << vz << ")"<< std::endl;
-        // std::cout << "maxXVelocity: " << dynConf.maxXVelocity << std::endl;
-        // std::cout << "maxYVelocity: " << dynConf.maxYVelocity << std::endl;
-        // std::cout << "maxZVelocity: " << dynConf.maxZVelocity << std::endl;
+        std::cout << "marker: " << marker.transpose() << std::endl;
+        std::cout << "rigidBody.center(): " << rigidBody.center().transpose() << std::endl;
+        std::cout << "dt: " << dt << std::endl;
+        std::cout << "Velocity: (" << vx << ", " << vy << ", " << vz << ")"<< std::endl;
+        std::cout << "maxXVelocity: " << dynConf.maxXVelocity << std::endl;
+        std::cout << "maxYVelocity: " << dynConf.maxYVelocity << std::endl;
+        std::cout << "maxZVelocity: " << dynConf.maxZVelocity << std::endl;
 
         if (   fabs(vx) < dynConf.maxXVelocity
             && fabs(vy) < dynConf.maxYVelocity
