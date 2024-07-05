@@ -684,7 +684,7 @@ bool RigidBodyTracker::initializeHybrid(
       rigidBody.m_lastTransformationValid = true;
       rigidBody.m_hasOrientation = false;
       std::cout << "rigidBody.m_lastValidTransform: " << (rigidBody.m_lastValidTransform.time_since_epoch().count()) << std::endl;
-      std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< rigidBody.m_lastTransformation.matrix() << "\n"; 
+      // std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< rigidBody.m_lastTransformation.matrix() << "\n"; 
       continue;
     }
     else if (rbNpts == 1){
@@ -812,7 +812,8 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
 
   CBS_Assignment<std::string, std::string> CBS_assignment;
   std::set<CBS_InputData> cbs_data_set;
-  std::map<std::set<std::string>, Eigen::Affine3f> groupsMap_Affine;
+  // std::map<std::set<std::string>, Eigen::Affine3f> groupsMap_Affine;
+  std::map<std::tuple<std::string, std::set<std::string>>, Eigen::Affine3f> groupsMap_Affine;
 
   // for (auto& rigidBody : m_rigidBodies) {
   size_t const numRigidBodies = m_rigidBodies.size();
@@ -824,7 +825,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     size_t const rbNpts = rbMarkers->size();
     std::cout <<"rigidBody.m_markerConfigurationIdx: " << rigidBody.m_markerConfigurationIdx<< " rbNpts: "<<rbNpts << std::endl;
     std::cout << "rigidBody.m_lastValidTransform: " << (rigidBody.m_lastValidTransform.time_since_epoch().count()) << std::endl;
-    std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< rigidBody.m_lastTransformation.matrix() << "\n"; 
+    // std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< rigidBody.m_lastTransformation.matrix() << "\n"; 
 
     std::chrono::duration<double> elapsedSeconds = stamp-rigidBody.m_lastValidTransform;
     double dt = elapsedSeconds.count();
@@ -984,7 +985,8 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
 
         // std::set<std::string> keySet = data.taskSet;
         // keySet.insert(std::to_string(data.cost));
-        groupsMap_Affine[data.taskSet] = tROTA;  // TODO maybe sth wrong
+        // groupsMap_Affine[data.taskSet] = tROTA;  // TODO maybe sth wrong
+        groupsMap_Affine[std::make_tuple(data.agent, data.taskSet)] = tROTA;
 
 
       } else {
@@ -1107,7 +1109,13 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     }
     else{ // TODO groupsMap_Affine maybe not a good match 
       // std::cout << "More than one element in the set." << std::endl;
-      rigidBody.m_lastTransformation = groupsMap_Affine[s.second];
+      // rigidBody.m_lastTransformation = groupsMap_Affine[s.second];   // std::make_tuple(mainKey, subKeys1)
+
+      auto searchKey = std::make_tuple(s.first, s.second);
+      if (groupsMap_Affine.find(searchKey) != groupsMap_Affine.end()) {
+        rigidBody.m_lastTransformation = groupsMap_Affine[std::make_tuple(s.first, s.second)];
+      } 
+
       rigidBody.m_velocity = (rigidBody.m_lastTransformation.translation() - rigidBody.center()) / dt;
       rigidBody.m_lastValidTransform = stamp;
       rigidBody.m_lastTransformationValid = true;
