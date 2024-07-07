@@ -1113,7 +1113,14 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
 
       auto searchKey = std::make_tuple(s.first, s.second);
       if (groupsMap_Affine.find(searchKey) != groupsMap_Affine.end()) {
-        rigidBody.m_lastTransformation = groupsMap_Affine[std::make_tuple(s.first, s.second)];
+        rigidBody.m_lastTransformation = groupsMap_Affine[searchKey];
+
+        // std::cout << "searchKey: (" << std::get<0>(searchKey) << ", {";
+        // for (const auto& elem : std::get<1>(searchKey)) {
+        //   std::cout << elem << " ";
+        // }
+        // std::cout << "})" << std::endl;
+
       } 
 
       rigidBody.m_velocity = (rigidBody.m_lastTransformation.translation() - rigidBody.center()) / dt;
