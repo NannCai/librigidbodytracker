@@ -747,6 +747,8 @@ bool RigidBodyTracker::initializeHybrid(
     // unavailable to all other rigidBodies so we don't double-assign markers
     // (TODO: this is so greedy... do we need a more global approach?)
     rigidBody.m_lastTransformation = bestTransformation;
+    rigidBody.m_lastValidTransform = stamp;  // this is a must, though i dont understand
+
     // remove highest indices first
     std::sort(rbTakePts.rbegin(), rbTakePts.rend());
     for (int idx : rbTakePts) {
