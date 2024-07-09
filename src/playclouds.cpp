@@ -73,7 +73,7 @@ static void readConfig(
   std::map<std::string, size_t> marker_name_to_index;
   i = 0;
   markerConfigurations.clear();
-  for (auto &&config : markerRoot) {    // didnt goes into this loop
+  for (auto &&config : markerRoot) {    
     auto val = config.second; // first is key
     assert(val.IsMap());
     auto offset = asVec(val["offset"]);
@@ -108,15 +108,11 @@ static void readConfig(
 int main(int argc, char **argv)
 {
   using namespace librigidbodytracker;
-  // std::cout << "argc"<< argc << std::endl;
 
   if (argc < 3) {
     std::cerr << "use arguments: <cfg> <recording> [<debuglog>]\n";
     return -1;
   }
-  // else{
-  //   std::cout << "argv[1]"<< argv[1] << std::endl;
-  // }
 
   std::vector<DynamicsConfiguration> dynamicsConfigurations;
   std::vector<MarkerConfiguration> markerConfigurations;
@@ -135,12 +131,9 @@ int main(int argc, char **argv)
 
   tracker.setLogWarningCallback(&log_stderr);
   if (argc < 4) {
-    // std::cout << "(argc < 4)" << std::endl;
     PointCloudPlayer player;
     player.load(argv[2]);
     player.play(tracker);
-    // player.play_compute_markerposition(8);
-    // player.play_compute_offset(tracker);
   }
   else {
     PointCloudDebugger debugger(argv[3]);

@@ -80,8 +80,7 @@ struct CBS_InputData {
   std::string agent;
   long cost;
   std::set<std::string> taskSet;
-  // Eigen::Affine3f m_Transformation;
-  // int id;
+
   bool operator<(const CBS_InputData& other) const {
     if (agent != other.agent) {
       return agent < other.agent;
