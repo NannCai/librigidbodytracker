@@ -18,7 +18,6 @@ struct Constraint{
   }
 
   friend std::ostream& operator<<(std::ostream& os, const Constraint& c) {
-    // os << "current Constraint: " ;
     os << "Agent: " << c.agent << ", Tasks: ";
     for (const std::string& task : c.taskSet) {
       os << task << " ";
@@ -50,14 +49,12 @@ struct HighLevelNode {
   }
 
   friend std::ostream& operator<<(std::ostream& os, const HighLevelNode& c) {
-    // os << "current HighLevelNode" << std::endl;
     os << "id: " << c.id << " cost: " << c.cost<< " Solution size: " << c.solution.size() << std::endl;
     
     if (c.solution.empty()) {
       os << "No sets in the solution map." << std::endl;
     }
     else{
-    // else if (c.cost == 401){
       os << "solution:\n";
       for (const auto& s : c.solution) {
         os << s.first << ": ";
@@ -67,14 +64,14 @@ struct HighLevelNode {
         os << std::endl;
       }
     }
-    // if (c.constraints.empty()) {
-    //   os << "No constraints." << std::endl;
-    // } else {
-    //   os << "Constraints:" << std::endl;
-    //   for (size_t i = 0; i < c.constraints.size(); ++i) {
-    //     os << c.constraints[i];
-    //   }
-    // }
+    if (c.constraints.empty()) {
+      os << "No constraints." << std::endl;
+    } else {
+      os << "Constraints:" << std::endl;
+      for (const auto& constraint : c.constraints) {
+        os << constraint;
+      }
+    }
     return os;
   }
 };
@@ -105,13 +102,10 @@ struct CBS_InputData {
 };
 
 void processInputFile(const std::string& inputFile, std::set<CBS_InputData>& inputData) {
-// void processInputFile(const std::string& inputFile, std::vector<InputData>& inputData) {
-    // int input_id = 0;
     std::ifstream input(inputFile);
     for (std::string line; getline(input, line);) {
         std::stringstream stream(line);
         CBS_InputData data;
-        // InputData data;
         stream >> data.agent;
         stream >> data.cost;
         std::string task;
@@ -125,8 +119,6 @@ void processInputFile(const std::string& inputFile, std::set<CBS_InputData>& inp
         }
         
         if (!skipLine) {
-            // data.id = input_id++;
-            // inputData.push_back(data);
             inputData.insert(data);
         }
     }
@@ -143,7 +135,6 @@ bool getFirstConflict(
       if (taskCounts[task] > 1){
         // std::cout << "Element appearing more than once: task" << task << std::endl;
         conflict_task = task;
-        // break;
         return true;
       }
     }
@@ -184,7 +175,6 @@ void createConstraintsFromConflict(
   }
 
 }
-
 
 void LowLevelSearch(
     const std::set<Constraint>& new_constraint_set,
