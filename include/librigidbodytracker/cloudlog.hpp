@@ -193,7 +193,7 @@ namespace librigidbodytracker {
 					Cloud::Ptr &rbMarkers = config[rigidBody.m_markerConfigurationIdx];
 					size_t const rbNpts = rbMarkers->size();
 					for (size_t j = 0; j < rbNpts; ++j) { //for each marker
-						auto p = rigidBody.transformation() * pcl2eig((*rbMarkers)[j]); 
+						auto p = rigidBody.transformation() * pcl2eig((*rbMarkers)[j]); //get real position
 						matches.back()->push_back(eig2pcl(p));
 					}
 				}

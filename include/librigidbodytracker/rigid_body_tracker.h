@@ -108,14 +108,11 @@ namespace librigidbodytracker {
     bool initializePosition(std::chrono::high_resolution_clock::time_point stamp,
       pcl::PointCloud<pcl::PointXYZ>::ConstPtr markers);
 
-    bool initializeHybrid_old(
-      pcl::PointCloud<pcl::PointXYZ>::ConstPtr markers);
-
     bool initializeHybrid(std::chrono::high_resolution_clock::time_point stamp,
       pcl::PointCloud<pcl::PointXYZ>::ConstPtr markers);
 
     void updateHybrid(std::chrono::high_resolution_clock::time_point stamp,
-      pcl::PointCloud<pcl::PointXYZ>::ConstPtr markers); 
+      const pcl::PointCloud<pcl::PointXYZ>::ConstPtr markers); 
 
     void logWarn(const std::string& msg);
 
