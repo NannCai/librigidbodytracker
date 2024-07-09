@@ -22,12 +22,6 @@ using Point = pcl::PointXYZ;
 using Cloud = pcl::PointCloud<Point>;
 using ICP = pcl::IterativeClosestPoint<Point, Point>;
 
-// enum TrackingMode {
-//     PositionMode,
-//     PoseMode,
-//     HybridMode
-// };
-
 static Eigen::Vector3f pcl2eig(Point p)
 {
   return Eigen::Vector3f(p.x, p.y, p.z);
@@ -83,10 +77,10 @@ bool RigidBody::lastTransformationValid() const
 RigidBodyTracker::RigidBodyTracker(
   const std::vector<DynamicsConfiguration>& dynamicsConfigurations,
   const std::vector<MarkerConfiguration>& markerConfigurations,
-  const std::vector<RigidBody>& rigidBodies)  // rigidBodies is the paras of rbs passinto the object m_rigidBodies
+  const std::vector<RigidBody>& rigidBodies)
   : m_markerConfigurations(markerConfigurations)
   , m_dynamicsConfigurations(dynamicsConfigurations)
-  , m_rigidBodies(rigidBodies)   // now m_rigidBodies is already have all the config paras from yaml file
+  , m_rigidBodies(rigidBodies)
   , m_trackPositionOnly(false)
   , m_trackingMode(PositionMode)
   , m_initialized(false)
@@ -100,7 +94,7 @@ RigidBodyTracker::RigidBodyTracker(
     Cloud::Ptr &rbMarkers = m_markerConfigurations[rigidBody.m_markerConfigurationIdx];
     size_t const rbNpts = rbMarkers->size();
     if (rbNpts == 1) {
-      // m_trackingMode = PositionMode;
+      m_trackingMode = PositionMode;
       m_trackPositionOnly = true;
     }
     else if(rbNpts > 1){
@@ -110,7 +104,6 @@ RigidBodyTracker::RigidBodyTracker(
 
   if (m_trackPositionOnly && m_trackingMode == PoseMode) {
     // throw std::runtime_error("Cannot use single-marker and multi-marker configurations simultaneously.");
-    std::cout << "!!has two marker mode!! developing the hybrid mode algorithm\n" ;
     m_trackingMode = HybridMode;
   }
 
@@ -125,25 +118,14 @@ void RigidBodyTracker::update(std::chrono::high_resolution_clock::time_point tim
   Cloud::Ptr pointCloud, std::string inputP)
 {
   // std::cout << "Current tracking mode: " << m_trackingMode << std::endl;
-  // return;
-  // if (m_trackPositionOnly) {
-  //   updatePosition(time, pointCloud);
-  // } else {
-  //   updatePose(time, pointCloud);
-  // }
-
-  // if (m_trackingMode == PositionMode) {
-  //   updatePosition(time, pointCloud);
-  // } else if (m_trackingMode == PoseMode) {
-  //   updatePose(time, pointCloud);
-  // }
-  // else if (m_trackingMode == HybridMode){
-  //   updateHybrid(time, pointCloud);
-  // }
-
-  inputPath = inputP;
-  updateHybrid(time, pointCloud);
-
+  if (m_trackingMode == PositionMode) {
+    updatePosition(time, pointCloud);
+  } else if (m_trackingMode == PoseMode) {
+    updatePose(time, pointCloud);
+  }
+  else if (m_trackingMode == HybridMode){
+    updateHybrid(time, pointCloud);
+  }
 }
 
 const std::vector<RigidBody>& RigidBodyTracker::rigidBodies() const
@@ -159,8 +141,6 @@ void RigidBodyTracker::setLogWarningCallback(
 
 bool RigidBodyTracker::initializePose(Cloud::ConstPtr markersConst)
 {
-  std::cout << "-initializePose function-" << std::endl;
-
   if (markersConst->size() == 0) {
     return false;
   }
@@ -291,8 +271,6 @@ bool RigidBodyTracker::initializePose(Cloud::ConstPtr markersConst)
 void RigidBodyTracker::updatePose(std::chrono::high_resolution_clock::time_point stamp,
   Cloud::ConstPtr markers)
 {
-  std::cout << "-updatePose function-"<< std::endl ;
-
   if (markers->empty()) {
     for (auto& rigidBody : m_rigidBodies) {
       rigidBody.m_lastTransformationValid = false;
@@ -359,7 +337,6 @@ void RigidBodyTracker::updatePose(std::chrono::high_resolution_clock::time_point
 
     // Obtain the transformation that aligned cloud_source to cloud_source_registered
     Eigen::Matrix4f transformation = icp.getFinalTransformation();
-    // std::cout << "icp.getFinalTransformation():  \n"<< transformation << "\n";
 
     Eigen::Affine3f tROTA(transformation);
     float x, y, z, roll, pitch, yaw;
@@ -389,7 +366,7 @@ void RigidBodyTracker::updatePose(std::chrono::high_resolution_clock::time_point
         && icp.getFitnessScore() < dynConf.maxFitnessScore)
     {
       rigidBody.m_velocity = (tROTA.translation() - rigidBody.center()) / dt;
-      rigidBody.m_lastTransformation = tROTA;  // tROTA is an object, so m_lastTransformation is also an object of class Eigen::Affine3f
+      rigidBody.m_lastTransformation = tROTA;
       rigidBody.m_lastValidTransform = stamp;
       rigidBody.m_lastTransformationValid = true;
       rigidBody.m_hasOrientation = true;
@@ -425,8 +402,6 @@ void RigidBodyTracker::updatePose(std::chrono::high_resolution_clock::time_point
       }
       logWarn(sstr.str());
     }
-    // std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< rigidBody.m_lastTransformation.matrix() << "\n"; 
-
   }
 
 }
@@ -467,7 +442,6 @@ bool RigidBodyTracker::initializePosition(
 void RigidBodyTracker::updatePosition(std::chrono::high_resolution_clock::time_point stamp,
   Cloud::ConstPtr markers)
 {
-  std::cout << "-updatePosition function-"<< std::endl;
   static std::chrono::high_resolution_clock::time_point lastCall;
   std::chrono::duration<double> lastCallElapsedSeconds = stamp-lastCall;
   double lastCalldt = lastCallElapsedSeconds.count();
@@ -534,7 +508,7 @@ void RigidBodyTracker::updatePosition(std::chrono::high_resolution_clock::time_p
     const DynamicsConfiguration& dynConf = m_dynamicsConfigurations[rigidBody.m_dynamicsConfigurationIdx];
 
     bool foundPotentialMarker = false;
-    for (int iMarker = 0; iMarker < nFound; ++iMarker) {   // loop all the near markers
+    for (int iMarker = 0; iMarker < nFound; ++iMarker) {
       Eigen::Vector3f marker = pcl2eig((*markers)[nearestIdx[iMarker]]);
 
       // Compute changes:
@@ -576,26 +550,6 @@ void RigidBodyTracker::updatePosition(std::chrono::high_resolution_clock::time_p
     rigidBody.m_lastTransformationValid = true;
     rigidBody.m_hasOrientation = false;
   }
-}
-
-
-bool RigidBodyTracker::initializeHybrid_old(Cloud::ConstPtr markers)
-{
-  std::cout << "-initializeHybrid function-"<< std::endl;
-  // use the config to initial
-  size_t const numRigidBodies = m_rigidBodies.size();
-  for (int iRb = 0; iRb < numRigidBodies; ++iRb) {
-    RigidBody& rigidBody = m_rigidBodies[iRb];
-
-    Eigen::Vector3f configinitialCenter = rigidBody.initialCenter();
-    Eigen::Matrix4f configTransformation = pcl::getTransformation(
-      configinitialCenter.x(), configinitialCenter.y(), configinitialCenter.z(),
-      0, 0, 0).matrix();
-
-    rigidBody.m_lastTransformation = configTransformation;
-    std::cout << "rigidBody.m_lastTransformation:  \n"<< configTransformation << "\n";
-  }
-  return true;  
 }
 
 bool RigidBodyTracker::initializeHybrid(
@@ -976,8 +930,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
         // for (size_t idx : correspondences) {
         //     std::cout <<"Correspond idx: "<< idx << " Point: " << (*markers)[idx] << std::endl;
         // }
-        
-        // Compute cost   
+         
         float dist = sqrt(pow(x - last_x, 2) + pow(y - last_y, 2) + pow(z - last_z, 2));
         long cost = dist* 10e3;
 
@@ -985,9 +938,6 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
         data.cost = cost;
         cbs_data_set.insert(data);
 
-        // std::set<std::string> keySet = data.taskSet;
-        // keySet.insert(std::to_string(data.cost));
-        // groupsMap_Affine[data.taskSet] = tROTA;  // TODO maybe sth wrong
         groupsMap_Affine[std::make_tuple(data.agent, data.taskSet)] = tROTA;
 
 
@@ -1026,9 +976,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     }
   }
 
-  // std::cout << "cbs_data_set:" << std::endl;
   for (const auto& data : cbs_data_set) {
-    // std::cout <<  data;
     CBS_assignment.setCost(data.agent, data.taskSet, data.cost);
   }
 
@@ -1039,8 +987,6 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   start.id = 0;
   start.cost = CBS_assignment_cost;
   start.solution = solution;
-  // std::cout << "The start HLN: ";
-  // std::cout << start;
   typename boost::heap::d_ary_heap<HighLevelNode, boost::heap::arity<2>,
                                     boost::heap::mutable_<true> >
       open;
@@ -1057,17 +1003,9 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   int duplicate = 0;
   while (!open.empty()) {
     m_highLevelExpanded++;
-    // std::cout << "=========" << m_highLevelExpanded<< " Loop ==========="  << std::endl;
     P = open.top();
     open.pop();
-    // std::cout << P;
-    if (m_highLevelExpanded!=1){
-      std::cout << "m_highLevelExpanded: " << m_highLevelExpanded << std::endl; // it always here
-      std::cout << "start node:"<< start;
-      std::cout << P;
-      // exit(0);
-    }
-
+    std::cout << P;
 
     if (P.solution.empty()) {
       std::cout << "Cannot find a solution!" << std::endl;
@@ -1090,10 +1028,8 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   }
 
   for (const auto& s : P.solution) {
-    auto& rigidBody = m_rigidBodies[std::stoi(s.first)];  // TODO change the type of s.first
+    auto& rigidBody = m_rigidBodies[std::stoi(s.first)]; 
     std::set<std::string> current_set = s.second;
-    // std::cout << "Marker Configuration Index: " << rigidBody.m_markerConfigurationIdx << std::endl; // done print
-    // std::cout << "Marker Configuration Value: " << *m_markerConfigurations[rigidBody.m_markerConfigurationIdx] << std::endl;
     std::chrono::duration<double> elapsedSeconds = stamp-rigidBody.m_lastValidTransform;
     double dt = elapsedSeconds.count();
 
@@ -1109,20 +1045,10 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
         rigidBody.m_lastTransformationValid = true;
         rigidBody.m_hasOrientation = false;
     }
-    else{ // TODO groupsMap_Affine maybe not a good match 
-      // std::cout << "More than one element in the set." << std::endl;
-      // rigidBody.m_lastTransformation = groupsMap_Affine[s.second];   // std::make_tuple(mainKey, subKeys1)
-
+    else{ 
       auto searchKey = std::make_tuple(s.first, s.second);
       if (groupsMap_Affine.find(searchKey) != groupsMap_Affine.end()) {
         rigidBody.m_lastTransformation = groupsMap_Affine[searchKey];
-
-        // std::cout << "searchKey: (" << std::get<0>(searchKey) << ", {";
-        // for (const auto& elem : std::get<1>(searchKey)) {
-        //   std::cout << elem << " ";
-        // }
-        // std::cout << "})" << std::endl;
-
       } 
 
       rigidBody.m_velocity = (rigidBody.m_lastTransformation.translation() - rigidBody.center()) / dt;
