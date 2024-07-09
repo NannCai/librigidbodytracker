@@ -34,16 +34,6 @@ namespace librigidbodytracker {
 	public:
 		PointCloudLogger(std::string file_path) : file(file_path, std::ios::binary | std::ios::out)
 		{
-			if (file.is_open())
-			{
-				std::cout << "File is open------------" << std::endl;
-				std::cout << "File path: " << file_path << std::endl;
-			}
-			else
-			{
-				std::cout << "File is not open" << std::endl;
-			}
-
 		}
 
 		void log(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
@@ -60,8 +50,6 @@ namespace librigidbodytracker {
 		void log(uint32_t millis, pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
 		{
 			write<uint32_t>(file, millis);
-			// std::cout << "Current time in milliseconds: " << millis << std::endl;  // this work
-
 			write<uint32_t>(file, cloud->size());
 			for (pcl::PointXYZ const &p : *cloud) {
 				static_assert(std::is_same<decltype(p.x), float>::value, "expected float");
@@ -74,8 +62,6 @@ namespace librigidbodytracker {
 		void flush()
 		{
 			file.flush();
-			// std::cout << "finish flush" << std::endl;
-
 		}
 
 	protected:
@@ -88,9 +74,6 @@ namespace librigidbodytracker {
 		std::chrono::high_resolution_clock::time_point start;
 	};
 
-// PointCloudPlayer is a class that have loading and playing back point cloud data function: load, play.
-// load: The loaded point cloud data is stored in the timestamps and clouds member variables.
-// play: takes a RigidBodyTracker object as input and iterates over the loaded point cloud data, updating the tracker with each point cloud at the corresponding timestamp.
 	class PointCloudPlayer
 	{
 	public:
@@ -121,166 +104,42 @@ namespace librigidbodytracker {
 			}
 		}
 
-		// IF want output the pc and tracking txt result: 
-		// 1 out.is_open() 2 std::ofstream out(outputFile 3 tracker.update(stamp, clouds[i], inputPath);
 		void play(librigidbodytracker::RigidBodyTracker &tracker) const
 		{
-			// std::string inputfileName = inputPath.substr(inputPath.find_last_of("/\\") + 1);
-			// std::string outputDir = "./data/output/";
-			// auto now = std::chrono::system_clock::now();
-			// auto epoch = now.time_since_epoch();
-			// auto minutes = std::chrono::duration_cast<std::chrono::minutes>(epoch).count();
-			// // std::cout << "Minutes: " << minutes << std::endl;
-			// std::string outputFile = outputDir + inputfileName+"_" + std::to_string(minutes) + "_pointcloud";  // + inputFile
-			// outputFile = outputFile + ".txt";
-			// std::ofstream out(outputFile, std::ios::out); // Open in append mode
-			// if (!out.is_open()) {
-			// 	std::cout << "File does not exist, creating a new file..." << std::endl;
-			// 	out.open(outputFile);
-			// }
-
-		    // const double pick_probability = 0.1;
-			// std::random_device rd;
-			// std::mt19937 gen(rd());
-			// std::uniform_real_distribution<> dis(0.0, 1.0);
+			std::string inputfileName = inputPath.substr(inputPath.find_last_of("/\\") + 1);
+			std::string outputDir = "./data/output/";
+			auto now = std::chrono::system_clock::now();
+			auto epoch = now.time_since_epoch();
+			auto minutes = std::chrono::duration_cast<std::chrono::minutes>(epoch).count();
+			// std::cout << "Minutes: " << minutes << std::endl;
+			std::string outputFile = outputDir + inputfileName+"_" + std::to_string(minutes) + "_pointcloud";  // + inputFile
+			outputFile = outputFile + ".txt";
+			std::ofstream out(outputFile, std::ios::out); // Open in append mode
+			if (!out.is_open()) {
+				std::cout << "File does not exist, creating a new file..." << std::endl;
+				out.open(outputFile);
+			}
 
 			for (size_t i = 0; i < clouds.size(); ++i) {
-			// for (size_t i = 0; i < 10; ++i) {
 				std::cout << i << " frame  ---------------------------------------------------"<< std::endl;
 				auto dur = std::chrono::milliseconds(timestamps[i]);
 				std::chrono::high_resolution_clock::time_point stamp(dur);
-				if (clouds[i]->empty()) {continue;}
-
-					
-				// // # new debug print   the points in the current point cloud
-				// // Ptr& cloud refers to the same object as clouds[i] but it's a reference, so it won't make a copy.
-				// const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
-				// // std::cout << "Cloud size: " << cloud->size() << "------------" << std::endl;   // between 8,9,10 maybe my shoes
-				// for (size_t i = 0; i < cloud->size(); ++i) {
-				// 	const pcl::PointXYZ& point = (*cloud)[i];  // !!! here reference and pointer need to be figure out
-				// 	std::cout << "Point " << i << ": (" << point.x << ", " << point.y << ", " << point.z << ")"<< std::endl;
-				// }
-
-
-				// std::ofstream out(outputFile, std::ios_base::app); // Open in append mode
-				// out << "stamp: " << stamp.time_since_epoch().count() << std::endl;
-				// const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
-				// for (size_t i = 0; i < cloud->size(); ++i) {
-				// 	const pcl::PointXYZ& point = (*cloud)[i];  // !!! here reference and pointer need to be figure out
-				// 	out << point.x << ", " << point.y << ", " << point.z << std::endl;
-				// }
-
-				// tracker.update(stamp, clouds[i], inputPath);
-				tracker.update(stamp, clouds[i]);
-
-			}
-			std::cout << "Total clouds size: " << clouds.size() << std::endl;
-		}
-
-		void play_compute_offset(librigidbodytracker::RigidBodyTracker &tracker) const
-		{
-			pcl::PointXYZ totalCenter = {0.0, 0.0, 0.0};
-			size_t validCloudsCount = 0;
-			// for (size_t i = 0; i < clouds.size(); ++i) {
-			for (size_t i = 0; i < 10; ++i) {
-				std::cout << "\n  " << i << "  ------------------------------\n";
-				auto dur = std::chrono::milliseconds(timestamps[i]);
-				std::chrono::high_resolution_clock::time_point stamp(dur);
-				// tracker.update(stamp, clouds[i]);
-
-				const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
-				// if (clouds[i]->size() >= 7) {
-				// 	clouds[i]->erase(clouds[i]->begin(), clouds[i]->begin() + 3);
-				// }		
-
-				if (cloud->size() >= 7) {
-					auto it = cloud->begin();
-					while (it != cloud->end()) {
-						if (it->z < 0.03) {
-							it = cloud->erase(it);
-						} else {
-							++it;
-						}
-					}
+				if (clouds[i]->empty()) {
+					continue;
 				}
+
+				std::ofstream out(outputFile, std::ios_base::app); // Open in append mode
+				out << "stamp: " << stamp.time_since_epoch().count() << std::endl;
+				const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
 				for (size_t i = 0; i < cloud->size(); ++i) {
 					const pcl::PointXYZ& point = (*cloud)[i];  // !!! here reference and pointer need to be figure out
-					std::cout << "Point " << i << ": (" << point.x << ", " << point.y << ", " << point.z << ")\n";
+					out << point.x << ", " << point.y << ", " << point.z << std::endl;
 				}
 
-
-				if (cloud->size() < 3) {
-					std::cout << "Not enough points. Skipping calculation.\n";
-					continue;
-				}
-
-				pcl::PointXYZ center;
-				center.x = ((*cloud)[0].x + (*cloud)[1].x + (*cloud)[2].x + (*cloud)[3].x) / 4.0;
-				center.y = ((*cloud)[0].y + (*cloud)[1].y + (*cloud)[2].y + (*cloud)[3].y) / 4.0;
-				center.z = ((*cloud)[0].z + (*cloud)[1].z + (*cloud)[2].z + (*cloud)[3].z) / 4.0;
-
-				totalCenter.x += center.x;
-				totalCenter.y += center.y;
-				totalCenter.z += center.z;
-				validCloudsCount++;
-				std::cout << "Center of the first three points: (" << center.x << ", " << center.y << ", " << center.z << ")\n";
-
+				tracker.update(stamp, clouds[i], inputPath);
+				// tracker.update(stamp, clouds[i]);
 			}
-
-			// Average Center: (0.0128561, 0.00107494, 0.0371899)
-			if (validCloudsCount > 0) {
-				totalCenter.x /= validCloudsCount;
-				totalCenter.y /= validCloudsCount;
-				totalCenter.z /= validCloudsCount;
-				std::cout << "Average Center: (" << totalCenter.x << ", " << totalCenter.y << ", " << totalCenter.z << ")\n";
-			} else {
-				std::cout << "No valid point clouds found.\n";
-			}
-		}
-
-
-		void play_compute_markerposition(size_t numPoints)
-		{
-			std::cout << "play_compute_markerposition" << std::endl;
-
-			std::vector<pcl::PointXYZ> totalPoints(numPoints, {0.0, 0.0, 0.0});
-			size_t validCloudsCount = 0;
-
-			// for (size_t i = 0; i < clouds.size(); ++i) {
-			for (size_t i = 0; i < 10; ++i) {
-				std::cout << "\n  " << i << "  ------------------------------\n";
-				auto dur = std::chrono::milliseconds(timestamps[i]);
-				std::chrono::high_resolution_clock::time_point stamp(dur);
-
-				const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
-
-				if (cloud->size() < numPoints) {
-					std::cout << "Not enough points. Skipping calculation.\n";
-					continue;
-				}
-
-				for (size_t j = 0; j < numPoints; ++j) {
-					const pcl::PointXYZ& point = (*cloud)[j];
-					// std::cout << "Point " << j << ": (" << point.x << ", " << point.y << ", " << point.z << ")\n";
-					totalPoints[j].x += point.x;
-					totalPoints[j].y += point.y;
-					totalPoints[j].z += point.z;
-				}
-
-				validCloudsCount++;
-			}
-
-			if (validCloudsCount > 0) {
-				for (size_t j = 0; j < numPoints; ++j) {
-					totalPoints[j].x /= validCloudsCount;
-					totalPoints[j].y /= validCloudsCount;
-					totalPoints[j].z /= validCloudsCount;
-
-					std::cout << "Average Point " << j << ": (" << totalPoints[j].x << ", " << totalPoints[j].y << ", " << totalPoints[j].z << ")\n";
-				}
-			} else {
-				std::cout << "No valid point clouds found.\n";
-			}
+			std::cout << "Total clouds size: " << clouds.size() << std::endl;
 		}
 
 
@@ -334,7 +193,7 @@ namespace librigidbodytracker {
 					Cloud::Ptr &rbMarkers = config[rigidBody.m_markerConfigurationIdx];
 					size_t const rbNpts = rbMarkers->size();
 					for (size_t j = 0; j < rbNpts; ++j) { //for each marker
-						auto p = rigidBody.transformation() * pcl2eig((*rbMarkers)[j]); //get the pose of the robot
+						auto p = rigidBody.transformation() * pcl2eig((*rbMarkers)[j]); 
 						matches.back()->push_back(eig2pcl(p));
 					}
 				}
