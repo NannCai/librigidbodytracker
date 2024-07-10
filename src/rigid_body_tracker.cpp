@@ -87,14 +87,12 @@ RigidBodyTracker::RigidBodyTracker(
   , m_init_attempts(0)
   , m_logWarn()
 {
-  // if at least one of the used marker configurations only has one marker,
-  // then switch to position only tracking
-
   for (const RigidBody& rigidBody : m_rigidBodies) {
     Cloud::Ptr &rbMarkers = m_markerConfigurations[rigidBody.m_markerConfigurationIdx];
     size_t const rbNpts = rbMarkers->size();
+    // std::cout <<" rbNpts: "<<rbNpts << std::endl;
+
     if (rbNpts == 1) {
-      m_trackingMode = PositionMode;
       m_trackPositionOnly = true;
     }
     else if(rbNpts > 1){
@@ -126,6 +124,7 @@ void RigidBodyTracker::update(std::chrono::high_resolution_clock::time_point tim
   else if (m_trackingMode == HybridMode){
     updateHybrid(time, pointCloud);
   }
+  inputPath = inputP;
 }
 
 const std::vector<RigidBody>& RigidBodyTracker::rigidBodies() const
@@ -955,7 +954,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     m_highLevelExpanded++;
     P = open.top();
     open.pop();
-    std::cout << P;
+    // std::cout << P;
 
     if (P.solution.empty()) {
       std::cout << "Cannot find a solution!" << std::endl;
@@ -1006,7 +1005,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
       rigidBody.m_hasOrientation = false;
     }
   }
-
+  
   if (!inputPath.empty()) {
     std::string inputfileName = inputPath.substr(inputPath.find_last_of("/\\") + 1);
     std::string outputDir = "./data/output/";

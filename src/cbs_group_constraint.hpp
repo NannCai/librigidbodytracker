@@ -64,14 +64,14 @@ struct HighLevelNode {
         os << std::endl;
       }
     }
-    if (c.constraints.empty()) {
-      os << "No constraints." << std::endl;
-    } else {
-      os << "Constraints:" << std::endl;
-      for (const auto& constraint : c.constraints) {
-        os << constraint;
-      }
-    }
+    // if (c.constraints.empty()) {
+    //   os << "No constraints." << std::endl;
+    // } else {
+    //   os << "Constraints:" << std::endl;
+    //   for (const auto& constraint : c.constraints) {
+    //     os << constraint;
+    //   }
+    // }
     return os;
   }
 };

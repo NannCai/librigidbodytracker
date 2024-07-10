@@ -111,10 +111,9 @@ namespace librigidbodytracker {
 			auto now = std::chrono::system_clock::now();
 			auto epoch = now.time_since_epoch();
 			auto minutes = std::chrono::duration_cast<std::chrono::minutes>(epoch).count();
-			// std::cout << "Minutes: " << minutes << std::endl;
-			std::string outputFile = outputDir + inputfileName+"_" + std::to_string(minutes) + "_pointcloud";  // + inputFile
+			std::string outputFile = outputDir + inputfileName+"_" + std::to_string(minutes) + "_pointcloud";  
 			outputFile = outputFile + ".txt";
-			std::ofstream out(outputFile, std::ios::out); // Open in append mode
+			std::ofstream out(outputFile, std::ios::out); 
 			if (!out.is_open()) {
 				std::cout << "File does not exist, creating a new file..." << std::endl;
 				out.open(outputFile);
@@ -128,18 +127,19 @@ namespace librigidbodytracker {
 					continue;
 				}
 
-				std::ofstream out(outputFile, std::ios_base::app); // Open in append mode
+				std::ofstream out(outputFile, std::ios_base::app); 
 				out << "stamp: " << stamp.time_since_epoch().count() << std::endl;
 				const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud = clouds[i];
 				for (size_t i = 0; i < cloud->size(); ++i) {
-					const pcl::PointXYZ& point = (*cloud)[i];  // !!! here reference and pointer need to be figure out
+					const pcl::PointXYZ& point = (*cloud)[i]; 
 					out << point.x << ", " << point.y << ", " << point.z << std::endl;
 				}
-
 				tracker.update(stamp, clouds[i], inputPath);
+
 				// tracker.update(stamp, clouds[i]);
 			}
 			std::cout << "Total clouds size: " << clouds.size() << std::endl;
+			std::cout << "outputFile: " << outputFile <<std::endl;
 		}
 
 
