@@ -3,6 +3,3 @@ build/
 *.dSYM
 *.o
 *.DS_Store
-.vscode
-data/
-data_old/
