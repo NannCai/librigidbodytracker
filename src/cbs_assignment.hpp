@@ -8,13 +8,13 @@
 namespace libMultiRobotPlanning {
 
 /*!
-  \example assignment.cpp example that takes cost mappings from a file
+  \example cbs_group_constraint.cpp example that takes cost mappings from a file
 */
 
 /*! \brief Find optimal (lowest total cost) assignment
 
 This class can find the lowest sum-of-cost assignment
-for given agents and tasks. The costs must be integers, the agents and
+for given agents and groups of tasks. The costs must be integers, the agents and
 tasks can be of any user-specified type.
 
 This method is based on maximum flow formulation.
@@ -34,7 +34,7 @@ class CBS_Assignment {
   void clear() {
     // std::cout << "Asg: clear" << std::endl;
     std::set<edge_t> edgesToRemove;
-    for (const auto& agent : m_agents) {  // add all the edges that need to remove
+    for (const auto& agent : m_agents) {  
       auto es = boost::out_edges(agent.right, m_graph);
       for (auto eit = es.first; eit != es.second; ++eit) {
         if (!m_graph[*eit].isReverseEdge) {
@@ -44,15 +44,15 @@ class CBS_Assignment {
       }
     }
 
-    for (const auto& e : edgesToRemove) {  // then remove all the edges
+    for (const auto& e : edgesToRemove) {  
       boost::remove_edge(e, m_graph);
     }
   }
 
   void setCost(const Agent& agent, const std::set<Task>& group, long cost) {
     // std::cout << "setCost: " << agent << "->" << "group";
-    // for (std::string task : group) {
-    //     std::cout << task << " ";
+    // for (auto task : group) {
+    // std::cout << task << " ";
     // }
     // std::cout <<" cost: " << cost << std::endl; 
 
@@ -123,7 +123,6 @@ class CBS_Assignment {
                     // std::cout << std::endl;
                     // std::cout << "Key found: " << itr->first << std::endl;
                     break;
-
                 }
             }
             cost += m_graph[edge(agentVertex, groupVertex, m_graph).first].cost;
@@ -135,17 +134,6 @@ class CBS_Assignment {
 
     return cost;
   }
-
-
-  // Function to get all groups
-  std::vector<std::set<Task>> getGroups() const {
-    std::vector<std::set<Task>> groups;
-    for (const auto& groupEntry : m_groups) {
-      groups.push_back(groupEntry.first);
-    }
-    return groups;
-  }
-
 
  protected:
   typedef boost::adjacency_list_traits<boost::vecS, boost::vecS,
@@ -198,9 +186,7 @@ class CBS_Assignment {
       m_graph[e1.first].reverseEdge = e2.first;
       m_graph[e2.first].reverseEdge = e1.first;
     }
-    
   }
-
 
  private:
   typedef boost::bimap<Agent, vertex_t> agentsMap_t;

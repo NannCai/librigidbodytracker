@@ -45,9 +45,9 @@ target_link_libraries(playclouds
 #   ${Boost_LIBRARIES}
 # )
 
-# add_executable(standalone
-#   src/standalone.cpp
-# )
+add_executable(standalone
+  src/standalone.cpp
+)
 
 add_executable(cbs_group_constraint
   src/cbs_group_constraint.cpp
@@ -58,7 +58,7 @@ target_link_libraries(cbs_group_constraint
 )
 
 target_link_libraries(
-  # standalone
+  standalone
   librigidbodytracker
   ${PCL_LIBRARIES}
 )

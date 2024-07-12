@@ -113,7 +113,7 @@ void RigidBodyTracker::update(Cloud::Ptr pointCloud)
   update(std::chrono::high_resolution_clock::now(), pointCloud);
 }
 void RigidBodyTracker::update(std::chrono::high_resolution_clock::time_point time,
-  Cloud::Ptr pointCloud, std::string inputP)
+  Cloud::Ptr pointCloud, std::string inputPath)
 {
   // std::cout << "Current tracking mode: " << m_trackingMode << std::endl;
   if (m_trackingMode == PositionMode) {
@@ -124,7 +124,7 @@ void RigidBodyTracker::update(std::chrono::high_resolution_clock::time_point tim
   else if (m_trackingMode == HybridMode){
     updateHybrid(time, pointCloud);
   }
-  inputPath = inputP;
+  m_inputPath = inputPath;
 }
 
 const std::vector<RigidBody>& RigidBodyTracker::rigidBodies() const
@@ -621,15 +621,12 @@ bool RigidBodyTracker::initializeHybrid(
       Eigen::Vector3f marker = pcl2eig((*markers)[nearestIdx[0]]);
       auto pi = rigidBody.initialCenter();
       float dist = (pi - marker).norm();
-      std::cout << "Distance between pi and marker: " << dist << std::endl; 
 
       Eigen::Vector3f offset = pcl2eig((*m_markerConfigurations[rigidBody.m_markerConfigurationIdx])[0]);
       rigidBody.m_lastTransformation = Eigen::Translation3f(marker + offset);
-      rigidBody.m_lastValidTransform = stamp;  // this is a must, though i dont understand
+      rigidBody.m_lastValidTransform = stamp;  
       rigidBody.m_lastTransformationValid = true;
       rigidBody.m_hasOrientation = false;
-      std::cout << "rigidBody.m_lastValidTransform: " << (rigidBody.m_lastValidTransform.time_since_epoch().count()) << std::endl;
-      // std::cout << "rigidBody.m_lastTransformation.matrix():\n"<< rigidBody.m_lastTransformation.matrix() << "\n"; 
       continue;
     }
     else if (rbNpts == 1){
@@ -1006,8 +1003,8 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     }
   }
   
-  if (!inputPath.empty()) {
-    std::string inputfileName = inputPath.substr(inputPath.find_last_of("/\\") + 1);
+  if (!m_inputPath.empty()) {
+    std::string inputfileName = m_inputPath.substr(m_inputPath.find_last_of("/\\") + 1);
     std::string outputDir = "./data/output/";
     auto now = std::chrono::system_clock::now();
     auto epoch = now.time_since_epoch();
