@@ -954,7 +954,9 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     // std::cout << P;
 
     if (P.solution.empty()) {
-      std::cout << "Cannot find a solution!" << std::endl;
+      std::stringstream sstr;
+      sstr << "Cannot find a solution!";
+      logWarn(sstr.str());
     }
 
     std::string conflict_task;
