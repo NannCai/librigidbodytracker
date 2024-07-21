@@ -22,12 +22,12 @@ def gen_data(max_agent_num,max_group_num,max_task_num):
 def save_input_txt(save_dir,data,i):
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-    output_file_name =  f'random_{i}.txt'
-    output_file_path = os.path.join(save_dir, output_file_name)
-    print('output_file_path',output_file_path)
-    with open(output_file_path, 'w') as file:
+    random_data_file_name =  f'random_{i}.txt'
+    random_data_file_path = os.path.join(save_dir, random_data_file_name)
+    print('random_data_file_path',random_data_file_path)
+    with open(random_data_file_path, 'w') as file:
         file.write(data)
-    return output_file_name
+    return random_data_file_name
 
 def test():
     random_data_root_dir = 'data'
@@ -43,13 +43,13 @@ def test():
         for max_agent_num in max_agent_num_list:
 
             base_name = f'G{max_group_num}_T{max_task_num}_A{max_agent_num}'
-            random_inputs_dir = f'{random_data_root_dir}/{base_name}/random_inputs_{base_name}'
+            random_data_dir = f'{random_data_root_dir}/{base_name}/random_data_{base_name}'
             # gurobi_res_dir = f'data/{base_name}/gurobi_{base_name}'
             # additional_group = max_task_num*max_agent_num + 30   # G3_T10_A50 will cost cbs really a lot of time 
             for i in range(100):
                 print("-----------",i)
                 data = gen_data(max_agent_num,max_group_num,max_task_num)
-                # input_txt_name = save_input_txt(random_inputs_dir,data,i)        
+                # input_txt_name = save_input_txt(random_data_dir,data,i)        
                 # runtime = Gurobi(input_txt_name,data,gurobi_res_dir,additional_group)  # runtime without read the file and write the result into the file
 
 
@@ -74,13 +74,13 @@ if __name__ == '__main__':
     if not os.path.exists(random_data_root_dir):
         os.makedirs(random_data_root_dir)
     base_name = f'G{max_group_num}_T{max_task_num}_A{max_agent_num}'
-    random_inputs_dir = f'{random_data_root_dir}/{base_name}/random_inputs_{base_name}'
+    random_data_dir = f'{random_data_root_dir}/{base_name}/random_data_{base_name}'
 
     for i in range(100):
         print("-----------",i)
         data = gen_data(max_agent_num,max_group_num,max_task_num)
-        input_txt_name = save_input_txt(random_inputs_dir,data,i) 
-    print('random_inputs_dir',random_inputs_dir)
+        input_txt_name = save_input_txt(random_data_dir,data,i) 
+    print('random_data_dir',random_data_dir)
 
 
 
