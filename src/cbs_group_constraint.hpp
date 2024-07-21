@@ -159,7 +159,7 @@ void createConstraintsFromConflict(
     }
   }
   for (const auto& constraint : all_constraints) {
-    std::cout <<"constraint:" << std::endl;
+    // std::cout <<"constraint:" << std::endl;  // for cbs_group_constraint.cpp debug
     std::cout << constraint;
     std::set<Constraint> constraint_set(all_constraints);
     constraint_set.erase(constraint);
@@ -167,7 +167,7 @@ void createConstraintsFromConflict(
   }
   
   for (const auto& constraint_set : new_constraints) {
-    std::cout <<"constraint_set:" << std::endl;
+    // std::cout <<"constraint_set:" << std::endl;
     for (const auto& constraint : constraint_set) {
         std::cout << constraint;
     }
