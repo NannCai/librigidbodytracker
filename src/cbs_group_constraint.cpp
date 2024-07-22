@@ -44,8 +44,10 @@ int main(int argc, char* argv[]) {
   // std::cout << "-----low level search: loading data, set cost;solve assignment;put solution into a HighLevelNode------" << std::endl;
   CBS_Assignment<std::string, std::string> CBS_assignment;
   for (const auto& data : inputData) {
+    // std::cout << data ;    
     CBS_assignment.setCost(data.agent, data.taskSet, data.cost);
   }
+  // auto groups = CBS_assignment.getGroups();
   std::map<std::string, std::set<std::string>> solution;
   int64_t CBS_assignment_cost = CBS_assignment.solve(solution);
   HighLevelNode start;

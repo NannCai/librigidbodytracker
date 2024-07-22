@@ -19,9 +19,11 @@ def parse_random_data(data,additional_cost = 1e4,additional_group = 50):
         group = tuple(set(tasks))  
         # print('group',group)
         if len(group) < len(tasks):  # skip the group with duplicate number
-            # print('!!!len(group) < len(tasks)!',len(group), '<', len(tasks))
             continue
         group_str = '_'.join(sorted(group))
+        if (agent, group_str) in assignments_dic:
+            if cost > assignments_dic[agent, group_str]:
+                continue  # skip when current cost is bigger
         assignments_dic[agent, group_str] = cost    
     agents = tuple(set(agent for agent, _ in assignments_dic.keys()))
     for agent in agents:
@@ -102,14 +104,14 @@ def save_result(model,x,combinations,gurobi_save_dir,random_data_file,runtime,ad
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Generate and save random data")
-    parser.add_argument('-p', '--save_path', default='data', help='Root directory for random data.')
+    parser.add_argument('-p', '--data_path', default='data', help='Root directory for random data.')
     parser.add_argument('-g', '--group', default=5, help='Maximum number of groups.')
     parser.add_argument('-t', '--task', default=3, help='List of maximum number of tasks.')
     parser.add_argument('-a', '--agent', default=5, help='List of maximum number of agents.')
 
     # Parse the arguments
     args = parser.parse_args()
-    random_data_root_dir = args.save_path
+    random_data_root_dir = args.data_path
     max_group_num = int(args.group)
     max_task_num = int(args.task)
     max_agent_num = int(args.agent)
@@ -118,7 +120,8 @@ if __name__ == '__main__':
     base_name = f'G{max_group_num}_T{max_task_num}_A{max_agent_num}'
     gurobi_save_dir = f'{random_data_root_dir}/{base_name}/gurobi_{base_name}'
     random_inputs_dir = f'{random_data_root_dir}/{base_name}/random_data_{base_name}'
-
+    if os.path.exists(gurobi_save_dir):
+        os.system(f'rm -rf {gurobi_save_dir}')
     additional_group = max_task_num*max_agent_num + 30
     additional_cost = 1e4
 
