@@ -47,14 +47,32 @@ def parse_res(gurobi_dir,cbs_dir,matching_gurobi,matching_cbs):
         quit()
     return None,None
 
+def violin_box_plot(data,frequency_cbs,average_cbs,frequency_gurobi,average_gurobi,base_name,evaluation_save_dir):
+    # print(" Creating violin plot")
+    plt.close()
+    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(15, 6))
+    # fig = plt.figure(figsize=(8,6))
+    axs[0].violinplot(data, showmeans=False,showmedians=True)
+    axs[0].set_xticks([1, 2], ['Gurobi', 'Cbs'])
+    axs[0].set_ylabel('Runtime')
+    axs[0].set_title(f'Box plot gurobi {frequency_gurobi:.2f} runtime {average_gurobi:.4f}')
+
+    axs[1].boxplot(data)
+    axs[1].set_xticks([1, 2], ['Gurobi', 'Cbs'])
+    axs[1].set_ylabel('Runtime')
+    axs[1].set_title(f'Violin plot frequency CBS {frequency_cbs:.2f} runtime {average_cbs:.4f}')
+
+    violin_path = evaluation_save_dir + f'/violin_box_{base_name}.png'
+    print('violin_path',violin_path)
+    plt.savefig(violin_path, bbox_inches='tight')
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="Generate and save random data")
     parser.add_argument('-p', '--data_path', default='data', help='Root directory for random data.')
-    parser.add_argument('-g', '--group', default=5, help='Maximum number of groups.')
-    parser.add_argument('-t', '--task', default=3, help='List of maximum number of tasks.')
-    parser.add_argument('-a', '--agent', default=5, help='List of maximum number of agents.')
+    parser.add_argument('-g', '--group', default=3, help='Maximum number of groups.')
+    parser.add_argument('-t', '--task', default=5, help='List of maximum number of tasks.')
+    parser.add_argument('-a', '--agent', default=15, help='List of maximum number of agents.')
 
     # Parse the arguments
     args = parser.parse_args()
@@ -73,6 +91,11 @@ if __name__ == '__main__':
     match_dict = get_matched_files_dict(gurobi_dir,cbs_dir,random_data_dir)
     match_cout = 0
     gurobi_runtime_list,cbs_runtime_list =[],[]
+
+    if os.path.exists(evaluation_save_dir):
+        os.system(f'rm -rf {evaluation_save_dir}')
+    os.makedirs(evaluation_save_dir)
+
     for matched_name,matched_files in match_dict.items():
         # print('matched_name',matched_name,'matched_files',matched_files)
         matching_gurobi = matched_files.get('gurobi')
@@ -86,22 +109,21 @@ if __name__ == '__main__':
         # print('res_gurobi',res_gurobi)
         # print('res_cbs',res_cbs)
 
-        if os.path.exists(evaluation_save_dir):
-            os.system(f'rm -rf {evaluation_save_dir}')
-        os.makedirs(evaluation_save_dir)
+
             
         if 'runtime' in res_gurobi and 'runtime' in res_cbs:
             gurobi_runtime_list.append(res_gurobi['runtime'])
             cbs_runtime_list.append(res_cbs['runtime'])
-        else:
-            print('matched_name',matched_name)
-            print('res_gurobi',res_gurobi)
-            print('res_cbs',res_cbs)
+        # else:
+        #     print('matched_name',matched_name)
+        #     print('res_gurobi',res_gurobi)
+        #     print('res_cbs',res_cbs)
 
 
-        if res_gurobi['cost'] == res_cbs['cost'] and res_gurobi['assignment'] == res_cbs['assignment']:
+        if (res_gurobi['cost'] == res_cbs['cost'] 
+            and res_gurobi['assignment'] == res_cbs['assignment']):
+            # and 'runtime' in res_gurobi and 'runtime' in res_cbs):
             # print("Content of 'res_gurobi' and 'res_cbs' is the same.")
-            # print('!!!!!!')
             match_cout += 1
         else:
             print("Content of 'res_gurobi' and 'res_cbs' is different.")
@@ -109,11 +131,11 @@ if __name__ == '__main__':
             # record the different input and also all the outputs            
             filename = f'{evaluation_save_dir}/eval_{matched_name}.txt'
             print('filename',filename)
+            with open(f'{random_data_dir}/{matched_name}.txt', 'r') as random_file:
+                random_data = random_file.read()
             with open(filename, 'w') as file:
                 file.write(f"res_gurobi:\n{res_gurobi}\n")
                 file.write(f"res_cbs:\n{res_cbs}\n")
-                with open(f'{random_data_dir}/{matched_name}.txt', 'r') as random_file:
-                    random_data = random_file.read()
                 print('random_data',random_data)
                 file.write(f"content in {matched_name}.txt:\n{random_data}\n")
 
@@ -142,6 +164,10 @@ if __name__ == '__main__':
     print(f'Frequency of !CBS! Average Runtime: {frequency_cbs}')
 
     print('match_cout',match_cout)
+    
+    violin_box_plot(data,frequency_cbs,average_cbs,frequency_gurobi,average_gurobi,base_name,evaluation_save_dir)
+
+
     print('end--------')
 
 
