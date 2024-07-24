@@ -43,7 +43,7 @@ def parse_rigidbody_data(rigidbody_path):
 
 def parse_pc_data(pc_path):
 	with open(pc_path, 'r') as pc_file:
-		point_cloud_data = pc_file.read().split(sep='\n')#.split("\n")
+		point_cloud_data = pc_file.read().split(sep='\n')
 
 	pc_dict = {}
 	key = ''
@@ -118,8 +118,8 @@ def one_vis(input_file_name,input_dir):
 				print(f'!!!not rb_trans!!! in frame {i} ','pc_key',pc_key)
 				continue
 
-			if len(rb_solution_agents) <3:
-				print('rb_solution_agents',rb_solution_agents)
+			# if len(rb_solution_agents) <3:
+			# 	print('rb_solution_agents',rb_solution_agents)
 			for agent,row in rb_trans.items():
 				if agent in rb_solution_agents: 
 					frame[f"Quadrotor{agent}"].set_transform(
@@ -149,7 +149,8 @@ if __name__ == '__main__':
 	input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/output'
 	
 	input_file_names = [
-		'3d_8m_mo1_28696988',	# gt   works
+		# '3d_8m_mo1_28696988',	# gt   works
+		'3d_8m_mo1_28697091'    # with noise remove points works
 	]
 
 	for input_file_name in input_file_names:

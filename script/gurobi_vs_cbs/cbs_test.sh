@@ -3,7 +3,7 @@
 # Define the root directory for random data
 save_path="data"
 
-group=5
+group=3
 task_list="3"
 agent_list="5"
 input_file="random_2.txt"
