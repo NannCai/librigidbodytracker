@@ -77,39 +77,37 @@ if __name__ == '__main__':
 
     result_dict = {}
 
-    for key,value in noise_dict.items():
-        noise_path = f'{root_path}/{key}.txt'
-        noise_trans_dict  = parse_rigidbody_data(noise_path)
+    for noise_key, noise_value in noise_dict.items():
+        noise_path = f'{root_path}/{noise_key}.txt'
+        noise_trans_dict = parse_rigidbody_data(noise_path)
         correct_count = 0
         incorrect_count = 0
-        # print('noise_trans_dict',noise_trans_dict)
-        for k,v in gt_trans_dict.items():
-            gt_trans = gt_trans_dict.get(k, {}).get("trans")
-            noise_trans = noise_trans_dict.get(k, {}).get("trans")
-            # print('gt_trans',gt_trans)
-            # print('noise_trans',noise_trans)
+
+        for rb_key, gt_value in gt_trans_dict.items():
+            gt_trans = gt_value.get("trans")
+            noise_trans = noise_trans_dict.get(rb_key, {}).get("trans", {})
+            
             for rb, gt_t in gt_trans.items():
-                print
-                noise_t = noise_trans.get(rb, None)
+                noise_t = noise_trans.get(rb)
+                
                 if noise_t is None:
                     print('noise_t is None',noise_t)
                     continue
+                
                 difference = [abs(gt - noise) for gt, noise in zip(gt_t, noise_t)]
                 if all(diff >= 0.0005 for diff in difference):
                     incorrect_count += 1
-                    print('difference', difference)
-                    print("----Noise transformation is incorrect for rb:---", rb)
-                    print('gt_trans', gt_trans)
-                    print('noise_trans', noise_trans)
+                    print(f"Difference: {difference}")
+                    print(f"Noise transformation is incorrect for rb: {rb}")
+                    print(f"GT Trans: {gt_trans}")
+                    print(f"Noise Trans: {noise_trans}")
                 else:
                     correct_count += 1
-        # print("Number of correct transformations:", correct_count)
-        # print("Number of incorrect transformations:", incorrect_count)
 
-        result_dict[key] = [correct_count, incorrect_count]
+        result_dict[noise_key] = [correct_count, incorrect_count]
 
-    print('noise_dict',noise_dict)
-    print('result_dict',result_dict)
+    print('Noise Dictionary:', noise_dict)
+    print('Result Dictionary:', result_dict)
 
 
 
