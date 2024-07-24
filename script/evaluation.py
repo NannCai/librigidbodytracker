@@ -2,8 +2,6 @@ import os
 import yaml
 import matplotlib.pyplot as plt
 import argparse
-from collections import OrderedDict
-
 
 def get_matched_files_dict(gurobi_dir,cbs_dir,random_data_dir):
     gurobi_files = os.listdir(gurobi_dir)
@@ -109,8 +107,6 @@ if __name__ == '__main__':
         # print('res_gurobi',res_gurobi)
         # print('res_cbs',res_cbs)
 
-
-            
         if 'runtime' in res_gurobi and 'runtime' in res_cbs:
             gurobi_runtime_list.append(res_gurobi['runtime'])
             cbs_runtime_list.append(res_cbs['runtime'])
@@ -118,7 +114,6 @@ if __name__ == '__main__':
         #     print('matched_name',matched_name)
         #     print('res_gurobi',res_gurobi)
         #     print('res_cbs',res_cbs)
-
 
         if (res_gurobi['cost'] == res_cbs['cost'] 
             and res_gurobi['assignment'] == res_cbs['assignment']):
@@ -138,9 +133,6 @@ if __name__ == '__main__':
                 file.write(f"res_cbs:\n{res_cbs}\n")
                 print('random_data',random_data)
                 file.write(f"content in {matched_name}.txt:\n{random_data}\n")
-
-    data = [gurobi_runtime_list, cbs_runtime_list]
-
 
 
     gurobi_runtime_length = len(gurobi_runtime_list)
@@ -164,9 +156,30 @@ if __name__ == '__main__':
     print(f'Frequency of !CBS! Average Runtime: {frequency_cbs}')
 
     print('match_cout',match_cout)
-    
+
+    data = [gurobi_runtime_list, cbs_runtime_list]
     violin_box_plot(data,frequency_cbs,average_cbs,frequency_gurobi,average_gurobi,base_name,evaluation_save_dir)
 
+    conclusion_file_path = f'{random_data_root_dir}/evaluation_conclusion.yaml'
+
+    if os.path.exists(conclusion_file_path):
+        with open(conclusion_file_path, 'r') as file:
+            conclusion_data = yaml.safe_load(file) or {}
+    else:
+        conclusion_data = {}
+
+    conclusion_data[base_name] = {
+        "gurobi_runtime_length": gurobi_runtime_length,
+        "cbs_runtime_length": cbs_runtime_length,
+        "average_gurobi_runtime": average_gurobi,
+        "frequency_gurobi_runtime": frequency_gurobi,
+        "average_cbs_runtime": average_cbs,
+        "frequency_cbs_runtime": frequency_cbs,
+        "match_count": match_cout
+    }
+
+    with open(conclusion_file_path, 'w') as file:
+        yaml.safe_dump(conclusion_data, file)
 
     print('end--------')
 
