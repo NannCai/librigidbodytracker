@@ -144,8 +144,6 @@ def one_vis(rigidbody_path,pc_path):
         f.write(res)
     print('output_html_path:',output_html_path)
 
-    print('end')
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Generate and save random data")
     parser.add_argument('-r', '--result_file', default='data/output/test0.txt', help='Tracking result path')
