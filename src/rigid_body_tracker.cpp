@@ -113,7 +113,7 @@ void RigidBodyTracker::update(Cloud::Ptr pointCloud)
   update(std::chrono::high_resolution_clock::now(), pointCloud);
 }
 void RigidBodyTracker::update(std::chrono::high_resolution_clock::time_point time,
-  Cloud::Ptr pointCloud, std::string inputPath)
+  Cloud::Ptr pointCloud, std::string inputPath,std::string outputPath)
 {
   // std::cout << "Current tracking mode: " << m_trackingMode << std::endl;
   if (m_trackingMode == PositionMode) {
@@ -125,6 +125,7 @@ void RigidBodyTracker::update(std::chrono::high_resolution_clock::time_point tim
     updateHybrid(time, pointCloud);
   }
   m_inputPath = inputPath;
+  m_outputPath = outputPath;
 }
 
 const std::vector<RigidBody>& RigidBodyTracker::rigidBodies() const
@@ -1007,13 +1008,13 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   
   if (!m_inputPath.empty()) {
     std::string inputfileName = m_inputPath.substr(m_inputPath.find_last_of("/\\") + 1);
-    std::string outputDir = "./data/output/";
-    auto now = std::chrono::system_clock::now();
-    auto epoch = now.time_since_epoch();
-    auto minutes = std::chrono::duration_cast<std::chrono::minutes>(epoch).count();
-    // std::cout << "Minutes: " << minutes << std::endl;
-    std::string outputFile = outputDir + inputfileName+"_"+ std::to_string(minutes);  // + inputFile
-    outputFile = outputFile + ".txt";
+    // std::string outputDir = "./data/output/";
+    // auto now = std::chrono::system_clock::now();
+    // auto epoch = now.time_since_epoch();
+    // auto minutes = std::chrono::duration_cast<std::chrono::minutes>(epoch).count();
+    // // std::cout << "Minutes: " << minutes << std::endl;
+    // std::string outputFile = outputDir + inputfileName+"_"+ std::to_string(minutes);  // + inputFile
+    std::string outputFile = m_outputPath + ".txt";
     
     std::cout << "Input File: " << inputfileName << std::endl;
     std::cout << "Output file: " << outputFile << std::endl;
@@ -1021,7 +1022,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     std::ofstream out(outputFile, std::ios_base::app); // Open in append mode
 
     if (!out.is_open()) {
-      std::cout << "File does not exist, creating a new file..." << std::endl;
+      std::cout << "File does not exist, creating a new file...  updateHybrid" << std::endl;
       out.open(outputFile);
     }
     // out << "highLevelExpanded: " << m_highLevelExpanded << std::endl;

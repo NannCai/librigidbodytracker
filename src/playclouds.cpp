@@ -130,10 +130,35 @@ int main(int argc, char **argv)
       rigidBodies);
 
   tracker.setLogWarningCallback(&log_stderr);
+
+  std::string inputPath = argv[2]; 
+  std::string inputfileName = inputPath.substr(inputPath.find_last_of("/\\") + 1);
+  std::string outputDir = "./data/output/";
+  auto now = std::chrono::system_clock::now();
+  auto epoch = now.time_since_epoch();
+  auto minutes = std::chrono::duration_cast<std::chrono::minutes>(epoch).count();
+  std::string outputPath = outputDir + inputfileName+"_" + std::to_string(minutes);  
+  // outputPath = outputPath + ".txt";
+  // std::ofstream out(outputPath, std::ios::trunc); 
+  // if (!out.is_open()) {
+  //   std::cout << "File does not exist, creating a new file... play funcion" << std::endl;
+  //   out.open(outputPath);
+  // }
+
   if (argc < 4) {
     PointCloudPlayer player;
     player.load(argv[2]);
     player.play(tracker);
+  }
+  else if (argc == 4){
+    PointCloudPlayer player;
+    player.load(argv[2]);
+    player.play(tracker,std::stod(argv[3]),outputPath);
+  }
+  else if (argc == 5){
+    PointCloudPlayer player;
+    player.load(argv[2]);
+    player.play(tracker,std::stod(argv[3]),argv[4]);
   }
   else {
     PointCloudDebugger debugger(argv[3]);
