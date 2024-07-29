@@ -3,8 +3,6 @@ import os
 import yaml
 
 if __name__ == '__main__':
-
-
     random_data_root_dir = 'data'
     conclusion_files = glob.glob(f'{random_data_root_dir}/evaluation_conclusion*')
     # for file in conclusion_files:
