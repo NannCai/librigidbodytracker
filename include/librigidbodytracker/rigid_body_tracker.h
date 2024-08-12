@@ -46,7 +46,7 @@ namespace librigidbodytracker {
     const Eigen::Affine3f& initialTransformation() const;
     Eigen::Vector3f initialCenter() const { return m_initialTransformation.translation(); }
 
-    bool lastTransformationValid() const;
+    bool lastTransformationValid() const;  // false   no update
 
     std::chrono::time_point<std::chrono::high_resolution_clock> lastValidTime() const {
       return m_lastValidTransform;
