@@ -1044,7 +1044,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
       rigidBody.m_velocity = (rigidBody.m_lastTransformation.translation() - rigidBody.center()) / dt;
       rigidBody.m_lastValidTransform = stamp;
       rigidBody.m_lastTransformationValid = true;
-      rigidBody.m_hasOrientation = false;
+      rigidBody.m_hasOrientation = true;
     }
   }
   auto runtime_cbs_end = std::chrono::high_resolution_clock::now();
