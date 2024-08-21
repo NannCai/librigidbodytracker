@@ -8,6 +8,7 @@
 #include <pcl/registration/transformation_estimation_2D.h>
 // #include <pcl/registration/transformation_estimation_lm.h>
 #include <pcl/search/impl/search.hpp>
+#include <random>
 
 #include <set>
 #include "assignment.hpp"
@@ -753,6 +754,8 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
   std::set<CBS_InputData> cbs_data_set;
   std::map<std::tuple<std::string, std::set<std::string>>, Eigen::Affine3f> groupsMap_Affine;
 
+  auto runtime_cbsDataSet_start = std::chrono::high_resolution_clock::now();
+
   size_t const numRigidBodies = m_rigidBodies.size();
   for (int iRb = 0; iRb < numRigidBodies; ++iRb) {
 
@@ -827,10 +830,43 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     int k= 3; 
     auto predictTransform = rigidBody.m_lastTransformation;      
 
+    double translationNoiseStdDev = 0.01; 
+    double rotationNoiseStdDev = 0.01; 
+
+    // Create a random number generator
+    std::default_random_engine generator;
+    std::normal_distribution<double> translationDistribution(0, translationNoiseStdDev);
+    std::normal_distribution<double> rotationDistribution(0, rotationNoiseStdDev);
+
     // std::cout << "-----try k times icp :----  \n";   
     for (size_t i = 0; i < k; ++i)  {
       Cloud result; 
-      icp.align(result, predictTransform.matrix());  
+
+      if (i >0){
+        // Extract translation and Euler angles
+        float p_x, p_y, p_z, p_roll, p_pitch, p_yaw;
+        pcl::getTranslationAndEulerAngles(predictTransform, p_x, p_y, p_z, p_roll, p_pitch, p_yaw);
+
+        // Add noise to translation and Euler angles
+        p_x += translationDistribution(generator);
+        p_y += translationDistribution(generator);
+        p_z += translationDistribution(generator);
+        p_roll += rotationDistribution(generator);
+        p_pitch += rotationDistribution(generator);
+        p_yaw += rotationDistribution(generator);
+
+        // Reconstruct the transformation matrix with noise
+        Eigen::Affine3f noisyTransform = pcl::getTransformation(p_x, p_y, p_z, p_roll, p_pitch, p_yaw).cast<float>();
+
+        // // Debug output to check the noisy transformation matrix
+        // std::cout << "Noisy predictTransform/m_lastTransformation:  \n" << noisyTransform.matrix() << "\n";
+        icp.align(result, noisyTransform.matrix());
+      }
+      else{
+        icp.align(result, predictTransform.matrix());  
+      }
+
+      // icp.align(result, predictTransform.matrix());  
 
       if (!icp.hasConverged()) {
         std::stringstream sstr;
@@ -842,6 +878,7 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
 
       Eigen::Matrix4f transformation = icp.getFinalTransformation();
       Eigen::Affine3f tROTA(transformation);
+      // std::cout << "Transformation Matrix:\n" << transformation << std::endl;
 
       float x, y, z, roll, pitch, yaw;
       pcl::getTranslationAndEulerAngles(tROTA, x, y, z, roll, pitch, yaw);
@@ -924,6 +961,11 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     }
   }
 
+  auto runtime_cbs_start = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> durationdataset = runtime_cbs_start - runtime_cbsDataSet_start;
+  // std::cout << "dataset duration: " << durationdataset.count() << " seconds" << std::endl;
+
+
   for (const auto& data : cbs_data_set) {
     CBS_assignment.setCost(data.agent, data.taskSet, data.cost);
   }
@@ -1005,7 +1047,11 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
       rigidBody.m_hasOrientation = false;
     }
   }
-  
+  auto runtime_cbs_end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> durationCbs = runtime_cbs_end - runtime_cbs_start;
+  std::cout << "cbs duration: " << durationCbs.count() << " seconds" << std::endl;
+
+
   if (!m_inputPath.empty()) {
     std::string inputfileName = m_inputPath.substr(m_inputPath.find_last_of("/\\") + 1);
     // std::string outputDir = "./data/output/";
@@ -1033,6 +1079,9 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
     std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();  
     std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>( t2-t1 );
     out << "Runtime: " << time_used.count() << " seconds" << std::endl;
+    out << "dataset duration: " << durationdataset.count() << " seconds" << std::endl;
+    out << "cbs duration: " << durationCbs.count() << " seconds" << std::endl;
+
     out << P;
     
     out << "transformation:"<< std::endl;
@@ -1049,6 +1098,8 @@ void RigidBodyTracker::updateHybrid(std::chrono::high_resolution_clock::time_poi
       <<std::endl;
     }
   }
+
+
 
 }
 

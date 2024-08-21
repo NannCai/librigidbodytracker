@@ -43,7 +43,7 @@ if __name__ == '__main__':
     # root_path = 'data/output_remove'
     # root_path = 'data/output_add_point'
     # root_path = 'data/output_test_remove_add'
-    root_path = 'data/output_add_remove_1208'
+    root_path = './data/output_add_remove_1208'
 
     noise_info_file_name  = 'noise_info.txt'
     noise_info_path = f'{root_path}/{noise_info_file_name}'
@@ -108,12 +108,12 @@ if __name__ == '__main__':
                 noise_t = noise_trans.get(rb)
                 # if (P.solution.empty()) nothing saved maybe also saved the stamp and empty solution
                 if noise_t is None:  # TODO each time is like skip one frame,   noise_trans {}
-                    print('----------')
-                    print('noise_path',noise_path)
-                    print('rb_key',rb_key)
-                    print('noise_trans',noise_trans)
-                    print('gt_trans',gt_trans)
-                    print('noise_t is None,rb',rb)
+                    # print('----------')
+                    # print('noise_path',noise_path)
+                    # print('rb_key',rb_key)
+                    # print('noise_trans',noise_trans)
+                    # print('gt_trans',gt_trans)
+                    # print('noise_t is None,rb',rb)
                     incorrect_count += 1
                     continue
 
@@ -172,7 +172,9 @@ if __name__ == '__main__':
 
     # Show the plot
     plt.grid(True)
-    plt.show()
+    # plt.show() 
+    save_path = './script/noise/evaluate_noise.png'
+    plt.savefig(save_path, bbox_inches='tight')
 
 
     # # linear fit

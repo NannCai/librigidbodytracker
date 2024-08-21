@@ -1,7 +1,5 @@
 import numpy as np
-from pathlib import Path
 import os
-import time
 
 # visualization related
 import meshcat
@@ -49,9 +47,10 @@ def parse_pc_data(pc_path):
 	key = ''
 	for line in point_cloud_data[:]:
 		if line.startswith('stamp:'):
+			# print('line',line)
 			key = line
 			pc_dict[key] = []
-		else:
+		elif key:
 			pc_dict[key].append(line)
 
 	for key in pc_dict:
@@ -146,11 +145,12 @@ def one_vis(input_file_name,input_dir):
 	print('end')
 
 if __name__ == '__main__':
-	input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/output'
-	
+	# input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/output'
+	input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/runtime_part'
 	input_file_names = [
 		# '3d_8m_mo1_28696988',	# gt   works
-		'3d_8m_mo1_28697091'    # with noise remove points works
+		# '3d_8m_mo1_28697091',    # with noise remove points works
+		'noise_icp'
 	]
 
 	for input_file_name in input_file_names:
