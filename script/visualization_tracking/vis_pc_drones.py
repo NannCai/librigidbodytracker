@@ -146,12 +146,25 @@ def one_vis(input_file_name,input_dir):
 
 if __name__ == '__main__':
 	# input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/output'
-	input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/runtime_part'
+	input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/2608runtime'
 	input_file_names = [
 		# '3d_8m_mo1_28696988',	# gt   works
 		# '3d_8m_mo1_28697091',    # with noise remove points works
-		'noise_icp'
+		# 'noise_icp'
+		# 'figure8_2d_5m1',
+		# 'figure8_2d_5m2',
+		# 'figure8_3d_8m1',
+		'figure8_3d_8m2',
+		# 'figure8_4d_9m1f',
+		# 'figure8_4d_9m2',
+		# 'figure8_4d_9m3f',
+		# 'figure8_4d_9m4',
+		# 'figure8_4d_9m5',
+		# 'figure8_4d_9m6f',
+		# 'figure8_4d_9m7'
+		
 	]
+
 
 	for input_file_name in input_file_names:
 		one_vis(input_file_name, input_dir)

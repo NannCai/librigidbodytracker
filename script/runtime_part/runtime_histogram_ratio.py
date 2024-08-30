@@ -33,20 +33,18 @@ def parse_rigidbody_data(rigidbody_path):
     # print("runtime_dict",runtime_dict)
     return runtime_dict
 
-
-if __name__ == '__main__':
-
-    # path = './data/output_add_point/add_point0.txt'
-    # path = './data/output_add_point/add_point40.txt'
-    # path = './data/output_add_remove_1208/add_point0.txt'
-    # path = './data/output_add_remove_1208/test0.txt'
-    # path = './data/output_remove/test0.txt'
-    # rigidbody_path = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/runtime_part/noise_icp.txt'
-    rigidbody_path = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/runtime_part/test.txt'
+def runtime_his_ratio(rigidbody_path):
     runtime_dict = parse_rigidbody_data(rigidbody_path)
 
     # Extract data for histograms
     runtime_values = [v['Runtime'] for v in runtime_dict.values()]
+    dataset_values = [v['dataset'] for v in runtime_dict.values()]
+    cbs_values = [v['cbs'] for v in runtime_dict.values()]
+    
+    avg_runtime = sum(runtime_values) / len(runtime_values)
+    avg_dataset = sum(dataset_values) / len(dataset_values)
+    avg_cbs = sum(cbs_values) / len(cbs_values)
+
     dataset_ratios = [v['dataset'] / v['Runtime'] for v in runtime_dict.values()]
     cbs_ratios = [v['cbs'] / v['Runtime'] for v in runtime_dict.values()]
 
@@ -56,7 +54,7 @@ if __name__ == '__main__':
     # First histogram: Runtime values
     counts, bins, patches = axs[0].hist(runtime_values, bins=100, edgecolor='black')
     total_values = len(runtime_values)
-    axs[0].set_title(f'Histogram of Runtime Values (Total: {total_values})\nPath: {rigidbody_path}')
+    axs[0].set_title(f'Histogram of Runtime Values (Total: {total_values}, Avg: {avg_runtime:.6f})\nPath: {rigidbody_path}')
     axs[0].set_xlabel('Runtime')
     axs[0].set_ylabel('Frequency')
     axs[0].set_yscale('log')
@@ -66,7 +64,7 @@ if __name__ == '__main__':
     # Second histogram: Dataset/Runtime ratio
     counts, bins, patches = axs[1].hist(dataset_ratios, bins=100, edgecolor='black')
     total_values = len(dataset_ratios)
-    axs[1].set_title(f'Histogram of Dataset/Runtime Ratios (Total: {total_values})')
+    axs[1].set_title(f'Histogram of Dataset/Runtime Ratios (Total: {total_values}, Avg Dataset: {avg_dataset:.6f})')
     axs[1].set_xlabel('Dataset/Runtime Ratio')
     axs[1].set_ylabel('Frequency')
     axs[1].set_yscale('log')
@@ -76,7 +74,7 @@ if __name__ == '__main__':
     # Third histogram: CBS/Runtime ratio
     counts, bins, patches = axs[2].hist(cbs_ratios, bins=100, edgecolor='black')
     total_values = len(cbs_ratios)
-    axs[2].set_title(f'Histogram of CBS/Runtime Ratios (Total: {total_values})')
+    axs[2].set_title(f'Histogram of CBS/Runtime Ratios (Total: {total_values}, Avg CBS: {avg_cbs:.6f})')
     axs[2].set_xlabel('CBS/Runtime Ratio')
     axs[2].set_ylabel('Frequency')
     axs[2].set_yscale('log')
@@ -117,3 +115,34 @@ if __name__ == '__main__':
 
     # for count, bin_edge in zip(counts, bins):
     #     print(f'Bin edge: {bin_edge}, Count: {count}')  # Print bin edge and count
+if __name__ == '__main__':
+
+    # path = './data/output_add_point/add_point0.txt'
+    # path = './data/output_add_point/add_point40.txt'
+    # path = './data/output_add_remove_1208/add_point0.txt'
+    # path = './data/output_add_remove_1208/test0.txt'
+    # path = './data/output_remove/test0.txt'
+    # rigidbody_path = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/runtime_part/noise_icp.txt'
+    # rigidbody_path = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/runtime_part/test.txt' 
+    # rigidbody_path = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/2608runtime/figure8_2d_5m1.txt'
+    # rigidbody_path = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/2608runtime/figure8_2d_5m2.txt'
+    # rigidbody_path = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/2608runtime/figure8_3d_8m1.txt'
+    rigidbody_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/2608runtime'
+    rigidbody_file_names = [
+        # 'figure8_3d_8m1',
+        # 'figure8_2d_5m2',
+        'figure8_3d_8m2',
+		'figure8_4d_9m1f',
+		'figure8_4d_9m2',
+		'figure8_4d_9m3f',
+		'figure8_4d_9m4',
+		'figure8_4d_9m5',
+		'figure8_4d_9m6f',
+		'figure8_4d_9m7'
+    ]
+
+    for rigidbody_file_name in rigidbody_file_names:
+        rigidbody_path = rigidbody_dir + '/' + rigidbody_file_name +'.txt'
+        runtime_his_ratio(rigidbody_path)
+    
+

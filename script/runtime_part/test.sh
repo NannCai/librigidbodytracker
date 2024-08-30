@@ -8,4 +8,4 @@
 # done
 
 
-./build/playclouds ./example/3d_8m_hand.yaml ../../data/3d_8m_mo1 0 ./data/runtime_part/noise_icp
+./build/playclouds ./example/figure8_3d_8m2.yaml ../../data/figure8_3d_8m2 0 ./data/2608runtime/figure8_3d_8m2
