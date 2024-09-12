@@ -1,14 +1,14 @@
 #!/bin/sh
 
 # Define the root directory for random data
-data_path="data"
+data_path="data/gurobi_vs_cbs2"
 
 group=3
 task_list="3 4 5"
 agent_list="5 10 15"
 
-task_list="4"
-agent_list="15"
+# task_list="4"
+# agent_list="15"
 
 for task in $task_list; do
     for agent in $agent_list; do
