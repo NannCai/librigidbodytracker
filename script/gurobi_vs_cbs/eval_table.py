@@ -5,7 +5,7 @@ import yaml
 if __name__ == '__main__':
 
 
-    random_data_root_dir = 'data'
+    random_data_root_dir = 'data/gurobi_vs_cbs2'
     conclusion_files = glob.glob(f'{random_data_root_dir}/evaluation_conclusion*')
     # for file in conclusion_files:
     #     print(file)  # Print or process the files as needed
@@ -46,7 +46,8 @@ if __name__ == '__main__':
             frequency_cbs_runtime = f"\\textbf{{{frequency_cbs_runtime:.1f}}}"
         else:
             print('!!wrong!!')
-
+            
+        key = key.replace('_', r'\_')
         print(f"{key} & {frequency_gurobi_runtime} & {frequency_cbs_runtime} \\\\")
 
 

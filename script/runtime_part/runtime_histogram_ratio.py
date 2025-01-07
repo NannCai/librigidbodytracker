@@ -47,7 +47,7 @@ def runtime_his_ratio(rigidbody_path):
 
     dataset_ratios = [v['dataset'] / v['Runtime'] for v in runtime_dict.values()]
     cbs_ratios = [v['cbs'] / v['Runtime'] for v in runtime_dict.values()]
-
+    
     fig, axs = plt.subplots(3, 1, figsize=(20, 15))
     plt.subplots_adjust(hspace=0.4, top=0.95, bottom=0.05, left=0.05, right=0.95)  # Adjust spacing
 
