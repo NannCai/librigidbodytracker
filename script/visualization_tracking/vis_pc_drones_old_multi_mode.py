@@ -118,17 +118,15 @@ def one_vis(input_file_name,input_dir):
 				print(f'!!!not rb_trans!!! in frame {i} ','pc_key',pc_key)
 				continue
 
-			# if len(rb_solution_agents) <3:
-			# 	print('rb_solution_agents',rb_solution_agents)
 			for agent,row in rb_trans.items():
-				if agent in rb_solution_agents: 
-					frame[f"Quadrotor{agent}"].set_transform(
-						tf.translation_matrix([row[0], row[1], row[2]]).dot(
-							tf.quaternion_matrix([row[6], row[3], row[4], row[5]])))
-				else:   # No results for this agent					
-					frame[f"Quadrotor{agent}"].set_transform(
-						tf.translation_matrix([1e5,1e5,1e5]).dot(
-							tf.quaternion_matrix([row[6], row[3], row[4], row[5]])))
+				# if agent in rb_solution_agents: 
+				frame[f"Quadrotor{agent}"].set_transform(
+					tf.translation_matrix([row[0], row[1], row[2]]).dot(
+						tf.quaternion_matrix([row[6], row[3], row[4], row[5]])))
+				# else:   # No results for this agent					
+				# 	frame[f"Quadrotor{agent}"].set_transform(
+				# 		tf.translation_matrix([1e5,1e5,1e5]).dot(
+				# 			tf.quaternion_matrix([row[6], row[3], row[4], row[5]])))
 										
 			i= i+1
 
@@ -168,8 +166,8 @@ if __name__ == '__main__':
 
 	input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/output_add_remove_old_multi_mode_2d_7m_mo_0701'
 	input_file_names = [
-		'test0',	# gt
-		# 'test19'	# remove 9135	
+		# 'test0',	# gt
+		'test19'	# remove 9135	
 	]
 
 	print('input_dir:',input_dir)

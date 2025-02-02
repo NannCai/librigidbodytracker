@@ -122,9 +122,9 @@ namespace librigidbodytracker {
 				out.open(outputFile);
 			}
 
-		    // const double pick_probability = 0.001;
+		    // const double pick_probability = 0.001;		// start with a seed number
 			std::random_device rd;
-			std::mt19937 gen(rd());
+			std::mt19937 gen(rd());		// gen(seed number)
 			std::uniform_real_distribution<> dis(0.0, 1.0);
 			std::poisson_distribution<int> dis_poisson(8); 
 

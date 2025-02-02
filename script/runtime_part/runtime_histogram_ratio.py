@@ -1,6 +1,5 @@
 # TODO use noise=0 data plot the histogram of runtime of each frame
 
-# import numpy as np
 import os
 import matplotlib.pyplot as plt 
 

@@ -1,0 +1,1602 @@
+{
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point0": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                0
+            ],
+            [
+                "pick_probability",
+                0.0
+            ]
+        ],
+        "plot": [
+            0,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point1": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -720
+            ],
+            [
+                "pick_probability",
+                0.05
+            ]
+        ],
+        "plot": [
+            -720,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point2": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -1345
+            ],
+            [
+                "pick_probability",
+                0.1
+            ]
+        ],
+        "plot": [
+            -1345,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point3": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -2079
+            ],
+            [
+                "pick_probability",
+                0.15
+            ]
+        ],
+        "plot": [
+            -2079,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point4": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -2932
+            ],
+            [
+                "pick_probability",
+                0.2
+            ]
+        ],
+        "plot": [
+            -2932,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point5": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -3334
+            ],
+            [
+                "pick_probability",
+                0.25
+            ]
+        ],
+        "plot": [
+            -3334,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point6": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -4298
+            ],
+            [
+                "pick_probability",
+                0.3
+            ]
+        ],
+        "plot": [
+            -4298,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point7": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -4618
+            ],
+            [
+                "pick_probability",
+                0.35
+            ]
+        ],
+        "plot": [
+            -4618,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point8": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -5330
+            ],
+            [
+                "pick_probability",
+                0.4
+            ]
+        ],
+        "plot": [
+            -5330,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point9": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -6172
+            ],
+            [
+                "pick_probability",
+                0.45
+            ]
+        ],
+        "plot": [
+            -6172,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point10": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -6935
+            ],
+            [
+                "pick_probability",
+                0.5
+            ]
+        ],
+        "plot": [
+            -6935,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point11": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -7695
+            ],
+            [
+                "pick_probability",
+                0.55
+            ]
+        ],
+        "plot": [
+            -7695,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point12": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -8294
+            ],
+            [
+                "pick_probability",
+                0.6
+            ]
+        ],
+        "plot": [
+            -8294,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point13": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -8931
+            ],
+            [
+                "pick_probability",
+                0.65
+            ]
+        ],
+        "plot": [
+            -8931,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point14": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -9688
+            ],
+            [
+                "pick_probability",
+                0.7
+            ]
+        ],
+        "plot": [
+            -9688,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point15": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -10259
+            ],
+            [
+                "pick_probability",
+                0.75
+            ]
+        ],
+        "plot": [
+            -10259,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point16": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -11175
+            ],
+            [
+                "pick_probability",
+                0.8
+            ]
+        ],
+        "plot": [
+            -11175,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point17": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -12018
+            ],
+            [
+                "pick_probability",
+                0.85
+            ]
+        ],
+        "plot": [
+            -12018,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point18": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -12575
+            ],
+            [
+                "pick_probability",
+                0.9
+            ]
+        ],
+        "plot": [
+            -12575,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point19": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -13000
+            ],
+            [
+                "pick_probability",
+                0.95
+            ]
+        ],
+        "plot": [
+            -13000,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point20": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -624
+            ],
+            [
+                "pick_probability",
+                0.05
+            ]
+        ],
+        "plot": [
+            -624,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point21": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -1320
+            ],
+            [
+                "pick_probability",
+                0.1
+            ]
+        ],
+        "plot": [
+            -1320,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point22": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -2309
+            ],
+            [
+                "pick_probability",
+                0.15
+            ]
+        ],
+        "plot": [
+            -2309,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point23": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -2741
+            ],
+            [
+                "pick_probability",
+                0.2
+            ]
+        ],
+        "plot": [
+            -2741,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point24": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -3533
+            ],
+            [
+                "pick_probability",
+                0.25
+            ]
+        ],
+        "plot": [
+            -3533,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point25": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -4412
+            ],
+            [
+                "pick_probability",
+                0.3
+            ]
+        ],
+        "plot": [
+            -4412,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point26": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -5081
+            ],
+            [
+                "pick_probability",
+                0.35
+            ]
+        ],
+        "plot": [
+            -5081,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point27": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -5537
+            ],
+            [
+                "pick_probability",
+                0.4
+            ]
+        ],
+        "plot": [
+            -5537,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point28": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -6335
+            ],
+            [
+                "pick_probability",
+                0.45
+            ]
+        ],
+        "plot": [
+            -6335,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point29": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -6783
+            ],
+            [
+                "pick_probability",
+                0.5
+            ]
+        ],
+        "plot": [
+            -6783,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point30": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -7367
+            ],
+            [
+                "pick_probability",
+                0.55
+            ]
+        ],
+        "plot": [
+            -7367,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point31": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -8092
+            ],
+            [
+                "pick_probability",
+                0.6
+            ]
+        ],
+        "plot": [
+            -8092,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point32": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -8985
+            ],
+            [
+                "pick_probability",
+                0.65
+            ]
+        ],
+        "plot": [
+            -8985,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point33": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -9752
+            ],
+            [
+                "pick_probability",
+                0.7
+            ]
+        ],
+        "plot": [
+            -9752,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point34": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -10514
+            ],
+            [
+                "pick_probability",
+                0.75
+            ]
+        ],
+        "plot": [
+            -10514,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point35": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -11313
+            ],
+            [
+                "pick_probability",
+                0.8
+            ]
+        ],
+        "plot": [
+            -11313,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point36": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -11587
+            ],
+            [
+                "pick_probability",
+                0.85
+            ]
+        ],
+        "plot": [
+            -11587,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point37": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -12614
+            ],
+            [
+                "pick_probability",
+                0.9
+            ]
+        ],
+        "plot": [
+            -12614,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point38": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -13195
+            ],
+            [
+                "pick_probability",
+                0.95
+            ]
+        ],
+        "plot": [
+            -13195,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/add_point39": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                -14053
+            ],
+            [
+                "pick_probability",
+                1.0
+            ]
+        ],
+        "plot": [
+            -14053,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test0": {
+        "count": [
+            3460,
+            0
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                0
+            ],
+            [
+                "pick_probability",
+                0.0
+            ]
+        ],
+        "plot": [
+            0,
+            1.0
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test1": {
+        "count": [
+            1092,
+            2368
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                475
+            ],
+            [
+                "pick_probability",
+                0.05
+            ]
+        ],
+        "plot": [
+            475,
+            0.315606936416185
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test2": {
+        "count": [
+            1425,
+            2035
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                997
+            ],
+            [
+                "pick_probability",
+                0.1
+            ]
+        ],
+        "plot": [
+            997,
+            0.41184971098265893
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test3": {
+        "count": [
+            949,
+            2511
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                1461
+            ],
+            [
+                "pick_probability",
+                0.15
+            ]
+        ],
+        "plot": [
+            1461,
+            0.27427745664739883
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test4": {
+        "count": [
+            847,
+            2613
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                1697
+            ],
+            [
+                "pick_probability",
+                0.2
+            ]
+        ],
+        "plot": [
+            1697,
+            0.24479768786127168
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test5": {
+        "count": [
+            865,
+            2595
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                2415
+            ],
+            [
+                "pick_probability",
+                0.25
+            ]
+        ],
+        "plot": [
+            2415,
+            0.25
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test6": {
+        "count": [
+            666,
+            2794
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                3313
+            ],
+            [
+                "pick_probability",
+                0.3
+            ]
+        ],
+        "plot": [
+            3313,
+            0.19248554913294796
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test7": {
+        "count": [
+            682,
+            2778
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                3337
+            ],
+            [
+                "pick_probability",
+                0.35
+            ]
+        ],
+        "plot": [
+            3337,
+            0.1971098265895954
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test8": {
+        "count": [
+            613,
+            2847
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                3904
+            ],
+            [
+                "pick_probability",
+                0.4
+            ]
+        ],
+        "plot": [
+            3904,
+            0.17716763005780348
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test9": {
+        "count": [
+            590,
+            2870
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                4496
+            ],
+            [
+                "pick_probability",
+                0.45
+            ]
+        ],
+        "plot": [
+            4496,
+            0.17052023121387283
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test10": {
+        "count": [
+            484,
+            2976
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                4850
+            ],
+            [
+                "pick_probability",
+                0.5
+            ]
+        ],
+        "plot": [
+            4850,
+            0.13988439306358383
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test11": {
+        "count": [
+            468,
+            2992
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                5468
+            ],
+            [
+                "pick_probability",
+                0.55
+            ]
+        ],
+        "plot": [
+            5468,
+            0.1352601156069364
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test12": {
+        "count": [
+            352,
+            3108
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                6061
+            ],
+            [
+                "pick_probability",
+                0.6
+            ]
+        ],
+        "plot": [
+            6061,
+            0.10173410404624278
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test13": {
+        "count": [
+            321,
+            3139
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                6583
+            ],
+            [
+                "pick_probability",
+                0.65
+            ]
+        ],
+        "plot": [
+            6583,
+            0.09277456647398843
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test14": {
+        "count": [
+            227,
+            3233
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                7204
+            ],
+            [
+                "pick_probability",
+                0.7
+            ]
+        ],
+        "plot": [
+            7204,
+            0.06560693641618497
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test15": {
+        "count": [
+            273,
+            3187
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                7480
+            ],
+            [
+                "pick_probability",
+                0.75
+            ]
+        ],
+        "plot": [
+            7480,
+            0.07890173410404624
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test16": {
+        "count": [
+            220,
+            3240
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                7924
+            ],
+            [
+                "pick_probability",
+                0.8
+            ]
+        ],
+        "plot": [
+            7924,
+            0.06358381502890173
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test17": {
+        "count": [
+            202,
+            3258
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                8478
+            ],
+            [
+                "pick_probability",
+                0.85
+            ]
+        ],
+        "plot": [
+            8478,
+            0.05838150289017341
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test18": {
+        "count": [
+            131,
+            3329
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                9094
+            ],
+            [
+                "pick_probability",
+                0.9
+            ]
+        ],
+        "plot": [
+            9094,
+            0.03786127167630058
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test19": {
+        "count": [
+            98,
+            3362
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                9533
+            ],
+            [
+                "pick_probability",
+                0.95
+            ]
+        ],
+        "plot": [
+            9533,
+            0.028323699421965318
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test20": {
+        "count": [
+            1669,
+            1791
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                96
+            ],
+            [
+                "pick_probability",
+                0.01
+            ]
+        ],
+        "plot": [
+            96,
+            0.4823699421965318
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test21": {
+        "count": [
+            2314,
+            1146
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                183
+            ],
+            [
+                "pick_probability",
+                0.02
+            ]
+        ],
+        "plot": [
+            183,
+            0.6687861271676301
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test22": {
+        "count": [
+            1532,
+            1928
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                304
+            ],
+            [
+                "pick_probability",
+                0.03
+            ]
+        ],
+        "plot": [
+            304,
+            0.44277456647398844
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test23": {
+        "count": [
+            1228,
+            2232
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                362
+            ],
+            [
+                "pick_probability",
+                0.04
+            ]
+        ],
+        "plot": [
+            362,
+            0.35491329479768785
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test24": {
+        "count": [
+            1195,
+            2265
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                404
+            ],
+            [
+                "pick_probability",
+                0.05
+            ]
+        ],
+        "plot": [
+            404,
+            0.3453757225433526
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test25": {
+        "count": [
+            1182,
+            2278
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                694
+            ],
+            [
+                "pick_probability",
+                0.06
+            ]
+        ],
+        "plot": [
+            694,
+            0.3416184971098266
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test26": {
+        "count": [
+            1184,
+            2276
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                756
+            ],
+            [
+                "pick_probability",
+                0.07
+            ]
+        ],
+        "plot": [
+            756,
+            0.3421965317919075
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test27": {
+        "count": [
+            836,
+            2624
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                802
+            ],
+            [
+                "pick_probability",
+                0.08
+            ]
+        ],
+        "plot": [
+            802,
+            0.24161849710982658
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test28": {
+        "count": [
+            1143,
+            2317
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                853
+            ],
+            [
+                "pick_probability",
+                0.09
+            ]
+        ],
+        "plot": [
+            853,
+            0.33034682080924854
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test29": {
+        "count": [
+            868,
+            2592
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                1105
+            ],
+            [
+                "pick_probability",
+                0.1
+            ]
+        ],
+        "plot": [
+            1105,
+            0.2508670520231214
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test30": {
+        "count": [
+            1377,
+            2083
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                1117
+            ],
+            [
+                "pick_probability",
+                0.11
+            ]
+        ],
+        "plot": [
+            1117,
+            0.39797687861271674
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test31": {
+        "count": [
+            991,
+            2469
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                1257
+            ],
+            [
+                "pick_probability",
+                0.12
+            ]
+        ],
+        "plot": [
+            1257,
+            0.2864161849710983
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test32": {
+        "count": [
+            927,
+            2533
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                1392
+            ],
+            [
+                "pick_probability",
+                0.13
+            ]
+        ],
+        "plot": [
+            1392,
+            0.2679190751445087
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test33": {
+        "count": [
+            1053,
+            2407
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                1480
+            ],
+            [
+                "pick_probability",
+                0.14
+            ]
+        ],
+        "plot": [
+            1480,
+            0.3043352601156069
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test34": {
+        "count": [
+            946,
+            2514
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                1490
+            ],
+            [
+                "pick_probability",
+                0.15
+            ]
+        ],
+        "plot": [
+            1490,
+            0.27341040462427746
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test35": {
+        "count": [
+            962,
+            2498
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                1703
+            ],
+            [
+                "pick_probability",
+                0.16
+            ]
+        ],
+        "plot": [
+            1703,
+            0.27803468208092486
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test36": {
+        "count": [
+            490,
+            2970
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                1717
+            ],
+            [
+                "pick_probability",
+                0.17
+            ]
+        ],
+        "plot": [
+            1717,
+            0.1416184971098266
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test37": {
+        "count": [
+            672,
+            2788
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                1896
+            ],
+            [
+                "pick_probability",
+                0.18
+            ]
+        ],
+        "plot": [
+            1896,
+            0.19421965317919074
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test38": {
+        "count": [
+            876,
+            2584
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                2030
+            ],
+            [
+                "pick_probability",
+                0.19
+            ]
+        ],
+        "plot": [
+            2030,
+            0.25317919075144507
+        ]
+    },
+    "./data/output_add_remove_hybrid_mode_2d_7m_mo_0701/test39": {
+        "count": [
+            876,
+            2584
+        ],
+        "info": [
+            [
+                "total_removed_points",
+                1934
+            ],
+            [
+                "pick_probability",
+                0.2
+            ]
+        ],
+        "plot": [
+            1934,
+            0.25317919075144507
+        ]
+    }
+}

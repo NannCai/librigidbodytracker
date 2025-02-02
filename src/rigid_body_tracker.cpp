@@ -106,6 +106,8 @@ RigidBodyTracker::RigidBodyTracker(
     m_trackingMode = HybridMode;
   }
 
+  m_trackingMode = PoseMode;    // for debugging compare to old multi marker tracker correct rate
+
 }
 
 
@@ -116,7 +118,8 @@ void RigidBodyTracker::update(Cloud::Ptr pointCloud)
 void RigidBodyTracker::update(std::chrono::high_resolution_clock::time_point time,
   Cloud::Ptr pointCloud, std::string inputPath,std::string outputPath)
 {
-  // std::cout << "Current tracking mode: " << m_trackingMode << std::endl;
+  std::cout << "Current tracking mode: " << m_trackingMode << std::endl;
+  // updateHybrid(time, pointCloud);
   if (m_trackingMode == PositionMode) {
     updatePosition(time, pointCloud);
   } else if (m_trackingMode == PoseMode) {
@@ -371,6 +374,8 @@ void RigidBodyTracker::updatePose(std::chrono::high_resolution_clock::time_point
       rigidBody.m_lastValidTransform = stamp;
       rigidBody.m_lastTransformationValid = true;
       rigidBody.m_hasOrientation = true;
+
+
     } else {
       std::stringstream sstr;
       sstr << "Dynamic check failed for rigidBody " << rigidBody.name() << std::endl;
@@ -404,6 +409,43 @@ void RigidBodyTracker::updatePose(std::chrono::high_resolution_clock::time_point
       logWarn(sstr.str());
     }
   }
+
+
+
+  // TODO add transformation for each rigid body, like from line 1104
+  if (!m_inputPath.empty()) {
+    std::string inputfileName = m_inputPath.substr(m_inputPath.find_last_of("/\\") + 1);
+    std::string outputFile = m_outputPath + ".txt";
+
+    std::cout << "Input File: " << inputfileName << std::endl;
+    std::cout << "Output file: " << outputFile << std::endl;
+
+    std::ofstream out(outputFile, std::ios_base::app); // Open in append mode
+    
+    if (!out.is_open()) {
+      std::cout << "File does not exist, creating a new file...  updateHybrid" << std::endl;
+      out.open(outputFile);
+    }
+  
+    out << "stamp: " << stamp.time_since_epoch().count() << std::endl;
+    out << "transformation:"<< std::endl;
+    size_t const numRigidBodies = m_rigidBodies.size();
+    for (int iRb = 0; iRb < numRigidBodies; ++iRb) {
+      RigidBody& rigidBody = m_rigidBodies[iRb];  // TODO need to know the index of the rigid body
+      Eigen::Quaternionf q(rigidBody.m_lastTransformation.rotation());
+      out << iRb<< ": "  <<rigidBody.m_lastTransformation.translation().x()
+      << " " <<rigidBody.m_lastTransformation.translation().y()
+      << " " <<rigidBody.m_lastTransformation.translation().z()
+      << " " <<q.x()
+      << " " <<q.y()
+      << " " <<q.z()
+      << " " <<q.w()
+      <<std::endl;
+    }
+    
+  }
+  
+
 
 }
 

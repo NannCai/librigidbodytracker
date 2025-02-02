@@ -13,8 +13,6 @@
 # done
 
 
-#!/bin/sh
-
 # for i in $(seq 0 19)
 # do
 #   freq=$(echo "scale=2; 0.01 * $((i))" | bc)
@@ -22,16 +20,34 @@
 #   ./build/playclouds ./example/3d_8m_hand.yaml ../../data/3d_8m_mo1 $freq $output_dir
 # done
 
+# for i in $(seq 0 19)
+# do
+#   freq=$(echo "scale=2; 0.05 * $((i))" | bc)
+#   output_dir="./data/output_add_remove_1208/add_point$((i))"
+#   ./build/playclouds ./example/3d_8m_hand.yaml ../../data/2807_24/3d_8m_mo1 $freq $output_dir
+# done
+
+# for i in $(seq 0 19)
+# do
+#   freq=$(echo "scale=2; 0.05 * $((i+1))" | bc)
+#   output_dir="./data/output_add_remove_1208/add_point$((i+20))"
+#   ./build/playclouds ./example/3d_8m_hand.yaml ../../data/2807_24/3d_8m_mo1 $freq $output_dir
+# done
+
+
+
 for i in $(seq 0 19)
 do
   freq=$(echo "scale=2; 0.05 * $((i))" | bc)
-  output_dir="./data/output_add_remove_1208/add_point$((i))"
-  ./build/playclouds ./example/3d_8m_hand.yaml ../../data/3d_8m_mo1 $freq $output_dir
+  output_dir="./data/output_add_remove_old_multi_mode_2d_7m_mo_0701/add_point$((i))"
+  ./build/playclouds ./example/3d_8m_hand.yaml ../../data/2807_24/2d_7m_mo $freq $output_dir
 done
 
 for i in $(seq 0 19)
 do
   freq=$(echo "scale=2; 0.05 * $((i+1))" | bc)
-  output_dir="./data/output_add_remove_1208/add_point$((i+20))"
-  ./build/playclouds ./example/3d_8m_hand.yaml ../../data/3d_8m_mo1 $freq $output_dir
+  output_dir="./data/output_add_remove_old_multi_mode_2d_7m_mo_0701/add_point$((i+20))"
+  ./build/playclouds ./example/3d_8m_hand.yaml ../../data/2807_24/2d_7m_mo $freq $output_dir
 done
+
+

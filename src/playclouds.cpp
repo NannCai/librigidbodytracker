@@ -138,24 +138,23 @@ int main(int argc, char **argv)
   auto epoch = now.time_since_epoch();
   auto minutes = std::chrono::duration_cast<std::chrono::minutes>(epoch).count();
   std::string outputPath = outputDir + inputfileName+"_" + std::to_string(minutes);  
-  // outputPath = outputPath + ".txt";
-  // std::ofstream out(outputPath, std::ios::trunc); 
-  // if (!out.is_open()) {
-  //   std::cout << "File does not exist, creating a new file... play funcion" << std::endl;
-  //   out.open(outputPath);
-  // }
 
   if (argc < 4) {
+    // default pick_probability = 0  ---no noise
     PointCloudPlayer player;
     player.load(argv[2]);
     player.play(tracker);
   }
-  else if (argc == 4){
+  else if (argc == 4){  
+    // define the pick_probability by the user (argv[3])
+    // default output path outputPath in above
     PointCloudPlayer player;
     player.load(argv[2]);
     player.play(tracker,std::stod(argv[3]),outputPath);
   }
-  else if (argc == 5){
+  else if (argc == 5){    
+    // define the pick_probability by the user (argv[3])
+    // define the output path by the user (argv[4])
     PointCloudPlayer player;
     player.load(argv[2]);
     player.play(tracker,std::stod(argv[3]),argv[4]);

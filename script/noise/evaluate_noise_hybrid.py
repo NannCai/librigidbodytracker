@@ -1,8 +1,22 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import PolynomialFeatures
+# from sklearn.linear_model import LinearRegression
+# from sklearn.preprocessing import PolynomialFeatures
+import json
 
+''' 
+this script plots the correct count ratio vs total removed points (noise)
+the workflow is first generate the noise data and estimated result 
+via shell file add_point.sh and gen_noise_data_remove_point.sh
+also cloudlog.hpp should be changed to add or remove points 
+'''
+
+
+
+
+# TODO add the data of old multi marker mode data, use another color to plot the points
+    # TODO generate the state estimation result of old multi marker mode 
+    # only change the mode in the c++ code and then run the same shell file (add_point.sh and gen_noise_data_remove_point.sh)
 
 # evaluation of noise result
 def parse_rigidbody_data(rigidbody_path):
@@ -43,7 +57,8 @@ if __name__ == '__main__':
     # root_path = 'data/output_remove'
     # root_path = 'data/output_add_point'
     # root_path = 'data/output_test_remove_add'
-    root_path = './data/output_add_remove_1208'
+    # root_path = './data/output_add_remove_1208'
+    root_path = './data/output_add_remove_hybrid_mode_2d_7m_mo_0701'
 
     noise_info_file_name  = 'noise_info.txt'
     noise_info_path = f'{root_path}/{noise_info_file_name}'
@@ -54,7 +69,6 @@ if __name__ == '__main__':
     # print('noise_info',noise_info)
 
     noise_res_info_dict = {}
-    # key = ''
     ground_truth_name = 0
     for item in noise_info:
         if item.endswith(':'):
@@ -126,7 +140,12 @@ if __name__ == '__main__':
                 # difference = [abs(gt - noise) for gt, noise in zip(gt_t, noise_t)]
                 # if all(diff >= 0.0005 for diff in difference):
                 difference = np.abs(gt_t - noise_t)
-                if np.all(difference >= 0.0005):
+                # TODO  
+                # import rowan.geometry.sym_intrinsic_distance  
+                # only both rotation and translation are close enough, then it is correct
+                
+                np.linalg.norm(gt_t -noise_t)  # use euclidean distance to compare the difference
+                if np.all(difference >= 0.005):  # TODO too small , change to 0.005
                     incorrect_count += 1
                     # print(f"Difference: {difference}")
                     # print(f"Noise transformation is incorrect for rb: {rb}")
@@ -145,6 +164,9 @@ if __name__ == '__main__':
     # print('Noise Dictionary:', noise_res_info_dict)
     print('Result Dictionary:', result_dict)
 
+    # Save result_dict to a JSON file
+    with open('./script/noise/result_dict_hybrid.json', 'w') as f:
+        json.dump(result_dict, f, indent=4)
 
     total_list = [data['count'][0] + data['count'][1] for data in result_dict.values()]
     print('Total Count:', total_list)
@@ -173,8 +195,9 @@ if __name__ == '__main__':
     # Show the plot
     plt.grid(True)
     # plt.show() 
-    save_path = './script/noise/evaluate_noise.png'
+    save_path = f'./script/noise/evaluate_noise_{root_path.split("/")[-1]}.png'
     plt.savefig(save_path, bbox_inches='tight')
+    print('Save Path:',save_path)
 
 
     # # linear fit
