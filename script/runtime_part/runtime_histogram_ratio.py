@@ -29,7 +29,7 @@ def parse_rigidbody_data(rigidbody_path):
             cbs_runtime_value = float(line.split()[2])
             runtime_dict[key]['cbs'] = cbs_runtime_value  # Store the number instead of the full line
 
-    # print("runtime_dict",runtime_dict)
+    # print("runtime_dict",runtime_dict) 
     return runtime_dict
 
 def runtime_his_ratio(rigidbody_path):
