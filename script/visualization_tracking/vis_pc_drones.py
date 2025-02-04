@@ -166,10 +166,22 @@ if __name__ == '__main__':
 	# 	# 'figure8_4d_9m7'
 	# ]
 
-	input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/output_add_remove_old_multi_mode_2d_7m_mo_0701'
+	# input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/output_add_remove_old_multi_mode_2d_7m_mo_0701'
+	# input_file_names = [
+	# 	'test0',	# gt
+	# 	# 'test19'	# remove 9135	
+	# ]
+
+
+	input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/030225runtime_grc'
 	input_file_names = [
-		'test0',	# gt
-		# 'test19'	# remove 9135	
+		# '2d_8m',
+		# '4d_4m',
+		# '4d_10m',
+		# '4d_16m',
+		# '8d_20m',
+		# '8d_22m2',
+		'figure8_3d_8m2'
 	]
 
 	print('input_dir:',input_dir)

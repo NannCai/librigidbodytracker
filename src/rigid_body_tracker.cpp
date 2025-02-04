@@ -106,7 +106,7 @@ RigidBodyTracker::RigidBodyTracker(
     m_trackingMode = HybridMode;
   }
 
-  m_trackingMode = PoseMode;    // for debugging compare to old multi marker tracker correct rate
+  m_trackingMode = HybridMode;    // for debugging 
 
 }
 
