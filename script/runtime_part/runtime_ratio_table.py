@@ -147,6 +147,6 @@ if __name__ == '__main__':
         prefix_num, prefix_expr = table_prefix[i]
 
         # print(f"& {runtime_median_ms:.2f}    & {percentage_over_10ms:.2f}\\%    & {cbs_contribution_median:.2f}\\%\\\\")
-        print(f"{prefix_num} & {prefix_expr} & {runtime_median_ms:.2f} & {percentage_over_10ms:.2f}\\% & {cbs_contribution_median:.2f}\\%\\\\")
+        print(f"{prefix_num} & {prefix_expr} & {runtime_median_ms:.2f} & {percentage_over_10ms:.2f}\\% & {cbs_contribution_median:.1f}\\%\\\\")
 
         # histogram()
