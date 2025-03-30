@@ -108,6 +108,7 @@ def one_vis(input_file_name,input_dir):
 			# print("frame ",i)
 			# print("len(pc_frame_points)",len(pc_frame_points))
 			for k,point in enumerate(pc_frame_points):
+				point[2] = point[2] + 0.04
 				frame[f"pc{k}"].set_transform(tf.translation_matrix(point))
 
 			# rb_trans = rb_trans_dict[pc_key]["trans"]

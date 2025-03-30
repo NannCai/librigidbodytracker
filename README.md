@@ -5,6 +5,8 @@ This library helps to track (i.e. estimate the pose) of rigid-bodies.
 It assumes that an initial estimate for the pose of each rigid body is given.
 The new poses are estimated using the iterative closest point algorithm (ICP) frame-by-frame.
 
+![Animation](vis/ani_visual_expiriment.gif)
+
 The library is used in the Crazyswarm project.
 
 ## Building
