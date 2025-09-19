@@ -1,5 +1,7 @@
 import numpy as np
 import os
+import sys
+import argparse
 
 # visualization related
 import meshcat
@@ -58,15 +60,25 @@ def parse_pc_data(pc_path):
 		pc_dict[key] = points
 	return pc_dict
 
-def one_vis(input_file_name,input_dir):
-	rigidbody_file_name = input_file_name + '.txt'
-	rigidbody_path = os.path.join(input_dir, rigidbody_file_name)
+def one_vis(rigidbody_path):
+	if not os.path.isabs(rigidbody_path):
+		rigidbody_path = os.path.abspath(rigidbody_path)
+
+	if not os.path.exists(rigidbody_path):
+		print(f"Error: rigidbody file not found: {rigidbody_path}")
+		sys.exit(1)
+
+	input_dir = os.path.dirname(rigidbody_path)
+	input_file_name = os.path.splitext(os.path.basename(rigidbody_path))[0]
+
 	rb_trans_dict = parse_rigidbody_data(rigidbody_path)
 
-	# input_file_name = '3d_8m_mo1_28646591'
 	point_cloud_file_name = input_file_name + '_pointcloud.txt'
-
 	pc_path = os.path.join(input_dir, point_cloud_file_name)
+	if not os.path.exists(pc_path):
+		print(f"Error: point cloud file not found: {pc_path}")
+		sys.exit(1)
+
 	pc_dict = parse_pc_data(pc_path)
 
 	vis = meshcat.Visualizer()
@@ -80,22 +92,21 @@ def one_vis(input_file_name,input_dir):
 		tf.translation_matrix([1, 0, 0]))
 
 	# rb initial
+	if not rb_trans_dict:
+		print("Error: Empty rigidbody data parsed.")
+		sys.exit(1)
+
 	max_index = max(max(sub_dict["trans"].keys()) for sub_dict in rb_trans_dict.values() if sub_dict)
-	# print('max_index',max_index)
+	mesh_path = os.path.join(os.path.dirname(__file__), 'meshes', 'cf2_assembly.stl')
 	for i in range(max_index+1):
 		vis[f"Quadrotor{i}"].set_object(
-			g.StlMeshGeometry.from_file('script/visualization_tracking/meshes/cf2_assembly.stl'))
+			g.StlMeshGeometry.from_file(mesh_path))
 
 	# pc initial
 	box = meshcat.geometry.Box([0.01, 0.01, 0.01])
-	max_length = max(len(value) for value in pc_dict.values())
-	# colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff]  # Add more colors as needed
-	# print('max_length',max_length)
+	max_length = max(len(value) for value in pc_dict.values()) if pc_dict else 0
 	for i in range(max_length):
 		vis[f"pc{i}"].set_object(box, g.MeshBasicMaterial(color=0xff0000))
-		# color = colors[i % len(colors)]  # Cycle through colors
-		# vis[f"pc{i}"].set_object(box, g.MeshBasicMaterial(color=color))
-
 
 	anim = Animation()
 	i = 0
@@ -105,24 +116,18 @@ def one_vis(input_file_name,input_dir):
 			print("not pc_frame_points","pc_key",pc_key)
 			continue
 		with anim.at_frame(vis, i) as frame:
-			# print("frame ",i)
-			# print("len(pc_frame_points)",len(pc_frame_points))
 			for k,point in enumerate(pc_frame_points):
 				point[2] = point[2] + 0.04
 				frame[f"pc{k}"].set_transform(tf.translation_matrix(point))
 
-			# rb_trans = rb_trans_dict[pc_key]["trans"]
 			rb_trans = rb_trans_dict.get(pc_key, {}).get("trans")
-			# print('rb_trans',rb_trans)
 			rb_solution_agents = rb_trans_dict.get(pc_key, {}).get("solution")
 			if not rb_trans:
 				print(f'!!!not rb_trans!!! in frame {i} ','pc_key',pc_key)
 				continue
 
-			# if len(rb_solution_agents) <3:
-			# 	print('rb_solution_agents',rb_solution_agents)
 			for agent,row in rb_trans.items():
-				if agent in rb_solution_agents: 
+				if agent in rb_solution_agents:
 					frame[f"Quadrotor{agent}"].set_transform(
 						tf.translation_matrix([row[0], row[1], row[2]]).dot(
 							tf.quaternion_matrix([row[6], row[3], row[4], row[5]])))
@@ -130,15 +135,11 @@ def one_vis(input_file_name,input_dir):
 					frame[f"Quadrotor{agent}"].set_transform(
 						tf.translation_matrix([1e5,1e5,1e5]).dot(
 							tf.quaternion_matrix([row[6], row[3], row[4], row[5]])))
-										
 			i= i+1
 
 	vis.set_animation(anim)
 	res = vis.static_html()
-	# save to a file
-	# Path("results").mkdir(exist_ok=True)
-	# output_html_path = Path("results") / f"{input_file_name}.html"
-	input_file_name = rigidbody_file_name.replace('.txt', '')
+
 	output_html_path = f'{input_dir}/{input_file_name}.html'
 	with open(output_html_path, "w") as f:
 		f.write(res)
@@ -147,49 +148,11 @@ def one_vis(input_file_name,input_dir):
 	print('end')
 
 if __name__ == '__main__':
-	# input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/output'
-	
-	# input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/2608runtime'
-	# input_file_names = [
-	# 	# '3d_8m_mo1_28696988',	# gt   works
-	# 	# '3d_8m_mo1_28697091',    # with noise remove points works
-	# 	# 'noise_icp'
-	# 	# 'figure8_2d_5m1',
-	# 	# 'figure8_2d_5m2',
-	# 	# 'figure8_3d_8m1',
-	# 	'figure8_3d_8m2',
-	# 	# 'figure8_4d_9m1f',
-	# 	# 'figure8_4d_9m2',
-	# 	# 'figure8_4d_9m3f',
-	# 	# 'figure8_4d_9m4',
-	# 	# 'figure8_4d_9m5',
-	# 	# 'figure8_4d_9m6f',
-	# 	# 'figure8_4d_9m7'
-	# ]
+	parser = argparse.ArgumentParser(description='Visualize rigidbody and point cloud data to an HTML animation.')
+	parser.add_argument('rigidbody_file', help='Path to the rigidbody .txt file (the pointcloud file must be <same_name>_pointcloud.txt in the same directory).')
+	args = parser.parse_args()
 
-	# input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/output_add_remove_old_multi_mode_2d_7m_mo_0701'
-	# input_file_names = [
-	# 	'test0',	# gt
-	# 	# 'test19'	# remove 9135	
-	# ]
-
-
-	input_dir = '/home/nan/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/deps/librigidbodytracker/data/030225runtime_grc'
-	input_file_names = [
-		# '2d_8m',
-		# '4d_4m',
-		# '4d_10m',
-		# '4d_16m',
-		# '8d_20m',
-		# '8d_22m2',
-		'figure8_3d_8m2'
-	]
-
-	print('input_dir:',input_dir)
-
-	for input_file_name in input_file_names:
-		one_vis(input_file_name, input_dir)
-	# one_vis('ori', input_dir)
+	one_vis(args.rigidbody_file)
 
 
 

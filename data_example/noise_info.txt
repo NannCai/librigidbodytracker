@@ -1,0 +1,114 @@
+./data/2608runtime/figure8_3d_8m1:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/1810:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/2807_24:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/2809:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/data0410:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_2d_5m1:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_2d_5m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m1:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_4d_9m1f:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_4d_9m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_4d_9m3f:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_4d_9m4:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_4d_9m5:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_4d_9m6f:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_4d_9m7:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_2d_5m1:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m1:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_4d_9m1f:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_4d_9m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_4d_9m3f:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_4d_9m4:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_4d_9m5:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_4d_9m6f:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_4d_9m7:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m2:
+total_removed_points: 0
+pick_probability: 0
+./data/2608runtime/figure8_3d_8m2:
+total_removed_points: 0
+pick_probability: 0
