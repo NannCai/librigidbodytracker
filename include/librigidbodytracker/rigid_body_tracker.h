@@ -46,7 +46,7 @@ namespace librigidbodytracker {
     const Eigen::Affine3f& initialTransformation() const;
     Eigen::Vector3f initialCenter() const { return m_initialTransformation.translation(); }
 
-    bool lastTransformationValid() const;  // false   no update
+    bool lastTransformationValid() const;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> lastValidTime() const {
       return m_lastValidTransform;
@@ -86,7 +86,7 @@ namespace librigidbodytracker {
 
     // for faster-than-real-time file playback
     void update(std::chrono::high_resolution_clock::time_point stamp,
-      pcl::PointCloud<pcl::PointXYZ>::Ptr pointCloud,std::string inputPath = "", std::string outputPath = "");
+      pcl::PointCloud<pcl::PointXYZ>::Ptr pointCloud,std::string inputPath = "");
 
     const std::vector<RigidBody>& rigidBodies() const;
 
@@ -126,10 +126,8 @@ namespace librigidbodytracker {
     TrackingMode m_trackingMode;
     std::function<void(const std::string&)> m_logWarn;
     std::string m_inputPath;
-    std::string m_outputPath;
 
   };
 
 } // namespace librigidbodytracker
-
 
