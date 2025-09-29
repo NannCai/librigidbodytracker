@@ -44,11 +44,6 @@ Example:
 - Rigidbody: `/path/to/data/figure8_3d_8m2.txt`
 - Pointcloud: `/path/to/data/figure8_3d_8m2_pointcloud.txt`
 
-Run from anywhere (paths resolved automatically):
-```
-python script/visualization_tracking/vis_pc_drones.py /absolute/or/relative/path/to/your_file.txt
-```
-
 Example:
 ```
 python3 script/visualization_tracking/vis_pc_drones.py data_example/figure8_2d_5m1.txt
